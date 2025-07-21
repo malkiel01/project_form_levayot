@@ -1,0 +1,69 @@
+[21-Jul-2025 10:56:52 Asia/Jerusalem] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mbeplusc_kadisha_v3.deceased_forms' doesn't exist in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/forms_list.php:73
+Stack trace:
+#0 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/forms_list.php(73): PDOStatement->execute(Array)
+#1 {main}
+  thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/forms_list.php on line 73
+[21-Jul-2025 11:03:53 Asia/Jerusalem] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mbeplusc_kadisha_v3.field_permissions' doesn't exist in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php:58
+Stack trace:
+#0 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php(58): PDOStatement->execute(Array)
+#1 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/DeceasedForm.php(139): hasPermission('identification_...', 4, 'edit')
+#2 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php(145): DeceasedForm->canEditField('identification_...')
+#3 {main}
+  thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php on line 58
+[21-Jul-2025 11:03:58 Asia/Jerusalem] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mbeplusc_kadisha_v3.field_permissions' doesn't exist in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php:58
+Stack trace:
+#0 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php(58): PDOStatement->execute(Array)
+#1 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/DeceasedForm.php(139): hasPermission('identification_...', 4, 'edit')
+#2 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php(145): DeceasedForm->canEditField('identification_...')
+#3 {main}
+  thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php on line 58
+[21-Jul-2025 11:03:59 Asia/Jerusalem] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mbeplusc_kadisha_v3.field_permissions' doesn't exist in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php:58
+Stack trace:
+#0 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php(58): PDOStatement->execute(Array)
+#1 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/DeceasedForm.php(139): hasPermission('identification_...', 4, 'edit')
+#2 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php(145): DeceasedForm->canEditField('identification_...')
+#3 {main}
+  thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php on line 58
+[21-Jul-2025 11:04:10 Asia/Jerusalem] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mbeplusc_kadisha_v3.field_permissions' doesn't exist in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php:58
+Stack trace:
+#0 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php(58): PDOStatement->execute(Array)
+#1 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/DeceasedForm.php(139): hasPermission('identification_...', 4, 'edit')
+#2 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php(145): DeceasedForm->canEditField('identification_...')
+#3 {main}
+  thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php on line 58
+[21-Jul-2025 11:05:58 Asia/Jerusalem] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mbeplusc_kadisha_v3.field_permissions' doesn't exist in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php:58
+Stack trace:
+#0 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php(58): PDOStatement->execute(Array)
+#1 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/DeceasedForm.php(139): hasPermission('identification_...', 4, 'edit')
+#2 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php(145): DeceasedForm->canEditField('identification_...')
+#3 {main}
+  thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php on line 58
+[21-Jul-2025 11:13:54 Asia/Jerusalem] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mbeplusc_kadisha_v3.field_permissions' doesn't exist in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php:58
+Stack trace:
+#0 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php(58): PDOStatement->execute(Array)
+#1 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/DeceasedForm.php(139): hasPermission('identification_...', 4, 'edit')
+#2 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php(145): DeceasedForm->canEditField('identification_...')
+#3 {main}
+  thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php on line 58
+[21-Jul-2025 11:18:38 Asia/Jerusalem] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mbeplusc_kadisha_v3.field_permissions' doesn't exist in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php:58
+Stack trace:
+#0 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php(58): PDOStatement->execute(Array)
+#1 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/DeceasedForm.php(139): hasPermission('identification_...', 4, 'edit')
+#2 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php(154): DeceasedForm->canEditField('identification_...')
+#3 {main}
+  thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php on line 58
+[21-Jul-2025 11:19:41 Asia/Jerusalem] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mbeplusc_kadisha_v3.field_permissions' doesn't exist in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php:58
+Stack trace:
+#0 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php(58): PDOStatement->execute(Array)
+#1 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/DeceasedForm.php(139): hasPermission('identification_...', 4, 'edit')
+#2 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php(154): DeceasedForm->canEditField('identification_...')
+#3 {main}
+  thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php on line 58
+[21-Jul-2025 11:23:29 Asia/Jerusalem] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mbeplusc_kadisha_v3.field_permissions' doesn't exist in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php:58
+Stack trace:
+#0 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php(58): PDOStatement->execute(Array)
+#1 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/DeceasedForm.php(139): hasPermission('identification_...', 1, 'edit')
+#2 /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php(154): DeceasedForm->canEditField('identification_...')
+#3 {main}
+  thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php on line 58
+[21-Jul-2025 11:41:28 Asia/Jerusalem] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php:25) in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php on line 56
