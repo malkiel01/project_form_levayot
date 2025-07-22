@@ -444,10 +444,10 @@ $cemeteries = $db->query("SELECT id, name FROM cemeteries WHERE is_active = 1 OR
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: 'ajax/delete_form.php',
+                        url: 'admin/delete_form.php',
                         method: 'POST',
                         data: {
-                            form_uuid: formUuid,
+                            form_id: formUuid,
                             csrf_token: '<?= $_SESSION['csrf_token'] ?>'
                         },
                         success: function(response) {
