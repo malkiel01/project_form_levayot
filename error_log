@@ -67,3 +67,7 @@ Stack trace:
 #3 {main}
   thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php on line 58
 [21-Jul-2025 11:41:28 Asia/Jerusalem] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php:25) in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php on line 56
+[22-Jul-2025 13:18:45 Asia/Jerusalem] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php:23) in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php on line 54
+[22-Jul-2025 13:19:37 Asia/Jerusalem] PHP Fatal error:  Composer detected issues in your platform: Your Composer dependencies require a PHP version ">= 8.3.0". You are running 7.4.33. in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/vendor/composer/platform_check.php on line 28
+[22-Jul-2025 13:24:51 Asia/Jerusalem] Error creating form: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '' for key 'form_uuid'
+[22-Jul-2025 13:32:54 Asia/Jerusalem] Error creating form: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '' for key 'form_uuid'

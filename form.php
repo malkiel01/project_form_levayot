@@ -11,11 +11,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 
-// // קבלת רמת הרשאה (לצורך הדגמה, בפועל תקבל מהמשתמש המחובר)
-// $userPermissionLevel = $_SESSION['permission_level'] ?? 2;
+// קבלת רמת הרשאה (לצורך הדגמה, בפועל תקבל מהמשתמש המחובר)
+$userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 
-// שים:
-$userPermissionLevel = 1; // הרשאת מנהל לבדיקה
 
 // בדיקה אם יש ID של טופס ב-URL
 $formUuid = $_GET['id'] ?? null;
@@ -443,9 +441,21 @@ $formData = $form->getFormData() ?? [];
                 }
             }).trigger('change');
             
-            // טעינת רשימות תלויות למקום קבורה
+            
+            // --------------------------------
+            // הוסף את הקוד הזה ל-form.php בתוך תג <script> בסוף הדף
+
+            // ניקוי שדות תלויים כשמשנים שדה הורה
             $('#cemetery_id').on('change', function() {
                 const cemeteryId = $(this).val();
+                
+                // נקה את כל השדות התלויים
+                $('#block_id').html('<option value="">בחר קודם בית עלמין</option>');
+                $('#section_id').html('<option value="">בחר קודם גוש</option>');
+                $('#row_id').html('<option value="">בחר קודם חלקה</option>');
+                $('#grave_id').html('<option value="">בחר קודם שורה</option>');
+                $('#plot_id').html('<option value="">בחר...</option>');
+                
                 if (cemeteryId) {
                     $.get('ajax/get_blocks.php', {cemetery_id: cemeteryId}, function(data) {
                         $('#block_id').html(data);
@@ -458,6 +468,12 @@ $formData = $form->getFormData() ?? [];
             
             $('#block_id').on('change', function() {
                 const blockId = $(this).val();
+                
+                // נקה שדות תלויים
+                $('#section_id').html('<option value="">בחר קודם גוש</option>');
+                $('#row_id').html('<option value="">בחר קודם חלקה</option>');
+                $('#grave_id').html('<option value="">בחר קודם שורה</option>');
+                
                 if (blockId) {
                     $.get('ajax/get_sections.php', {block_id: blockId}, function(data) {
                         $('#section_id').html(data);
@@ -467,6 +483,11 @@ $formData = $form->getFormData() ?? [];
             
             $('#section_id').on('change', function() {
                 const sectionId = $(this).val();
+                
+                // נקה שדות תלויים
+                $('#row_id').html('<option value="">בחר קודם חלקה</option>');
+                $('#grave_id').html('<option value="">בחר קודם שורה</option>');
+                
                 if (sectionId) {
                     $.get('ajax/get_rows.php', {section_id: sectionId}, function(data) {
                         $('#row_id').html(data);
@@ -476,12 +497,86 @@ $formData = $form->getFormData() ?? [];
             
             $('#row_id').on('change', function() {
                 const rowId = $(this).val();
+                
+                // נקה שדה תלוי
+                $('#grave_id').html('<option value="">בחר קודם שורה</option>');
+                
                 if (rowId) {
                     $.get('ajax/get_graves.php', {row_id: rowId}, function(data) {
                         $('#grave_id').html(data);
                     });
                 }
             });
+            
+            // וודא שרק ערכים תקינים נשלחים
+            $('#deceasedForm').on('submit', function(e) {
+                // אם השדה ריק, הסר אותו מהטופס
+                $('select').each(function() {
+                    if ($(this).val() === '' || $(this).val() === null) {
+                        $(this).removeAttr('name');
+                    }
+                });
+                
+                // וודא שיש לפחות את השדות הנדרשים
+                const requiredFields = ['identification_type', 'deceased_name', 'death_date', 'death_time', 'burial_date', 'burial_time', 'burial_license'];
+                let hasError = false;
+                
+                requiredFields.forEach(function(field) {
+                    const value = $('[name="' + field + '"]').val();
+                    if (!value || value === '') {
+                        hasError = true;
+                        $('[name="' + field + '"]').addClass('is-invalid');
+                    }
+                });
+                
+                if (hasError) {
+                    e.preventDefault();
+                    alert('יש למלא את כל השדות החובה');
+                    return false;
+                }
+            });
+            // --------------------------------
+            
+            
+            // // טעינת רשימות תלויות למקום קבורה
+            // $('#cemetery_id').on('change', function() {
+            //     const cemeteryId = $(this).val();
+            //     if (cemeteryId) {
+            //         $.get('ajax/get_blocks.php', {cemetery_id: cemeteryId}, function(data) {
+            //             $('#block_id').html(data);
+            //         });
+            //         $.get('ajax/get_plots.php', {cemetery_id: cemeteryId}, function(data) {
+            //             $('#plot_id').html(data);
+            //         });
+            //     }
+            // });
+            
+            // $('#block_id').on('change', function() {
+            //     const blockId = $(this).val();
+            //     if (blockId) {
+            //         $.get('ajax/get_sections.php', {block_id: blockId}, function(data) {
+            //             $('#section_id').html(data);
+            //         });
+            //     }
+            // });
+            
+            // $('#section_id').on('change', function() {
+            //     const sectionId = $(this).val();
+            //     if (sectionId) {
+            //         $.get('ajax/get_rows.php', {section_id: sectionId}, function(data) {
+            //             $('#row_id').html(data);
+            //         });
+            //     }
+            // });
+            
+            // $('#row_id').on('change', function() {
+            //     const rowId = $(this).val();
+            //     if (rowId) {
+            //         $.get('ajax/get_graves.php', {row_id: rowId}, function(data) {
+            //             $('#grave_id').html(data);
+            //         });
+            //     }
+            // });
         });
         
         // חתימה דיגיטלית
