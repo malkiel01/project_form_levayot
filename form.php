@@ -552,9 +552,8 @@ if (!empty($formData)) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
     </script>
-</body>
-</html>
-        $(document).ready(function() {
+    <script>
+             $(document).ready(function() {
             // טיפול בסוג זיהוי
             $('#identification_type').on('change', function() {
                 const type = $(this).val();
@@ -860,3 +859,8 @@ if (!empty($formData)) {
             
             document.body.removeChild(textArea);
         }
+    </script>
+</body>
+</html>
+
+   
