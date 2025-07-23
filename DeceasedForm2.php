@@ -1,5 +1,5 @@
 <?php
-// DeceasedForm.php - מחלקת ניהול טופס נפטרים עם תיקונים
+// DeceasedForm.php - מחלקת ניהול טופס נפטרים
 
 require_once 'config.php';
 
@@ -9,31 +9,25 @@ class DeceasedForm {
     private $formData;
     private $userPermissionLevel;
     
-    public function __construct($formUuid = null, $userPermissionLevel = 1) {
+    public function __construct($formId = null, $userPermissionLevel = 1) {
         $this->db = getDbConnection();
         $this->userPermissionLevel = $userPermissionLevel;
         
-        if ($formUuid) {
-            $this->loadForm($formUuid);
+        if ($formId) {
+            $this->loadForm($formId);
         }
     }
     
     // טעינת טופס קיים
-    public function loadForm($formUuid) {
+    public function loadForm($formId) {
         $stmt = $this->db->prepare("SELECT * FROM deceased_forms WHERE form_uuid = ?");
-        $stmt->execute([$formUuid]);
+        $stmt->execute([$formId]);
         $this->formData = $stmt->fetch();
         
         if ($this->formData) {
             $this->formId = $this->formData['id'];
-            
-            // רישום בלוג
-            error_log("Form loaded successfully - UUID: $formUuid, ID: " . $this->formId);
-            
             return true;
         }
-        
-        error_log("Form not found - UUID: $formUuid");
         return false;
     }
     
@@ -49,15 +43,7 @@ class DeceasedForm {
             throw new Exception("UUID ריק");
         }
         
-        // בדוק שה-UUID לא קיים כבר
-        $checkStmt = $this->db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE form_uuid = ?");
-        $checkStmt->execute([$data['form_uuid']]);
-        if ($checkStmt->fetchColumn() > 0) {
-            throw new Exception("UUID כבר קיים במערכת");
-        }
-        
         $data['created_by'] = $_SESSION['user_id'] ?? null;
-        $data['status'] = $data['status'] ?? 'draft';
         
         // חישוב אחוז התקדמות
         $data['progress_percentage'] = $this->calculateProgress($data);
@@ -75,13 +61,8 @@ class DeceasedForm {
         $values = [];
         $placeholders = [];
         
-        // וודא ש-form_uuid נכלל
-        if (!in_array('form_uuid', array_keys($data))) {
-            throw new Exception("form_uuid חסר בנתונים");
-        }
-        
         foreach ($data as $field => $value) {
-            if ($this->canEditField($field) || $field === 'form_uuid' || $field === 'created_by' || $field === 'status' || $field === 'progress_percentage') {
+            if ($this->canEditField($field)) {
                 $fields[] = $field;
                 $values[] = $value;
                 $placeholders[] = '?';
@@ -95,29 +76,14 @@ class DeceasedForm {
         $sql = "INSERT INTO deceased_forms (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
         
         try {
-            error_log("Creating new form - UUID: " . $data['form_uuid']);
-            error_log("SQL: " . $sql);
-            error_log("Values: " . print_r($values, true));
+            error_log("DEBUG SQL: " . $sql);
+            error_log("DEBUG VALUES: " . print_r($values, true));
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute($values);
             
             $this->formId = $this->db->lastInsertId();
-            
-            // רישום בלוג
-            $logStmt = $this->db->prepare("
-                INSERT INTO activity_log (user_id, form_id, action, details, ip_address, user_agent) 
-                VALUES (?, ?, 'create_form', ?, ?, ?)
-            ");
-            $logStmt->execute([
-                $_SESSION['user_id'] ?? null,
-                $this->formId,
-                json_encode(['form_uuid' => $data['form_uuid']]),
-                $_SERVER['REMOTE_ADDR'] ?? '',
-                $_SERVER['HTTP_USER_AGENT'] ?? ''
-            ]);
-            
-            error_log("Form created successfully - UUID: " . $data['form_uuid'] . ", ID: " . $this->formId);
+            $this->loadForm($data['form_uuid']);
             
             return $data['form_uuid'];
         } catch (PDOException $e) {
@@ -142,21 +108,14 @@ class DeceasedForm {
             }
         }
         
-        // מיזוג עם הנתונים הקיימים לצורך חישוב אחוז התקדמות
-        $mergedData = array_merge($this->formData, $data);
-        $data['progress_percentage'] = $this->calculateProgress($mergedData);
-        
-        // אם השלימו את כל השדות החובה, שנה סטטוס
-        if ($data['progress_percentage'] == 100 && ($data['status'] ?? $this->formData['status']) === 'draft') {
-            $data['status'] = 'completed';
-        }
+        $data['progress_percentage'] = $this->calculateProgress(array_merge($this->formData, $data));
         
         // בניית שאילתת UPDATE
         $fields = [];
         $values = [];
         
         foreach ($data as $field => $value) {
-            if ($this->canEditField($field) || in_array($field, ['updated_by', 'progress_percentage', 'status'])) {
+            if ($this->canEditField($field)) {
                 $fields[] = "$field = ?";
                 $values[] = $value;
             }
@@ -170,25 +129,8 @@ class DeceasedForm {
         $sql = "UPDATE deceased_forms SET " . implode(', ', $fields) . " WHERE id = ?";
         
         try {
-            error_log("Updating form - ID: " . $this->formId);
-            
             $stmt = $this->db->prepare($sql);
-            $result = $stmt->execute($values);
-            
-            // רישום בלוג
-            $logStmt = $this->db->prepare("
-                INSERT INTO activity_log (user_id, form_id, action, details, ip_address, user_agent) 
-                VALUES (?, ?, 'update_form', ?, ?, ?)
-            ");
-            $logStmt->execute([
-                $_SESSION['user_id'] ?? null,
-                $this->formId,
-                json_encode(['updated_fields' => array_keys($data)]),
-                $_SERVER['REMOTE_ADDR'] ?? '',
-                $_SERVER['HTTP_USER_AGENT'] ?? ''
-            ]);
-            
-            return $result;
+            return $stmt->execute($values);
         } catch (PDOException $e) {
             error_log("Error updating form: " . $e->getMessage());
             throw new Exception("שגיאה בעדכון הטופס: " . $e->getMessage());
@@ -249,7 +191,7 @@ class DeceasedForm {
         
         $filteredData = [];
         foreach ($this->formData as $field => $value) {
-            if ($this->canViewField($field) || in_array($field, ['form_uuid', 'status', 'progress_percentage', 'created_at', 'updated_at'])) {
+            if ($this->canViewField($field)) {
                 $filteredData[$field] = $value;
             }
         }
@@ -426,3 +368,9 @@ class DeceasedForm {
         return $stmt->fetchAll();
     }
 }
+
+// החלף את פונקציית createForm ב-DeceasedForm.php
+
+
+// החלף גם את פונקציית updateForm
+
