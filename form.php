@@ -61,6 +61,9 @@ console.log('======================');
 // רישום בלוג
 error_log("FORM ACCESS - UUID: $formUuid, Is New: " . ($isNewForm ? 'YES' : 'NO') . ", User: " . $_SESSION['user_id']);
 
+// משתנה לזיהוי אם צריך להפנות לתצוגה
+$shouldRedirectToView = false;
+
 // טיפול בשליחת הטופס
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // בדיקת CSRF token
@@ -71,6 +74,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // סניטציה של הנתונים
     $postData = sanitizeInput($_POST);
     unset($postData['csrf_token']);
+    
+    // בדיקה אם לחצו על כפתור "שמור וצפה"
+    $saveAndView = isset($_POST['save_and_view']);
     
     // אל תבצע ולידציה של שדות חובה - רק ולידציה של פורמט
     $formatErrors = [];
@@ -97,18 +103,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $form->createForm($postData);
                 $successMessage = "הטופס נוצר בהצלחה";
                 
-                // לאחר יצירה מוצלחת, הטופס כבר לא חדש
-                $isNewForm = false;
+                // אם יצירת הטופס הצליחה והמשתמש לחץ על "שמור וצפה"
+                if ($saveAndView) {
+                    header("Location: view_form.php?id=" . $formUuid);
+                    exit;
+                }
                 
-                // טען מחדש את הנתונים
-                $form = new DeceasedForm($formUuid, $userPermissionLevel);
-                $formData = $form->getFormData();
+                // אחרת, טען מחדש את הטופס לעריכה
+                header("Location: form.php?id=" . $formUuid);
+                exit;
                 
-                echo "<script>console.log('Form created successfully with UUID: " . $formUuid . "');</script>";
             } else {
                 // עדכון טופס קיים
                 $form->updateForm($postData);
                 $successMessage = "הטופס עודכן בהצלחה";
+                
+                // אם המשתמש לחץ על "שמור וצפה"
+                if ($saveAndView) {
+                    header("Location: view_form.php?id=" . $formUuid);
+                    exit;
+                }
                 
                 // טען מחדש את הנתונים המעודכנים
                 $formData = $form->getFormData();
@@ -260,7 +274,6 @@ if ($form) {
             <!-- הצגת UUID -->
             <div class="form-uuid-display text-center">
                 <small>מספר טופס: <strong><?= $formUuid ?></strong></small>
-                <small>גירסה 1</small>
             </div>
             
             <!-- הצגת סטטוס -->
@@ -606,17 +619,29 @@ if ($form) {
                 <!-- כפתורי פעולה -->
                 <div class="row mt-4">
                     <div class="col-12 text-center">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-save"></i> שמור טופס
-                        </button>
-                        <?php if (!$isNewForm): ?>
+                        <?php if ($isNewForm): ?>
+                            <!-- כפתורים לטופס חדש -->
+                            <button type="submit" name="save" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> צור טופס
+                            </button>
+                            <button type="submit" name="save_and_view" value="1" class="btn btn-success btn-lg ms-2">
+                                <i class="fas fa-save"></i> צור וצפה בטופס
+                            </button>
+                        <?php else: ?>
+                            <!-- כפתורים לטופס קיים -->
+                            <button type="submit" name="save" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> שמור שינויים
+                            </button>
+                            <button type="submit" name="save_and_view" value="1" class="btn btn-success btn-lg ms-2">
+                                <i class="fas fa-save"></i> שמור וצפה בטופס
+                            </button>
                             <a href="view_form.php?id=<?= $formUuid ?>" class="btn btn-info btn-lg ms-2">
                                 <i class="fas fa-eye"></i> צפייה בטופס
                             </a>
+                            <button type="button" class="btn btn-warning btn-lg ms-2" onclick="shareForm()">
+                                <i class="fas fa-share"></i> שתף טופס
+                            </button>
                         <?php endif; ?>
-                        <button type="button" class="btn btn-success btn-lg ms-2" onclick="shareForm()">
-                            <i class="fas fa-share"></i> שתף טופס
-                        </button>
                         <a href="forms_list.php" class="btn btn-secondary btn-lg ms-2">
                             <i class="fas fa-list"></i> רשימת טפסים
                         </a>
@@ -629,6 +654,9 @@ if ($form) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // משתנה לציון אם זה טופס חדש
+        const isNewForm = <?= $isNewForm ? 'true' : 'false' ?>;
+        
         $(document).ready(function() {
             // רשימת שדות חובה
             const requiredFields = <?= json_encode($requiredFields) ?>;
@@ -961,12 +989,17 @@ if ($form) {
         
         // שיתוף טופס
         function shareForm() {
+            if (isNewForm) {
+                alert('יש לשמור את הטופס לפני השיתוף');
+                return;
+            }
+            
             const formUrl = window.location.href;
             if (navigator.share) {
                 navigator.share({
                     title: 'טופס הזנת נפטר',
                     url: formUrl
-                }).catch(err => {
+                }).catch(() => {
                     console.log('Error sharing:', err);
                     copyToClipboard(formUrl);
                 });
