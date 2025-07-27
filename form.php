@@ -286,6 +286,8 @@ if ($form) {
     <title>טופס הזנת נפטר <?= $isNewForm ? '- חדש' : '- עריכה' ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             background-color: #f8f9fa;
@@ -919,42 +921,6 @@ if ($form) {
 
     <script>
         // עדכון הפונקציה shareForm
-        function shareFormOld() {
-            if (isNewForm) {
-                alert('יש לשמור את הטופס לפני השיתוף');
-                return;
-            }
-
-            const formUuid = '<?= $formUuid ?>'; // מזהה הטופס מהשרת
-
-
-            // צור קישור חדש באמצעות AJAX
-            $.post('ajax/create_share_link.php', { form_uuid: formUuid }, function(response) {
-                if (response.error) {
-                    alert('שגיאה ביצירת קישור2: ' + response.error);
-                    return;
-                }
-
-                // הדפסת מידע דיבוג לקונסול
-                console.log(response);
-
-                const formUrl = response.link;
-
-                if (navigator.share) {
-                    navigator.share({
-                        title: 'טופס הזנת נפטר',
-                        url: formUrl
-                    }).catch((err) => {
-                        console.log('Error sharing:', err);
-                        copyToClipboard(formUrl);
-                    });
-                } else {
-                    copyToClipboard(formUrl);
-                }
-            }, 'json').fail(function() {
-                alert('שגיאה ביצירת הקישור.');
-            });
-        }
         function shareForm() {
             if (isNewForm) {
                 alert('יש לשמור את הטופס לפני השיתוף');
@@ -1192,8 +1158,6 @@ if ($form) {
         }
     </script>
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // משתנה לציון אם זה טופס חדש
         const isNewForm = <?= $isNewForm ? 'true' : 'false' ?>;
