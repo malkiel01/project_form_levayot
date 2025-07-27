@@ -212,19 +212,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: form.php?id=" . $formUuid);
                 exit;
                 
+            // } else {
+            //     // עדכון טופס קיים
+            //     $form->updateForm($postData);
+            //     $successMessage = "הטופס עודכן בהצלחה";
+                
+            //     // אם המשתמש לחץ על "שמור וצפה"
+            //     if ($saveAndView) {
+            //         header("Location: view_form.php?id=" . $formUuid);
+            //         exit;
+            //     }
+                
+            //     // טען מחדש את הנתונים המעודכנים
+            //     $formData = $form->getFormData();
+            // }
             } else {
                 // עדכון טופס קיים
                 $form->updateForm($postData);
+                $formData = $form->getFormData(); // שלב חשוב - טען מחדש מהשרת
+
                 $successMessage = "הטופס עודכן בהצלחה";
-                
+
                 // אם המשתמש לחץ על "שמור וצפה"
                 if ($saveAndView) {
                     header("Location: view_form.php?id=" . $formUuid);
                     exit;
                 }
-                
-                // טען מחדש את הנתונים המעודכנים
-                $formData = $form->getFormData();
+
+                // הפניה לטעינה מחודשת (ולא השארה על אותו POST)
+                header("Location: form.php?id=" . $formUuid . "&saved=1");
+                exit;
             }
         } catch (Exception $e) {
             $errorMessage = "שגיאה בשמירת הטופס: " . $e->getMessage();
