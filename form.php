@@ -752,6 +752,416 @@ if ($form) {
             </form>
         </div>
     </div>
+
+    <!-- תוספת ל-form.php - הוסיפי בסוף הקובץ לפני תג ה-</body> -->
+
+<!-- Modal יצירת קישור שיתוף -->
+<div class="modal fade" id="shareFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">יצירת קישור שיתוף</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="shareLinkForm">
+                    <!-- סוג גישה -->
+                    <div class="mb-3">
+                        <label class="form-label">סוג גישה</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="access_type" id="access_public" value="public" checked>
+                            <label class="form-check-label" for="access_public">
+                                <i class="fas fa-globe"></i> פתוח לכולם
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="access_type" id="access_users" value="users">
+                            <label class="form-check-label" for="access_users">
+                                <i class="fas fa-users"></i> משתמשים ספציפיים
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- בחירת משתמשים -->
+                    <div class="mb-3" id="usersSelectDiv" style="display: none;">
+                        <label for="allowed_users" class="form-label">בחר משתמשים מורשים</label>
+                        <select class="form-select" id="allowed_users" name="allowed_users[]" multiple size="5">
+                            <!-- יטען באמצעות AJAX -->
+                        </select>
+                        <small class="form-text text-muted">החזק Ctrl לבחירה מרובה</small>
+                    </div>
+
+                    <!-- הרשאות -->
+                    <div class="mb-3">
+                        <label class="form-label">הרשאות</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="permission_mode" id="view_only" value="view" checked>
+                            <label class="form-check-label" for="view_only">
+                                <i class="fas fa-eye"></i> צפייה בלבד
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="permission_mode" id="can_edit" value="edit">
+                            <label class="form-check-label" for="can_edit">
+                                <i class="fas fa-edit"></i> צפייה ועריכה
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- רמת הרשאה -->
+                    <div class="mb-3">
+                        <label for="permission_level" class="form-label">רמת הרשאה למשתמשים לא רשומים</label>
+                        <select class="form-select" id="permission_level" name="permission_level">
+                            <option value="1">צופה (רמה 1)</option>
+                            <option value="2">עורך בסיסי (רמה 2)</option>
+                            <option value="3">עורך מתקדם (רמה 3)</option>
+                            <option value="4" selected>מנהל (רמה 4)</option>
+                        </select>
+                    </div>
+
+                    <!-- תוקף -->
+                    <div class="mb-3">
+                        <label class="form-label">תוקף הקישור</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="expiry_type" id="no_expiry" value="never" checked>
+                            <label class="form-check-label" for="no_expiry">
+                                <i class="fas fa-infinity"></i> ללא הגבלת זמן
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="expiry_type" id="custom_expiry" value="custom">
+                            <label class="form-check-label" for="custom_expiry">
+                                <i class="fas fa-clock"></i> הגדרת תוקף
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- בחירת תאריך תפוגה -->
+                    <div class="mb-3" id="expiryDateDiv" style="display: none;">
+                        <label for="expiry_date" class="form-label">תאריך תפוגה</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="date" class="form-control" id="expiry_date" name="expiry_date">
+                            </div>
+                            <div class="col-md-6">
+                                <input type="time" class="form-control" id="expiry_time" name="expiry_time" value="23:59">
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(1)">מחר</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(7)">שבוע</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(30)">חודש</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(90)">3 חודשים</button>
+                        </div>
+                    </div>
+
+                    <!-- הערות -->
+                    <div class="mb-3">
+                        <label for="link_description" class="form-label">תיאור/הערות (אופציונלי)</label>
+                        <input type="text" class="form-control" id="link_description" name="link_description" 
+                               placeholder="לדוגמה: קישור למשפחה">
+                    </div>
+                </form>
+
+                <!-- הודעות -->
+                <div id="shareLinkAlert" class="alert" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ביטול</button>
+                <button type="button" class="btn btn-primary" onclick="createShareLink()">
+                    <i class="fas fa-link"></i> צור קישור
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal הצגת קישור שנוצר -->
+<div class="modal fade" id="showLinkModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">קישור השיתוף נוצר בהצלחה</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">קישור לשיתוף:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="generatedLink" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">
+                            <i class="fas fa-copy"></i> העתק
+                        </button>
+                    </div>
+                </div>
+                <div id="linkDetails" class="alert alert-info">
+                    <!-- פרטי הקישור יוצגו כאן -->
+                </div>
+                <div class="text-center">
+                    <div id="qrcode"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגור</button>
+                <button type="button" class="btn btn-primary" onclick="shareViaWhatsApp()">
+                    <i class="fab fa-whatsapp"></i> שתף בוואטסאפ
+                </button>
+                <button type="button" class="btn btn-info" onclick="shareViaEmail()">
+                    <i class="fas fa-envelope"></i> שלח במייל
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- הוסף את ספריית QR Code (אופציונלי) -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <script>
+        // עדכון הפונקציה shareForm
+        function shareForm() {
+            if (isNewForm) {
+                alert('יש לשמור את הטופס לפני השיתוף');
+                return;
+            }
+            
+            // טען רשימת משתמשים
+            loadUsersList();
+            
+            // פתח את המודל
+            $('#shareFormModal').modal('show');
+        }
+
+        // אם אתה רוצה לשמור גם את האפשרות הישנה של שיתוף מהיר, 
+        // תוכל להוסיף פונקציה נוספת:
+        function quickShareForm() {
+            if (isNewForm) {
+                alert('יש לשמור את הטופס לפני השיתוף');
+                return;
+            }
+
+            const formUuid = '<?= $formUuid ?>';
+            
+            // יצירת קישור מהיר עם הגדרות ברירת מחדל
+            const formData = new FormData();
+            formData.append('form_uuid', formUuid);
+            formData.append('allowed_users', 'null'); // פתוח לכולם
+            formData.append('can_edit', '0'); // צפייה בלבד
+            formData.append('permission_level', '4'); // רמת הרשאה 4
+            formData.append('expires_at', 'null'); // ללא תפוגה
+            formData.append('description', 'קישור מהיר');
+            
+            $.ajax({
+                url: 'ajax/create_share_link.php',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const formUrl = response.link;
+                        
+                        if (navigator.share) {
+                            navigator.share({
+                                title: 'טופס הזנת נפטר',
+                                url: formUrl
+                            }).catch((err) => {
+                                console.log('Error sharing:', err);
+                                copyToClipboard(formUrl);
+                            });
+                        } else {
+                            copyToClipboard(formUrl);
+                        }
+                    } else {
+                        alert('שגיאה ביצירת קישור: ' + (response.message || 'שגיאה לא ידועה'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    alert('שגיאה ביצירת הקישור');
+                }
+            });
+        }
+
+        // ואם תרצה, תוכל להוסיף שני כפתורים בממשק:
+        // 1. כפתור "שיתוף מתקדם" שקורא ל-shareForm()
+        // 2. כפתור "שיתוף מהיר" שקורא ל-quickShareForm()
+
+        // טעינת רשימת משתמשים
+        function loadUsersList() {
+            $.get('ajax/get_users_list.php', function(data) {
+                $('#allowed_users').html(data);
+            });
+        }
+
+        // הצגה/הסתרה של שדות לפי הבחירה
+        $(document).ready(function() {
+            // גישה למשתמשים ספציפיים
+            $('input[name="access_type"]').change(function() {
+                if ($(this).val() === 'users') {
+                    $('#usersSelectDiv').show();
+                } else {
+                    $('#usersSelectDiv').hide();
+                }
+            });
+            
+            // תוקף מותאם אישית
+            $('input[name="expiry_type"]').change(function() {
+                if ($(this).val() === 'custom') {
+                    $('#expiryDateDiv').show();
+                    // הגדר ברירת מחדל לעוד שבוע
+                    setExpiryDays(7);
+                } else {
+                    $('#expiryDateDiv').hide();
+                }
+            });
+        });
+
+        // הגדרת תאריך תפוגה
+        function setExpiryDays(days) {
+            const date = new Date();
+            date.setDate(date.getDate() + days);
+            $('#expiry_date').val(date.toISOString().split('T')[0]);
+        }
+
+        // יצירת קישור השיתוף
+        function createShareLink() {
+            const formData = new FormData();
+            formData.append('form_uuid', '<?= $formUuid ?>');
+            
+            // סוג גישה
+            const accessType = $('input[name="access_type"]:checked').val();
+            if (accessType === 'users') {
+                const selectedUsers = $('#allowed_users').val();
+                if (!selectedUsers || selectedUsers.length === 0) {
+                    showAlert('shareLinkAlert', 'danger', 'יש לבחור לפחות משתמש אחד');
+                    return;
+                }
+                formData.append('allowed_users', JSON.stringify(selectedUsers));
+            } else {
+                formData.append('allowed_users', 'null');
+            }
+            
+            // הרשאות
+            const permissionMode = $('input[name="permission_mode"]:checked').val();
+            formData.append('can_edit', permissionMode === 'edit' ? '1' : '0');
+            
+            // רמת הרשאה
+            formData.append('permission_level', $('#permission_level').val());
+            
+            // תוקף
+            const expiryType = $('input[name="expiry_type"]:checked').val();
+            if (expiryType === 'custom') {
+                const expiryDate = $('#expiry_date').val();
+                const expiryTime = $('#expiry_time').val();
+                if (!expiryDate) {
+                    showAlert('shareLinkAlert', 'danger', 'יש לבחור תאריך תפוגה');
+                    return;
+                }
+                formData.append('expires_at', expiryDate + ' ' + expiryTime + ':00');
+            } else {
+                formData.append('expires_at', 'null');
+            }
+            
+            // תיאור
+            formData.append('description', $('#link_description').val());
+            
+            // שלח בקשה
+            showAlert('shareLinkAlert', 'info', 'יוצר קישור...');
+            
+            $.ajax({
+                url: 'ajax/create_share_link.php',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        $('#shareFormModal').modal('hide');
+                        showGeneratedLink(response);
+                    } else {
+                        showAlert('shareLinkAlert', 'danger', response.message || 'שגיאה ביצירת הקישור');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error creating link:', error);
+                    showAlert('shareLinkAlert', 'danger', 'שגיאת תקשורת: ' + error);
+                }
+            });
+        }
+
+        // הצגת הקישור שנוצר
+        function showGeneratedLink(data) {
+            $('#generatedLink').val(data.link);
+            
+            // הצג פרטי קישור
+            let details = '<strong>פרטי הקישור:</strong><br>';
+            details += '• סוג גישה: ' + (data.access_type === 'public' ? 'פתוח לכולם' : 'משתמשים ספציפיים') + '<br>';
+            details += '• הרשאות: ' + (data.can_edit ? 'צפייה ועריכה' : 'צפייה בלבד') + '<br>';
+            if (data.expires_at) {
+                details += '• תוקף עד: ' + new Date(data.expires_at).toLocaleDateString('he-IL') + '<br>';
+            } else {
+                details += '• תוקף: ללא הגבלה<br>';
+            }
+            $('#linkDetails').html(details);
+            
+            // צור QR Code
+            $('#qrcode').empty();
+            new QRCode(document.getElementById("qrcode"), {
+                text: data.link,
+                width: 200,
+                height: 200
+            });
+            
+            $('#showLinkModal').modal('show');
+        }
+
+        // העתקת קישור
+        function copyLink() {
+            const linkInput = document.getElementById('generatedLink');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            // הצג הודעה
+            const btn = event.target.closest('button');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> הועתק!';
+            btn.classList.remove('btn-outline-secondary');
+            btn.classList.add('btn-success');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            }, 2000);
+        }
+
+        // שיתוף בוואטסאפ
+        function shareViaWhatsApp() {
+            const link = $('#generatedLink').val();
+            const text = 'טופס נפטר - <?= htmlspecialchars($formData['deceased_name'] ?? 'טופס חדש') ?>\n' + link;
+            window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+        }
+
+        // שיתוף במייל
+        function shareViaEmail() {
+            const link = $('#generatedLink').val();
+            const subject = 'טופס נפטר - <?= htmlspecialchars($formData['deceased_name'] ?? 'טופס חדש') ?>';
+            const body = 'שלום,\n\nמצורף קישור לטופס נפטר:\n' + link + '\n\nבברכה';
+            window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+        }
+
+        // פונקציית עזר להצגת הודעות
+        function showAlert(elementId, type, message) {
+            const alert = $('#' + elementId);
+            alert.removeClass('alert-success alert-danger alert-info alert-warning');
+            alert.addClass('alert-' + type);
+            alert.html(message);
+            alert.show();
+        }
+    </script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -1089,116 +1499,6 @@ if ($form) {
         // טען חתימה קיימת בטעינה ראשונה
         loadExistingSignature();
         
-        // שיתוף טופס
-        function shareFormOld() {
-            if (isNewForm) {
-                alert('יש לשמור את הטופס לפני השיתוף');
-                return;
-            }
-
-            const formUuid = '<?= $formUuid ?>'; // מזהה הטופס מהשרת
-
-
-            // צור קישור חדש באמצעות AJAX
-            $.post('ajax/create_share_link.php', { form_uuid: formUuid }, function(response) {
-                if (response.error) {
-                    alert('שגיאה ביצירת קישור2: ' + response.error);
-                    return;
-                }
-
-                // הדפסת מידע דיבוג לקונסול
-                console.log(response);
-
-                const formUrl = response.link;
-
-                if (navigator.share) {
-                    navigator.share({
-                        title: 'טופס הזנת נפטר',
-                        url: formUrl
-                    }).catch((err) => {
-                        console.log('Error sharing:', err);
-                        copyToClipboard(formUrl);
-                    });
-                } else {
-                    copyToClipboard(formUrl);
-                }
-            }, 'json').fail(function() {
-                alert('שגיאה ביצירת הקישור.');
-            });
-        }
-
-        // החלף את הפונקציה shareForm הישנה בפונקציה הזו:
-
-        function shareForm() {
-            if (isNewForm) {
-                alert('יש לשמור את הטופס לפני השיתוף');
-                return;
-            }
-            
-            // טען רשימת משתמשים אם צריך
-            loadUsersList();
-            
-            // פתח את המודל לבחירת אפשרויות השיתוף
-            $('#shareFormModal').modal('show');
-        }
-
-        // אם אתה רוצה לשמור גם את האפשרות הישנה של שיתוף מהיר, 
-        // תוכל להוסיף פונקציה נוספת:
-
-        function quickShareForm() {
-            if (isNewForm) {
-                alert('יש לשמור את הטופס לפני השיתוף');
-                return;
-            }
-
-            const formUuid = '<?= $formUuid ?>';
-            
-            // יצירת קישור מהיר עם הגדרות ברירת מחדל
-            const formData = new FormData();
-            formData.append('form_uuid', formUuid);
-            formData.append('allowed_users', 'null'); // פתוח לכולם
-            formData.append('can_edit', '0'); // צפייה בלבד
-            formData.append('permission_level', '4'); // רמת הרשאה 4
-            formData.append('expires_at', 'null'); // ללא תפוגה
-            formData.append('description', 'קישור מהיר');
-            
-            $.ajax({
-                url: 'ajax/create_share_link.php',
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        const formUrl = response.link;
-                        
-                        if (navigator.share) {
-                            navigator.share({
-                                title: 'טופס הזנת נפטר',
-                                url: formUrl
-                            }).catch((err) => {
-                                console.log('Error sharing:', err);
-                                copyToClipboard(formUrl);
-                            });
-                        } else {
-                            copyToClipboard(formUrl);
-                        }
-                    } else {
-                        alert('שגיאה ביצירת קישור: ' + (response.message || 'שגיאה לא ידועה'));
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    alert('שגיאה ביצירת הקישור');
-                }
-            });
-        }
-
-        // ואם תרצה, תוכל להוסיף שני כפתורים בממשק:
-        // 1. כפתור "שיתוף מתקדם" שקורא ל-shareForm()
-        // 2. כפתור "שיתוף מהיר" שקורא ל-quickShareForm()
-
         
         function copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
