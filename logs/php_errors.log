@@ -64,3 +64,76 @@
 [24-Jul-2025 12:39:47 Asia/Jerusalem] Generated new UUID: f4ed495c-65be-424b-9e66-d54d9ed95d5a
 [24-Jul-2025 12:39:48 Asia/Jerusalem] Form not found - UUID: f4ed495c-65be-424b-9e66-d54d9ed95d5a
 [24-Jul-2025 12:39:48 Asia/Jerusalem] FORM ACCESS - UUID: f4ed495c-65be-424b-9e66-d54d9ed95d5a, Is New: YES, User: 1
+[27-Jul-2025 11:07:49 Asia/Jerusalem] Generated new UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284
+[27-Jul-2025 11:07:49 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: YES, User: 1
+[27-Jul-2025 11:08:01 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: YES, User: 1
+[27-Jul-2025 11:08:01 Asia/Jerusalem] Creating new form - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284
+[27-Jul-2025 11:08:01 Asia/Jerusalem] SQL: INSERT INTO deceased_forms (identification_number, deceased_name, father_name, mother_name, birth_date, death_date, death_time, burial_date, burial_time, burial_license, death_location, informant_name, informant_phone, informant_relationship, notes, client_signature, form_uuid, status, created_by, progress_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+[27-Jul-2025 11:08:01 Asia/Jerusalem] Values: Array
+(
+    [0] => 
+    [1] => 
+    [2] => 
+    [3] => 
+    [4] => 
+    [5] => 
+    [6] => 
+    [7] => 
+    [8] => 
+    [9] => 
+    [10] => 
+    [11] => 
+    [12] => 
+    [13] => 
+    [14] => 
+    [15] => 
+    [16] => 1ea03e30-9b05-4e16-830f-ba7d80185284
+    [17] => draft
+    [18] => 1
+    [19] => 0
+)
+
+[27-Jul-2025 11:08:01 Asia/Jerusalem] Form created successfully - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, ID: 23, Status: draft
+[27-Jul-2025 11:08:05 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:08:18 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:09:05 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:09:05 Asia/Jerusalem] Updating form - ID: 23, New Status: draft
+[27-Jul-2025 11:09:23 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:09:40 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:09:40 Asia/Jerusalem] Updating form - ID: 23, New Status: completed
+[27-Jul-2025 11:09:50 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:09:50 Asia/Jerusalem] Updating form - ID: 23, New Status: completed
+[27-Jul-2025 11:09:58 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:10:06 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:10:06 Asia/Jerusalem] Updating form - ID: 23, New Status: draft
+[27-Jul-2025 11:10:14 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:10:14 Asia/Jerusalem] Updating form - ID: 23, New Status: draft
+[27-Jul-2025 11:10:18 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:10:18 Asia/Jerusalem] Updating form - ID: 23, New Status: draft
+[27-Jul-2025 11:10:30 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:10:40 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:10:40 Asia/Jerusalem] Updating form - ID: 23, New Status: completed
+[27-Jul-2025 11:10:55 Asia/Jerusalem] FORM ACCESS - UUID: 1ea03e30-9b05-4e16-830f-ba7d80185284, Is New: NO, User: 1
+[27-Jul-2025 11:10:55 Asia/Jerusalem] Updating form - ID: 23, New Status: completed
+[27-Jul-2025 11:10:58 Asia/Jerusalem] PHP Warning:  Undefined array key "form_uuid" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 151
+[27-Jul-2025 11:10:58 Asia/Jerusalem] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 151
+[27-Jul-2025 11:10:58 Asia/Jerusalem] PHP Warning:  Undefined array key "created_at" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 365
+[27-Jul-2025 11:10:58 Asia/Jerusalem] PHP Deprecated:  strtotime(): Passing null to parameter #1 ($datetime) of type string is deprecated in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 365
+[27-Jul-2025 11:10:58 Asia/Jerusalem] PHP Warning:  Undefined array key "updated_at" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 370
+[27-Jul-2025 11:10:58 Asia/Jerusalem] PHP Deprecated:  strtotime(): Passing null to parameter #1 ($datetime) of type string is deprecated in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 370
+[27-Jul-2025 11:10:58 Asia/Jerusalem] PHP Warning:  Undefined array key "form_uuid" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 378
+[27-Jul-2025 11:10:58 Asia/Jerusalem] PHP Warning:  Undefined array key "form_uuid" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 384
+[27-Jul-2025 11:11:47 Asia/Jerusalem] Generated new UUID: 556ba0cf-e42b-44c4-8acb-0ac982abcaa2
+[27-Jul-2025 11:11:48 Asia/Jerusalem] FORM ACCESS - UUID: 556ba0cf-e42b-44c4-8acb-0ac982abcaa2, Is New: YES, User: 2
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Warning:  Undefined array key "cemetery_id" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 34
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Warning:  Undefined array key "form_uuid" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 151
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 151
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Warning:  Undefined array key "status" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 159
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Warning:  Undefined array key "status" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 159
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Warning:  Undefined array key "client_signature" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 333
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Warning:  Undefined array key "created_at" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 365
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Deprecated:  strtotime(): Passing null to parameter #1 ($datetime) of type string is deprecated in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 365
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Warning:  Undefined array key "updated_at" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 370
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Deprecated:  strtotime(): Passing null to parameter #1 ($datetime) of type string is deprecated in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 370
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Warning:  Undefined array key "form_uuid" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 378
+[27-Jul-2025 11:12:01 Asia/Jerusalem] PHP Warning:  Undefined array key "form_uuid" in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/view_form.php on line 384
