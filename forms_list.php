@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $db = getDbConnection();
-$userPermissionLevel = $_SESSION['permission_level'] ?? 1;
+$userPermissionLevel = $_SESSION['permission_level'] ?? 4;
 
 // פרמטרים לחיפוש וסינון
 $search = $_GET['search'] ?? '';

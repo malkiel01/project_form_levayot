@@ -67,3 +67,35 @@ Stack trace:
 #3 {main}
   thrown in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/config.php on line 58
 [21-Jul-2025 11:41:28 Asia/Jerusalem] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php:25) in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php on line 56
+[22-Jul-2025 13:18:45 Asia/Jerusalem] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php:23) in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/form.php on line 54
+[22-Jul-2025 13:19:37 Asia/Jerusalem] PHP Fatal error:  Composer detected issues in your platform: Your Composer dependencies require a PHP version ">= 8.3.0". You are running 7.4.33. in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/vendor/composer/platform_check.php on line 28
+[22-Jul-2025 13:24:51 Asia/Jerusalem] Error creating form: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '' for key 'form_uuid'
+[22-Jul-2025 13:32:54 Asia/Jerusalem] Error creating form: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '' for key 'form_uuid'
+[22-Jul-2025 13:55:20 Asia/Jerusalem] PHP Warning:  range(): Argument #2 ($end) must be a single byte, subsequent bytes are ignored in /home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/export.php on line 229
+[22-Jul-2025 23:20:24 Asia/Jerusalem] Error creating form: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '' for key 'form_uuid'
+[22-Jul-2025 23:45:02 Asia/Jerusalem] Error creating form: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '' for key 'form_uuid'
+[22-Jul-2025 23:52:05 Asia/Jerusalem] Error creating form: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '' for key 'form_uuid'
+[22-Jul-2025 23:52:18 Asia/Jerusalem] Error creating form: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '' for key 'form_uuid'
+[22-Jul-2025 23:56:09 Asia/Jerusalem] DEBUG SQL: INSERT INTO deceased_forms (identification_type, identification_number, deceased_name, father_name, mother_name, birth_date, death_date, death_time, burial_date, burial_time, burial_license, death_location, informant_name, informant_phone, informant_relationship, notes, client_signature) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+[22-Jul-2025 23:56:09 Asia/Jerusalem] DEBUG VALUES: Array
+(
+    [0] => baby
+    [1] => 
+    [2] => משה
+    [3] => 
+    [4] => 
+    [5] => 
+    [6] => 2025-06-29
+    [7] => 00:55
+    [8] => 2025-07-20
+    [9] => 23:59
+    [10] => 111
+    [11] => 
+    [12] => 
+    [13] => 
+    [14] => 
+    [15] => 
+    [16] => 
+)
+
+[22-Jul-2025 23:56:09 Asia/Jerusalem] Error creating form: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '' for key 'form_uuid'

@@ -1,5 +1,5 @@
 <?php
-// config.php - קובץ הגדרות
+// config.php - קובץ הגדרות משופר
 
 // הגדרות חיבור לדטהבייס
 define('DB_HOST', 'mbe-plus.com');
@@ -34,19 +34,58 @@ function getDbConnection() {
     }
 }
 
-// פונקציה ליצירת UUID
+// פונקציה משופרת ליצירת UUID
 function generateUUID() {
-    return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0x0fff) | 0x4000,
-        mt_rand(0, 0x3fff) | 0x8000,
-        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-    );
+    // שיטה 1: שימוש ב-random_bytes (מומלץ)
+    if (function_exists('random_bytes')) {
+        $data = random_bytes(16);
+        
+        // הגדרת ביטים לפי תקן UUID v4
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // גרסה 4
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // variant bits
+        
+        // המרה לפורמט UUID
+        $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    } else {
+        // שיטה 2: גיבוי עם mt_rand (פחות מאובטח)
+        $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        );
+    }
+    
+    // רישום בלוג
+    error_log("Generated new UUID: " . $uuid);
+    
+    // וידוא שה-UUID ייחודי בבסיס הנתונים
+    $db = getDbConnection();
+    $stmt = $db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE form_uuid = ?");
+    $stmt->execute([$uuid]);
+    
+    // אם כבר קיים, צור חדש (נדיר מאוד)
+    if ($stmt->fetchColumn() > 0) {
+        error_log("UUID collision detected, generating new one");
+        return generateUUID();
+    }
+    
+    return $uuid;
 }
 
 // פונקציה לבדיקת הרשאות
 function hasPermission($fieldName, $permissionLevel, $action = 'view') {
+    static $permissionsCache = [];
+    
+    // יצירת מפתח למטמון
+    $cacheKey = $fieldName . '_' . $permissionLevel . '_' . $action;
+    
+    // בדוק אם כבר במטמון
+    if (isset($permissionsCache[$cacheKey])) {
+        return $permissionsCache[$cacheKey];
+    }
+    
     $db = getDbConnection();
     $column = $action === 'edit' ? 'can_edit' : 'can_view';
     
@@ -58,7 +97,12 @@ function hasPermission($fieldName, $permissionLevel, $action = 'view') {
     $stmt->execute([$fieldName, $permissionLevel]);
     $result = $stmt->fetch();
     
-    return $result ? (bool)$result[$column] : false;
+    $hasPermission = $result ? (bool)$result[$column] : false;
+    
+    // שמור במטמון
+    $permissionsCache[$cacheKey] = $hasPermission;
+    
+    return $hasPermission;
 }
 
 // פונקציה לסניטציה של קלט
@@ -86,6 +130,36 @@ function validateIsraeliId($id) {
     return $sum % 10 === 0;
 }
 
+// פונקציה לרישום פעילות
+function logActivity($action, $details = [], $formId = null) {
+    try {
+        $db = getDbConnection();
+        $stmt = $db->prepare("
+            INSERT INTO activity_log (user_id, form_id, action, details, ip_address, user_agent) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        
+        $stmt->execute([
+            $_SESSION['user_id'] ?? null,
+            $formId,
+            $action,
+            json_encode($details),
+            $_SERVER['REMOTE_ADDR'] ?? '',
+            $_SERVER['HTTP_USER_AGENT'] ?? ''
+        ]);
+    } catch (Exception $e) {
+        error_log("Failed to log activity: " . $e->getMessage());
+    }
+}
+
+// פונקציה להצגת הודעות דיבוג בקונסול
+function debugLog($message, $data = null) {
+    if ($data !== null) {
+        $message .= ' - ' . json_encode($data);
+    }
+    echo "<script>console.log('DEBUG: " . addslashes($message) . "');</script>";
+}
+
 // התחלת סשן
 session_name(SESSION_NAME);
 session_start();
@@ -94,3 +168,26 @@ session_start();
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+
+// הגדרת error reporting בהתאם לסביבה
+if (isset($_ENV['APP_ENV']) && $_ENV['APP_ENV'] === 'production') {
+    error_reporting(0);
+    ini_set('display_errors', '0');
+} else {
+    error_reporting(E_ALL);
+    ini_set('display_errors', '1');
+}
+
+// וידוא שתיקיית uploads קיימת
+if (!is_dir(UPLOAD_PATH)) {
+    mkdir(UPLOAD_PATH, 0777, true);
+}
+
+// וידוא שתיקיית logs קיימת
+$logsPath = __DIR__ . '/logs/';
+if (!is_dir($logsPath)) {
+    mkdir($logsPath, 0777, true);
+}
+
+// הגדרת קובץ לוג
+ini_set('error_log', $logsPath . 'php_errors.log');
