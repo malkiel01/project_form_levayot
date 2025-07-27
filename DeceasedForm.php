@@ -31,7 +31,6 @@ class DeceasedForm {
         return false;
     }
 
-    // -------------------------------------
     // יצירת טופס חדש
     public function createForm($data) {
         // וודא שיש UUID תקין
@@ -199,6 +198,87 @@ class DeceasedForm {
         }
     }
 
+    /**
+     * יצירת קישור חדש לטופס
+     * 
+     * @param string $formUuid יוניק של הטופס
+     * @param int $permissionLevel רמת הרשאה למשתמשים לא רשומים
+     * @param array|null $allowedUserIds מזהי משתמשים מורשים (או NULL לכולם)
+     * @param bool $canEdit האם ניתן לערוך (true) או רק לצפות (false)
+     * @param string|null $expiresAt תאריך תפוגה (פורמט Y-m-d H:i:s) או NULL ללא תפוגה
+     * @param int|null $createdBy מזהה המשתמש שיצר את הקישור
+     * @return string ה-UUID של הקישור שנוצר
+     */
+    function createFormLink($formUuid, $permissionLevel = 4, $allowedUserIds = null, $canEdit = false, $expiresAt = null, $createdBy = null) {
+        $db = getDbConnection();
+
+        // יצירת link_uuid ייחודי
+        $linkUuid = generateUUID();
+
+        // הכנת השאילתה
+        $stmt = $db->prepare("
+            INSERT INTO form_links 
+                (link_uuid, form_uuid, permission_level, allowed_user_ids, can_edit, expires_at, created_by) 
+            VALUES 
+                (?, ?, ?, ?, ?, ?, ?)
+        ");
+
+        // הפיכת מערך מזהי משתמשים ל-JSON אם קיים
+        $allowedUserIdsJson = $allowedUserIds ? json_encode($allowedUserIds) : null;
+
+        // ביצוע השאילתה
+        $stmt->execute([
+            $linkUuid, 
+            $formUuid, 
+            $permissionLevel, 
+            $allowedUserIdsJson, 
+            $canEdit, 
+            $expiresAt, 
+            $createdBy
+        ]);
+
+        return $linkUuid;
+    }
+
+    /**
+     * בדיקת קישור לטופס
+     *
+     * @param string $linkUuid
+     * @return array|false מחזיר מערך עם נתוני הקישור וההרשאות, או false אם הקישור לא תקף
+     */
+    function checkFormLink($linkUuid) {
+        $db = getDbConnection();
+
+        // טעינת הקישור מטבלת form_links
+        $stmt = $db->prepare("SELECT * FROM form_links WHERE link_uuid = ?");
+        $stmt->execute([$linkUuid]);
+        $linkData = $stmt->fetch();
+
+        if (!$linkData) {
+            return false; // קישור לא קיים
+        }
+
+        // בדיקת תאריך תפוגה
+        if ($linkData['expires_at'] && strtotime($linkData['expires_at']) < time()) {
+            return false; // הקישור פג תוקף
+        }
+
+        // אם יש הגבלה על משתמשים ספציפיים
+        if ($linkData['allowed_user_ids']) {
+            $allowedUsers = json_decode($linkData['allowed_user_ids'], true);
+
+            if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_id'], $allowedUsers)) {
+                return false; // המשתמש לא מורשה
+            }
+        }
+
+        return [
+            'form_uuid' => $linkData['form_uuid'],
+            'permission_level' => isset($_SESSION['permission_level']) ? $_SESSION['permission_level'] : $linkData['permission_level'],
+            'can_edit' => $linkData['can_edit']
+        ];
+    }
+
     // פונקציה חדשה לבדיקה האם כל שדות החובה מלאים
     private function areAllRequiredFieldsFilled($data) {
         $requiredFields = $this->getRequiredFields();
@@ -246,69 +326,6 @@ class DeceasedForm {
         }
         
         return $errors;
-    }
-    // -------------------------------------
-    
-    // יצירת טופס חדש
-    public function createFormOld($data) {
-        $data['form_uuid'] = generateUUID();
-        $data['created_by'] = $_SESSION['user_id'] ?? null;
-        
-        // חישוב אחוז התקדמות
-        $data['progress_percentage'] = $this->calculateProgress($data);
-        
-        // בניית שאילתת INSERT
-        $fields = [];
-        $values = [];
-        $placeholders = [];
-        
-        foreach ($data as $field => $value) {
-            if ($this->canEditField($field)) {
-                $fields[] = $field;
-                $values[] = $value;
-                $placeholders[] = '?';
-            }
-        }
-        
-        $sql = "INSERT INTO deceased_forms (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($values);
-        
-        $this->formId = $this->db->lastInsertId();
-        $this->loadForm($data['form_uuid']);
-        
-        return $data['form_uuid'];
-    }
-    
-    // עדכון טופס
-    public function updateFormOld($data) {
-        if (!$this->formId) {
-            throw new Exception("No form loaded");
-        }
-        
-        $data['updated_by'] = $_SESSION['user_id'] ?? null;
-        $data['progress_percentage'] = $this->calculateProgress(array_merge($this->formData, $data));
-        
-        // בניית שאילתת UPDATE
-        $fields = [];
-        $values = [];
-        
-        foreach ($data as $field => $value) {
-            if ($this->canEditField($field)) {
-                $fields[] = "$field = ?";
-                $values[] = $value;
-            }
-        }
-        
-        if (empty($fields)) {
-            return false;
-        }
-        
-        $values[] = $this->formId;
-        $sql = "UPDATE deceased_forms SET " . implode(', ', $fields) . " WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
-        
-        return $stmt->execute($values);
     }
     
     // שמירת חתימה
@@ -358,21 +375,6 @@ class DeceasedForm {
     }
     
     // קבלת נתוני הטופס עם סינון לפי הרשאות
-    // public function getFormData() {
-    //     if (!$this->formData) {
-    //         return null;
-    //     }
-        
-    //     $filteredData = [];
-    //     foreach ($this->formData as $field => $value) {
-    //         if ($this->canViewField($field)) {
-    //             $filteredData[$field] = $value;
-    //         }
-    //     }
-        
-    //     return $filteredData;
-    // }
-    // קבלת נתוני הטופס עם סינון לפי הרשאות
     public function getFormData() {
         if (!$this->formData && $this->formId) {
             $this->loadForm($this->formData['form_uuid'] ?? null);
@@ -392,44 +394,6 @@ class DeceasedForm {
         return $filteredData;
     }
 
-    
-    // ולידציה של הטופס
-    public function validateFormOld($data) {
-        $errors = [];
-        
-        // בדיקת שדות חובה
-        $requiredFields = $this->getRequiredFields();
-        foreach ($requiredFields as $field) {
-            if (empty($data[$field])) {
-                $errors[$field] = "שדה חובה";
-            }
-        }
-        
-        // ולידציות ספציפיות
-        if (!empty($data['identification_type'])) {
-            if (in_array($data['identification_type'], ['tz', 'passport'])) {
-                if (empty($data['identification_number'])) {
-                    $errors['identification_number'] = "מספר זיהוי הוא שדה חובה עבור סוג זיהוי זה";
-                } elseif ($data['identification_type'] === 'tz' && !validateIsraeliId($data['identification_number'])) {
-                    $errors['identification_number'] = "מספר תעודת זהות לא תקין";
-                }
-                
-                if (empty($data['birth_date'])) {
-                    $errors['birth_date'] = "תאריך לידה הוא שדה חובה עבור סוג זיהוי זה";
-                }
-            }
-        }
-        
-        // בדיקת תאריכים
-        if (!empty($data['death_date']) && !empty($data['burial_date'])) {
-            if (strtotime($data['burial_date']) < strtotime($data['death_date'])) {
-                $errors['burial_date'] = "תאריך הקבורה לא יכול להיות לפני תאריך הפטירה";
-            }
-        }
-        
-        return $errors;
-    }
-    
     // קבלת רשימת בתי עלמין
     public function getCemeteries() {
         if (!$this->canViewField('cemetery_id')) {

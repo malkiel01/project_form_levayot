@@ -4,11 +4,50 @@
 require_once 'config.php';
 require_once 'DeceasedForm.php';
 
-// בדיקת התחברות
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
+// בדיקת כניסה מקישור או התחברות
+if (isset($_GET['link'])) {
+    $linkInfo = checkFormLink($_GET['link']);
+
+    if (!$linkInfo) {
+        die('הקישור אינו זמין או פג תוקף.');
+    }
+
+    // הגדרת רמת הרשאה זמנית לפי הקישור
+    $userPermissionLevel = $linkInfo['permission_level'];
+    $_SESSION['temp_permission_level'] = $userPermissionLevel;
+
+    // טען את הטופס לפי הקישור
+    $formUuid = $linkInfo['form_uuid'];
+    $form = new DeceasedForm($formUuid, $userPermissionLevel);
+    $formData = $form->getFormData();
+
+    if (!$formData) {
+        die('הטופס לא נמצא.');
+    }
+
+    // אם אין הרשאת עריכה, טען במצב צפייה בלבד
+    if (!$linkInfo['can_edit']) {
+        $_SESSION['view_only'] = true;
+    }
+
+} else {
+    // התנהגות רגילה אם לא נכנסים מקישור
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: login.php');
+        exit;
+    }
+
+    $userPermissionLevel = $_SESSION['permission_level'];
 }
+
+// דוגמה לנטרול כפתור שמירה במצב צפייה בלבד
+$viewOnly = isset($_SESSION['view_only']) && $_SESSION['view_only'];
+
+// // בדיקת התחברות
+// if (!isset($_SESSION['user_id'])) {
+//     header('Location: login.php');
+//     exit;
+// }
 
 // קבלת רמת הרשאה
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
@@ -30,24 +69,6 @@ if (!$formUuid) {
     // הפניה לכתובת עם ה-UUID החדש
     header("Location: form.php?id=" . $formUuid);
     exit;
-// } else {
-//     // יש UUID - בדוק אם הטופס קיים
-//     $form = new DeceasedForm($formUuid, $userPermissionLevel);
-//     $existingFormData = $form->getFormData();
-    
-//     if (!$existingFormData) {
-//         // הטופס לא קיים - זה טופס חדש
-//         $isNewForm = true;
-//         $formData = []; // טופס ריק
-        
-//         // יצירת אובייקט טופס חדש ללא UUID (נעביר אותו בשמירה)
-//         $form = new DeceasedForm(null, $userPermissionLevel);
-//     } else {
-//         // הטופס קיים - טען את הנתונים
-//         $isNewForm = false;
-//         $formData = $existingFormData;
-//     }
-// }
 } else {
     // יש UUID - בדוק אם הטופס קיים
     $form = new DeceasedForm($formUuid, $userPermissionLevel);
@@ -639,18 +660,18 @@ if ($form) {
                     <div class="col-12 text-center">
                         <?php if ($isNewForm): ?>
                             <!-- כפתורים לטופס חדש -->
-                            <button type="submit" name="save" class="btn btn-primary btn-lg">
+                            <button type="submit" name="save" class="btn btn-primary btn-lg" <?= $viewOnly ? 'disabled' : '' ?>>
                                 <i class="fas fa-save"></i> צור טופס
                             </button>
-                            <button type="submit" name="save_and_view" value="1" class="btn btn-success btn-lg ms-2">
+                            <button type="submit" name="save_and_view" value="1" class="btn btn-success btn-lg ms-2" <?= $viewOnly ? 'disabled' : '' ?>>
                                 <i class="fas fa-save"></i> צור וצפה בטופס
                             </button>
                         <?php else: ?>
                             <!-- כפתורים לטופס קיים -->
-                            <button type="submit" name="save" class="btn btn-primary btn-lg">
+                            <button type="submit" name="save" class="btn btn-primary btn-lg" <?= $viewOnly ? 'disabled' : '' ?>>
                                 <i class="fas fa-save"></i> שמור שינויים
                             </button>
-                            <button type="submit" name="save_and_view" value="1" class="btn btn-success btn-lg ms-2">
+                            <button type="submit" name="save_and_view" value="1" class="btn btn-success btn-lg ms-2" <?= $viewOnly ? 'disabled' : '' ?>>
                                 <i class="fas fa-save"></i> שמור וצפה בטופס
                             </button>
                             <a href="view_form.php?id=<?= $formUuid ?>" class="btn btn-info btn-lg ms-2">
