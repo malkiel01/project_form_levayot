@@ -358,20 +358,40 @@ class DeceasedForm {
     }
     
     // קבלת נתוני הטופס עם סינון לפי הרשאות
+    // public function getFormData() {
+    //     if (!$this->formData) {
+    //         return null;
+    //     }
+        
+    //     $filteredData = [];
+    //     foreach ($this->formData as $field => $value) {
+    //         if ($this->canViewField($field)) {
+    //             $filteredData[$field] = $value;
+    //         }
+    //     }
+        
+    //     return $filteredData;
+    // }
+    // קבלת נתוני הטופס עם סינון לפי הרשאות
     public function getFormData() {
+        if (!$this->formData && $this->formId) {
+            $this->loadForm($this->formData['form_uuid'] ?? null);
+        }
+
         if (!$this->formData) {
             return null;
         }
-        
+
         $filteredData = [];
         foreach ($this->formData as $field => $value) {
             if ($this->canViewField($field)) {
                 $filteredData[$field] = $value;
             }
         }
-        
+
         return $filteredData;
     }
+
     
     // ולידציה של הטופס
     public function validateFormOld($data) {

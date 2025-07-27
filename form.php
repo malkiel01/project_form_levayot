@@ -30,24 +30,46 @@ if (!$formUuid) {
     // הפניה לכתובת עם ה-UUID החדש
     header("Location: form.php?id=" . $formUuid);
     exit;
+// } else {
+//     // יש UUID - בדוק אם הטופס קיים
+//     $form = new DeceasedForm($formUuid, $userPermissionLevel);
+//     $existingFormData = $form->getFormData();
+    
+//     if (!$existingFormData) {
+//         // הטופס לא קיים - זה טופס חדש
+//         $isNewForm = true;
+//         $formData = []; // טופס ריק
+        
+//         // יצירת אובייקט טופס חדש ללא UUID (נעביר אותו בשמירה)
+//         $form = new DeceasedForm(null, $userPermissionLevel);
+//     } else {
+//         // הטופס קיים - טען את הנתונים
+//         $isNewForm = false;
+//         $formData = $existingFormData;
+//     }
+// }
 } else {
     // יש UUID - בדוק אם הטופס קיים
     $form = new DeceasedForm($formUuid, $userPermissionLevel);
     $existingFormData = $form->getFormData();
-    
+
     if (!$existingFormData) {
-        // הטופס לא קיים - זה טופס חדש
         $isNewForm = true;
-        $formData = []; // טופס ריק
-        
-        // יצירת אובייקט טופס חדש ללא UUID (נעביר אותו בשמירה)
+        $formData = [];
         $form = new DeceasedForm(null, $userPermissionLevel);
     } else {
-        // הטופס קיים - טען את הנתונים
         $isNewForm = false;
         $formData = $existingFormData;
     }
+
+    // אם יש סימן ששמרנו הרגע, טען את הנתונים מחדש באופן מפורש
+    if (isset($_GET['saved'])) {
+        $formData = $form->getFormData();
+    }
 }
+
+
+
 
 // רישום בלוג - רק ללוג, לא לפלט
 error_log("FORM ACCESS - UUID: $formUuid, Is New: " . ($isNewForm ? 'YES' : 'NO') . ", User: " . $_SESSION['user_id']);
