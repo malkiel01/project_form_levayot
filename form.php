@@ -4,53 +4,115 @@
 require_once 'config.php';
 require_once 'DeceasedForm.php';
 
-// בדיקת כניסה מקישור או התחברות
+// בדיקת כניסה מקישור שיתוף
+$isLinkAccess = false;
+$linkPermissions = null;
+$viewOnly = false;
+
 if (isset($_GET['link'])) {
-    $linkInfo = checkFormLink($_GET['link']);
-
-    if (!$linkInfo) {
-        die('הקישור אינו זמין או פג תוקף.');
+    $linkUuid = $_GET['link'];
+    
+    // בדוק תקינות הקישור
+    $db = getDbConnection();
+    $linkStmt = $db->prepare("
+        SELECT * FROM form_links 
+        WHERE link_uuid = ? 
+        AND (expires_at IS NULL OR expires_at > NOW())
+    ");
+    $linkStmt->execute([$linkUuid]);
+    $linkData = $linkStmt->fetch();
+    
+    if ($linkData) {
+        $isLinkAccess = true;
+        
+        // בדוק אם יש הגבלה על משתמשים ספציפיים
+        $accessGranted = true;
+        if ($linkData['allowed_user_ids']) {
+            $allowedUsers = json_decode($linkData['allowed_user_ids'], true);
+            if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_id'], $allowedUsers)) {
+                $accessGranted = false;
+            }
+        }
+        
+        if ($accessGranted) {
+            // הגדר הרשאות זמניות
+            $linkPermissions = [
+                'form_uuid' => $linkData['form_uuid'],
+                'permission_level' => isset($_SESSION['permission_level']) ? 
+                    $_SESSION['permission_level'] : $linkData['permission_level'],
+                'can_edit' => $linkData['can_edit'],
+                'link_uuid' => $linkUuid
+            ];
+            
+            // אם אין הרשאת עריכה
+            if (!$linkData['can_edit']) {
+                $viewOnly = true;
+            }
+            
+            // הגדר את ה-UUID של הטופס
+            $formUuid = $linkData['form_uuid'];
+            
+            // רישום גישה בלוג
+            $logStmt = $db->prepare("
+                INSERT INTO activity_log (user_id, form_id, action, details, ip_address, user_agent) 
+                VALUES (?, (SELECT id FROM deceased_forms WHERE form_uuid = ?), 'access_via_link', ?, ?, ?)
+            ");
+            $logStmt->execute([
+                $_SESSION['user_id'] ?? null,
+                $formUuid,
+                json_encode(['link_uuid' => $linkUuid]),
+                $_SERVER['REMOTE_ADDR'] ?? '',
+                $_SERVER['HTTP_USER_AGENT'] ?? ''
+            ]);
+            
+            // עדכן זמן שימוש אחרון בקישור
+            $updateStmt = $db->prepare("
+                UPDATE form_links 
+                SET last_used = NOW(), use_count = use_count + 1 
+                WHERE link_uuid = ?
+            ");
+            $updateStmt->execute([$linkUuid]);
+            
+        } else {
+            // אין הרשאה
+            die('
+                <div style="text-align: center; margin-top: 50px; font-family: Arial;">
+                    <h2>אין לך הרשאה לצפות בטופס זה</h2>
+                    <p>הקישור מוגבל למשתמשים ספציפיים בלבד.</p>
+                    <a href="login.php">התחבר למערכת</a>
+                </div>
+            ');
+        }
+    } else {
+        // קישור לא תקף
+        die('
+            <div style="text-align: center; margin-top: 50px; font-family: Arial;">
+                <h2>קישור לא תקף</h2>
+                <p>הקישור אינו קיים או שפג תוקפו.</p>
+                <a href="login.php">עבור לדף הכניסה</a>
+            </div>
+        ');
     }
-
-    // הגדרת רמת הרשאה זמנית לפי הקישור
-    $userPermissionLevel = $linkInfo['permission_level'];
-    $_SESSION['temp_permission_level'] = $userPermissionLevel;
-
-    // טען את הטופס לפי הקישור
-    $formUuid = $linkInfo['form_uuid'];
-    $form = new DeceasedForm($formUuid, $userPermissionLevel);
-    $formData = $form->getFormData();
-
-    if (!$formData) {
-        die('הטופס לא נמצא.');
-    }
-
-    // אם אין הרשאת עריכה, טען במצב צפייה בלבד
-    if (!$linkInfo['can_edit']) {
-        $_SESSION['view_only'] = true;
-    }
-
 } else {
-    // התנהגות רגילה אם לא נכנסים מקישור
+    // כניסה רגילה - דורשת התחברות
     if (!isset($_SESSION['user_id'])) {
         header('Location: login.php');
         exit;
     }
+}
 
-    $userPermissionLevel = $_SESSION['permission_level'];
+// קביעת רמת הרשאה
+if ($isLinkAccess && $linkPermissions) {
+    $userPermissionLevel = $linkPermissions['permission_level'];
+} else {
+    $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 }
 
 // דוגמה לנטרול כפתור שמירה במצב צפייה בלבד
 $viewOnly = isset($_SESSION['view_only']) && $_SESSION['view_only'];
 
-// // בדיקת התחברות
-// if (!isset($_SESSION['user_id'])) {
-//     header('Location: login.php');
-//     exit;
-// }
-
-// קבלת רמת הרשאה
-$userPermissionLevel = $_SESSION['permission_level'] ?? 1;
+// // קבלת רמת הרשאה
+// $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 
 // בדיקה אם יש ID של טופס ב-URL
 $formUuid = $_GET['id'] ?? null;

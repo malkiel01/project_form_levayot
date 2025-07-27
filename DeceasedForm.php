@@ -201,7 +201,7 @@ class DeceasedForm {
     /**
      * יצירת קישור חדש לטופס
      * 
-     * @param string $formUuid יוניק של הטופס
+     * @param string $formUuid מזהה הטופס
      * @param int $permissionLevel רמת הרשאה למשתמשים לא רשומים
      * @param array|null $allowedUserIds מזהי משתמשים מורשים (או NULL לכולם)
      * @param bool $canEdit האם ניתן לערוך (true) או רק לצפות (false)
@@ -232,7 +232,7 @@ class DeceasedForm {
             $formUuid, 
             $permissionLevel, 
             $allowedUserIdsJson, 
-            $canEdit, 
+            $canEdit ? 1 : 0, 
             $expiresAt, 
             $createdBy
         ]);
@@ -241,41 +241,122 @@ class DeceasedForm {
     }
 
     /**
-     * בדיקת קישור לטופס
+     * בדיקת תקינות קישור לטופס
      *
-     * @param string $linkUuid
+     * @param string $linkUuid מזהה הקישור
      * @return array|false מחזיר מערך עם נתוני הקישור וההרשאות, או false אם הקישור לא תקף
      */
     function checkFormLink($linkUuid) {
         $db = getDbConnection();
 
         // טעינת הקישור מטבלת form_links
-        $stmt = $db->prepare("SELECT * FROM form_links WHERE link_uuid = ?");
+        $stmt = $db->prepare("
+            SELECT * FROM form_links 
+            WHERE link_uuid = ? 
+            AND (expires_at IS NULL OR expires_at > NOW())
+        ");
         $stmt->execute([$linkUuid]);
         $linkData = $stmt->fetch();
 
         if (!$linkData) {
-            return false; // קישור לא קיים
+            return false; // קישור לא קיים או פג תוקף
         }
 
-        // בדיקת תאריך תפוגה
-        if ($linkData['expires_at'] && strtotime($linkData['expires_at']) < time()) {
-            return false; // הקישור פג תוקף
-        }
-
-        // אם יש הגבלה על משתמשים ספציפיים
+        // בדיקת הגבלות משתמשים
         if ($linkData['allowed_user_ids']) {
             $allowedUsers = json_decode($linkData['allowed_user_ids'], true);
 
+            // אם יש הגבלה על משתמשים ספציפיים ואין משתמש מחובר
             if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_id'], $allowedUsers)) {
                 return false; // המשתמש לא מורשה
             }
         }
 
+        // עדכון מונה השימוש
+        $updateStmt = $db->prepare("
+            UPDATE form_links 
+            SET last_used = NOW(), use_count = use_count + 1 
+            WHERE link_uuid = ?
+        ");
+        $updateStmt->execute([$linkUuid]);
+
+        // רישום גישה בלוג
+        $logStmt = $db->prepare("
+            INSERT INTO form_link_access_log 
+                (link_uuid, user_id, ip_address, user_agent) 
+            VALUES 
+                (?, ?, ?, ?)
+        ");
+        $logStmt->execute([
+            $linkUuid,
+            $_SESSION['user_id'] ?? null,
+            $_SERVER['REMOTE_ADDR'] ?? '',
+            $_SERVER['HTTP_USER_AGENT'] ?? ''
+        ]);
+
         return [
             'form_uuid' => $linkData['form_uuid'],
-            'permission_level' => isset($_SESSION['permission_level']) ? $_SESSION['permission_level'] : $linkData['permission_level'],
-            'can_edit' => $linkData['can_edit']
+            'permission_level' => $linkData['permission_level'],
+            'can_edit' => (bool)$linkData['can_edit'],
+            'expires_at' => $linkData['expires_at'],
+            'description' => $linkData['description']
+        ];
+    }
+
+    /**
+     * קבלת סטטיסטיקות על קישור
+     *
+     * @param string $linkUuid מזהה הקישור
+     * @return array|false מחזיר מערך עם סטטיסטיקות או false אם הקישור לא נמצא
+     */
+    function getLinkStats($linkUuid) {
+        $db = getDbConnection();
+        
+        // קבלת נתוני הקישור
+        $linkStmt = $db->prepare("
+            SELECT fl.*, df.deceased_name, u.full_name as created_by_name
+            FROM form_links fl
+            LEFT JOIN deceased_forms df ON fl.form_uuid = df.form_uuid
+            LEFT JOIN users u ON fl.created_by = u.id
+            WHERE fl.link_uuid = ?
+        ");
+        $linkStmt->execute([$linkUuid]);
+        $linkData = $linkStmt->fetch();
+        
+        if (!$linkData) {
+            return false;
+        }
+        
+        // קבלת היסטוריית גישות
+        $accessStmt = $db->prepare("
+            SELECT fla.*, u.full_name as user_name
+            FROM form_link_access_log fla
+            LEFT JOIN users u ON fla.user_id = u.id
+            WHERE fla.link_uuid = ?
+            ORDER BY fla.accessed_at DESC
+            LIMIT 100
+        ");
+        $accessStmt->execute([$linkUuid]);
+        $accessHistory = $accessStmt->fetchAll();
+        
+        // סטטיסטיקות מצטברות
+        $statsStmt = $db->prepare("
+            SELECT 
+                COUNT(DISTINCT user_id) as unique_users,
+                COUNT(DISTINCT ip_address) as unique_ips,
+                COUNT(*) as total_views,
+                MIN(accessed_at) as first_access,
+                MAX(accessed_at) as last_access
+            FROM form_link_access_log
+            WHERE link_uuid = ?
+        ");
+        $statsStmt->execute([$linkUuid]);
+        $stats = $statsStmt->fetch();
+        
+        return [
+            'link' => $linkData,
+            'stats' => $stats,
+            'history' => $accessHistory
         ];
     }
 
