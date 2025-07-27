@@ -1095,30 +1095,10 @@ if ($form) {
                 alert('יש לשמור את הטופס לפני השיתוף');
                 return;
             }
-            
-            const formUrl = window.location.href;
-            if (navigator.share) {
-                navigator.share({
-                    title: 'טופס הזנת נפטר',
-                    url: formUrl
-                }).catch(() => {
-                    console.log('Error sharing:', err);
-                    copyToClipboard(formUrl);
-                });
-            } else {
-                copyToClipboard(formUrl);
-            }
-        }
-        // שיתוף טופס
-        function shareForm() {
-            if (isNewForm) {
-                alert('יש לשמור את הטופס לפני השיתוף');
-                return;
-            }
 
             const formUuid = '<?= $formUuid ?>'; // מזהה הטופס מהשרת
 
-            console.log('test1');
+
             // צור קישור חדש באמצעות AJAX
             $.post('ajax/create_share_link.php', { form_uuid: formUuid }, function(response) {
                 if (response.error) {
@@ -1146,6 +1126,78 @@ if ($form) {
                 alert('שגיאה ביצירת הקישור.');
             });
         }
+
+        // החלף את הפונקציה shareForm הישנה בפונקציה הזו:
+
+        function shareForm() {
+            if (isNewForm) {
+                alert('יש לשמור את הטופס לפני השיתוף');
+                return;
+            }
+            
+            // טען רשימת משתמשים אם צריך
+            loadUsersList();
+            
+            // פתח את המודל לבחירת אפשרויות השיתוף
+            $('#shareFormModal').modal('show');
+        }
+
+        // אם אתה רוצה לשמור גם את האפשרות הישנה של שיתוף מהיר, 
+        // תוכל להוסיף פונקציה נוספת:
+
+        function quickShareForm() {
+            if (isNewForm) {
+                alert('יש לשמור את הטופס לפני השיתוף');
+                return;
+            }
+
+            const formUuid = '<?= $formUuid ?>';
+            
+            // יצירת קישור מהיר עם הגדרות ברירת מחדל
+            const formData = new FormData();
+            formData.append('form_uuid', formUuid);
+            formData.append('allowed_users', 'null'); // פתוח לכולם
+            formData.append('can_edit', '0'); // צפייה בלבד
+            formData.append('permission_level', '4'); // רמת הרשאה 4
+            formData.append('expires_at', 'null'); // ללא תפוגה
+            formData.append('description', 'קישור מהיר');
+            
+            $.ajax({
+                url: 'ajax/create_share_link.php',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const formUrl = response.link;
+                        
+                        if (navigator.share) {
+                            navigator.share({
+                                title: 'טופס הזנת נפטר',
+                                url: formUrl
+                            }).catch((err) => {
+                                console.log('Error sharing:', err);
+                                copyToClipboard(formUrl);
+                            });
+                        } else {
+                            copyToClipboard(formUrl);
+                        }
+                    } else {
+                        alert('שגיאה ביצירת קישור: ' + (response.message || 'שגיאה לא ידועה'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    alert('שגיאה ביצירת הקישור');
+                }
+            });
+        }
+
+        // ואם תרצה, תוכל להוסיף שני כפתורים בממשק:
+        // 1. כפתור "שיתוף מתקדם" שקורא ל-shareForm()
+        // 2. כפתור "שיתוף מהיר" שקורא ל-quickShareForm()
 
         
         function copyToClipboard(text) {
