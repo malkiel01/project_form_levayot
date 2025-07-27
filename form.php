@@ -1057,7 +1057,7 @@ if ($form) {
             const formUuid = '<?= $formUuid ?>'; // מזהה הטופס מהשרת
 
             // צור קישור חדש באמצעות AJAX
-            $.post('./ajax/create_share_link.php', { form_uuid: formUuid }, function(response) {
+            $.post('ajax/create_share_link.php', { form_uuid: formUuid }, function(response) {
                 if (response.error) {
                     alert('שגיאה ביצירת קישור: ' + response.error);
                     return;
