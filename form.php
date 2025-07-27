@@ -111,11 +111,10 @@ if ($isLinkAccess && $linkPermissions) {
 // דוגמה לנטרול כפתור שמירה במצב צפייה בלבד
 $viewOnly = isset($_SESSION['view_only']) && $_SESSION['view_only'];
 
-// // קבלת רמת הרשאה
-// $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
-
 // בדיקה אם יש ID של טופס ב-URL
-$formUuid = $_GET['id'] ?? null;
+if (!$formUuid) {
+    $formUuid = $_GET['id'] ?? null;
+}
 
 // משתנים לשימוש בהמשך
 $isNewForm = false;
@@ -150,9 +149,6 @@ if (!$formUuid) {
         $formData = $form->getFormData();
     }
 }
-
-
-
 
 // רישום בלוג - רק ללוג, לא לפלט
 error_log("FORM ACCESS - UUID: $formUuid, Is New: " . ($isNewForm ? 'YES' : 'NO') . ", User: " . $_SESSION['user_id']);
@@ -757,167 +753,167 @@ if ($form) {
 
     <!-- תוספת ל-form.php - הוסיפי בסוף הקובץ לפני תג ה-</body> -->
 
-<!-- Modal יצירת קישור שיתוף -->
-<div class="modal fade" id="shareFormModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">יצירת קישור שיתוף</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="shareLinkForm">
-                    <!-- סוג גישה -->
-                    <div class="mb-3">
-                        <label class="form-label">סוג גישה</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="access_type" id="access_public" value="public" checked>
-                            <label class="form-check-label" for="access_public">
-                                <i class="fas fa-globe"></i> פתוח לכולם
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="access_type" id="access_users" value="users">
-                            <label class="form-check-label" for="access_users">
-                                <i class="fas fa-users"></i> משתמשים ספציפיים
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- בחירת משתמשים -->
-                    <div class="mb-3" id="usersSelectDiv" style="display: none;">
-                        <label for="allowed_users" class="form-label">בחר משתמשים מורשים</label>
-                        <select class="form-select" id="allowed_users" name="allowed_users[]" multiple size="5">
-                            <!-- יטען באמצעות AJAX -->
-                        </select>
-                        <small class="form-text text-muted">החזק Ctrl לבחירה מרובה</small>
-                    </div>
-
-                    <!-- הרשאות -->
-                    <div class="mb-3">
-                        <label class="form-label">הרשאות</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="permission_mode" id="view_only" value="view" checked>
-                            <label class="form-check-label" for="view_only">
-                                <i class="fas fa-eye"></i> צפייה בלבד
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="permission_mode" id="can_edit" value="edit">
-                            <label class="form-check-label" for="can_edit">
-                                <i class="fas fa-edit"></i> צפייה ועריכה
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- רמת הרשאה -->
-                    <div class="mb-3">
-                        <label for="permission_level" class="form-label">רמת הרשאה למשתמשים לא רשומים</label>
-                        <select class="form-select" id="permission_level" name="permission_level">
-                            <option value="1">צופה (רמה 1)</option>
-                            <option value="2">עורך בסיסי (רמה 2)</option>
-                            <option value="3">עורך מתקדם (רמה 3)</option>
-                            <option value="4" selected>מנהל (רמה 4)</option>
-                        </select>
-                    </div>
-
-                    <!-- תוקף -->
-                    <div class="mb-3">
-                        <label class="form-label">תוקף הקישור</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="expiry_type" id="no_expiry" value="never" checked>
-                            <label class="form-check-label" for="no_expiry">
-                                <i class="fas fa-infinity"></i> ללא הגבלת זמן
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="expiry_type" id="custom_expiry" value="custom">
-                            <label class="form-check-label" for="custom_expiry">
-                                <i class="fas fa-clock"></i> הגדרת תוקף
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- בחירת תאריך תפוגה -->
-                    <div class="mb-3" id="expiryDateDiv" style="display: none;">
-                        <label for="expiry_date" class="form-label">תאריך תפוגה</label>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <input type="date" class="form-control" id="expiry_date" name="expiry_date">
+    <!-- Modal יצירת קישור שיתוף -->
+    <div class="modal fade" id="shareFormModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">יצירת קישור שיתוף</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="shareLinkForm">
+                        <!-- סוג גישה -->
+                        <div class="mb-3">
+                            <label class="form-label">סוג גישה</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="access_type" id="access_public" value="public" checked>
+                                <label class="form-check-label" for="access_public">
+                                    <i class="fas fa-globe"></i> פתוח לכולם
+                                </label>
                             </div>
-                            <div class="col-md-6">
-                                <input type="time" class="form-control" id="expiry_time" name="expiry_time" value="23:59">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="access_type" id="access_users" value="users">
+                                <label class="form-check-label" for="access_users">
+                                    <i class="fas fa-users"></i> משתמשים ספציפיים
+                                </label>
                             </div>
                         </div>
-                        <div class="mt-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(1)">מחר</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(7)">שבוע</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(30)">חודש</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(90)">3 חודשים</button>
+
+                        <!-- בחירת משתמשים -->
+                        <div class="mb-3" id="usersSelectDiv" style="display: none;">
+                            <label for="allowed_users" class="form-label">בחר משתמשים מורשים</label>
+                            <select class="form-select" id="allowed_users" name="allowed_users[]" multiple size="5">
+                                <!-- יטען באמצעות AJAX -->
+                            </select>
+                            <small class="form-text text-muted">החזק Ctrl לבחירה מרובה</small>
                         </div>
-                    </div>
 
-                    <!-- הערות -->
-                    <div class="mb-3">
-                        <label for="link_description" class="form-label">תיאור/הערות (אופציונלי)</label>
-                        <input type="text" class="form-control" id="link_description" name="link_description" 
-                               placeholder="לדוגמה: קישור למשפחה">
-                    </div>
-                </form>
+                        <!-- הרשאות -->
+                        <div class="mb-3">
+                            <label class="form-label">הרשאות</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="permission_mode" id="view_only" value="view" checked>
+                                <label class="form-check-label" for="view_only">
+                                    <i class="fas fa-eye"></i> צפייה בלבד
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="permission_mode" id="can_edit" value="edit">
+                                <label class="form-check-label" for="can_edit">
+                                    <i class="fas fa-edit"></i> צפייה ועריכה
+                                </label>
+                            </div>
+                        </div>
 
-                <!-- הודעות -->
-                <div id="shareLinkAlert" class="alert" style="display: none;"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ביטול</button>
-                <button type="button" class="btn btn-primary" onclick="createShareLink()">
-                    <i class="fas fa-link"></i> צור קישור
-                </button>
+                        <!-- רמת הרשאה -->
+                        <div class="mb-3">
+                            <label for="permission_level" class="form-label">רמת הרשאה למשתמשים לא רשומים</label>
+                            <select class="form-select" id="permission_level" name="permission_level">
+                                <option value="1">צופה (רמה 1)</option>
+                                <option value="2">עורך בסיסי (רמה 2)</option>
+                                <option value="3">עורך מתקדם (רמה 3)</option>
+                                <option value="4" selected>מנהל (רמה 4)</option>
+                            </select>
+                        </div>
+
+                        <!-- תוקף -->
+                        <div class="mb-3">
+                            <label class="form-label">תוקף הקישור</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="expiry_type" id="no_expiry" value="never" checked>
+                                <label class="form-check-label" for="no_expiry">
+                                    <i class="fas fa-infinity"></i> ללא הגבלת זמן
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="expiry_type" id="custom_expiry" value="custom">
+                                <label class="form-check-label" for="custom_expiry">
+                                    <i class="fas fa-clock"></i> הגדרת תוקף
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- בחירת תאריך תפוגה -->
+                        <div class="mb-3" id="expiryDateDiv" style="display: none;">
+                            <label for="expiry_date" class="form-label">תאריך תפוגה</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="date" class="form-control" id="expiry_date" name="expiry_date">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="time" class="form-control" id="expiry_time" name="expiry_time" value="23:59">
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(1)">מחר</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(7)">שבוע</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(30)">חודש</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setExpiryDays(90)">3 חודשים</button>
+                            </div>
+                        </div>
+
+                        <!-- הערות -->
+                        <div class="mb-3">
+                            <label for="link_description" class="form-label">תיאור/הערות (אופציונלי)</label>
+                            <input type="text" class="form-control" id="link_description" name="link_description" 
+                                placeholder="לדוגמה: קישור למשפחה">
+                        </div>
+                    </form>
+
+                    <!-- הודעות -->
+                    <div id="shareLinkAlert" class="alert" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ביטול</button>
+                    <button type="button" class="btn btn-primary" onclick="createShareLink()">
+                        <i class="fas fa-link"></i> צור קישור
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal הצגת קישור שנוצר -->
-<div class="modal fade" id="showLinkModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">קישור השיתוף נוצר בהצלחה</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">קישור לשיתוף:</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="generatedLink" readonly>
-                        <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">
-                            <i class="fas fa-copy"></i> העתק
-                        </button>
+    <!-- Modal הצגת קישור שנוצר -->
+    <div class="modal fade" id="showLinkModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">קישור השיתוף נוצר בהצלחה</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">קישור לשיתוף:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="generatedLink" readonly>
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">
+                                <i class="fas fa-copy"></i> העתק
+                            </button>
+                        </div>
+                    </div>
+                    <div id="linkDetails" class="alert alert-info">
+                        <!-- פרטי הקישור יוצגו כאן -->
+                    </div>
+                    <div class="text-center">
+                        <div id="qrcode"></div>
                     </div>
                 </div>
-                <div id="linkDetails" class="alert alert-info">
-                    <!-- פרטי הקישור יוצגו כאן -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגור</button>
+                    <button type="button" class="btn btn-primary" onclick="shareViaWhatsApp()">
+                        <i class="fab fa-whatsapp"></i> שתף בוואטסאפ
+                    </button>
+                    <button type="button" class="btn btn-info" onclick="shareViaEmail()">
+                        <i class="fas fa-envelope"></i> שלח במייל
+                    </button>
                 </div>
-                <div class="text-center">
-                    <div id="qrcode"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגור</button>
-                <button type="button" class="btn btn-primary" onclick="shareViaWhatsApp()">
-                    <i class="fab fa-whatsapp"></i> שתף בוואטסאפ
-                </button>
-                <button type="button" class="btn btn-info" onclick="shareViaEmail()">
-                    <i class="fas fa-envelope"></i> שלח במייל
-                </button>
             </div>
         </div>
     </div>
-</div>
 
-<!-- הוסף את ספריית QR Code (אופציונלי) -->
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- הוסף את ספריית QR Code (אופציונלי) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
     <script>
         // עדכון הפונקציה shareForm
