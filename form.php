@@ -260,6 +260,7 @@ if ($form) {
             <!-- הצגת UUID -->
             <div class="form-uuid-display text-center">
                 <small>מספר טופס: <strong><?= $formUuid ?></strong></small>
+                <small>גירסה 1</small>
             </div>
             
             <!-- הצגת סטטוס -->
