@@ -1,6 +1,6 @@
 <?php
-require_once 'config.php';
-require_once 'DeceasedForm.php';
+require_once '../config.php';
+require_once '../DeceasedForm.php';
 
 // לוודא שהמשתמש מחובר
 if (!isset($_SESSION['user_id'])) {

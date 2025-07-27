@@ -313,7 +313,7 @@ if ($form) {
             <!-- הצגת UUID -->
             <div class="form-uuid-display text-center">
                 <small>מספר טופס: <strong><?= $formUuid ?></strong></small>
-                <small>גירסה: <strong>5</strong></small>
+                <small>גירסה: <strong>6</strong></small>
             </div>
             
             <!-- הצגת סטטוס -->
