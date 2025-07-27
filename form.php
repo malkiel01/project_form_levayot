@@ -1028,7 +1028,7 @@ if ($form) {
         loadExistingSignature();
         
         // שיתוף טופס
-        function shareForm() {
+        function shareFormOld() {
             if (isNewForm) {
                 alert('יש לשמור את הטופס לפני השיתוף');
                 return;
@@ -1047,6 +1047,40 @@ if ($form) {
                 copyToClipboard(formUrl);
             }
         }
+        // שיתוף טופס
+        function shareForm() {
+            if (isNewForm) {
+                alert('יש לשמור את הטופס לפני השיתוף');
+                return;
+            }
+
+            const formUuid = '<?= $formUuid ?>'; // מזהה הטופס מהשרת
+
+            // צור קישור חדש באמצעות AJAX
+            $.post('ajax_create_share_link.php', { form_uuid: formUuid }, function(response) {
+                if (response.error) {
+                    alert('שגיאה ביצירת קישור: ' + response.error);
+                    return;
+                }
+
+                const formUrl = response.link;
+
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'טופס הזנת נפטר',
+                        url: formUrl
+                    }).catch((err) => {
+                        console.log('Error sharing:', err);
+                        copyToClipboard(formUrl);
+                    });
+                } else {
+                    copyToClipboard(formUrl);
+                }
+            }, 'json').fail(function() {
+                alert('שגיאה ביצירת הקישור.');
+            });
+        }
+
         
         function copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
