@@ -9,7 +9,7 @@ define('DB_PASS', 'Gxfv16be');
 define('DB_CHARSET', 'utf8mb4');
 
 // הגדרות כלליות
-define('SITE_URL', 'http://localhost/deceased_forms');
+define('SITE_URL', 'https://vaadma.cemeteries.mbe-plus.com/project_form_levayot');
 define('UPLOAD_PATH', __DIR__ . '/uploads/');
 define('MAX_FILE_SIZE', 10 * 1024 * 1024); // 10MB
 define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']);
