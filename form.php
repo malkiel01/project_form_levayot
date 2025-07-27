@@ -49,17 +49,15 @@ if (!$formUuid) {
     }
 }
 
-// הדפסה לקונסול לצורכי דיבוג
-echo "<script>
-console.log('=== FORM DEBUG INFO ===');
-console.log('Form UUID: " . $formUuid . "');
-console.log('Is New Form: " . ($isNewForm ? 'YES' : 'NO') . "');
-console.log('Form Data Loaded: " . (!empty($formData) ? 'YES' : 'NO') . "');
-console.log('======================');
-</script>";
-
-// רישום בלוג
+// רישום בלוג - רק ללוג, לא לפלט
 error_log("FORM ACCESS - UUID: $formUuid, Is New: " . ($isNewForm ? 'YES' : 'NO') . ", User: " . $_SESSION['user_id']);
+
+// אחסן את מידע הדיבוג למטה בדף
+$debugInfo = [
+    'formUuid' => $formUuid,
+    'isNewForm' => $isNewForm,
+    'formDataLoaded' => !empty($formData)
+];
 
 // משתנה לזיהוי אם צריך להפנות לתצוגה
 $shouldRedirectToView = false;
@@ -126,8 +124,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // טען מחדש את הנתונים המעודכנים
                 $formData = $form->getFormData();
-                
-                echo "<script>console.log('Form updated successfully');</script>";
             }
         } catch (Exception $e) {
             $errorMessage = "שגיאה בשמירת הטופס: " . $e->getMessage();
@@ -1039,5 +1035,16 @@ if ($form) {
             document.body.removeChild(textArea);
         }
     </script>
+    
+    <?php if (!empty($debugInfo)): ?>
+    <script>
+        // הדפסת מידע דיבוג לקונסול
+        console.log('=== FORM DEBUG INFO ===');
+        console.log('Form UUID: <?= $debugInfo['formUuid'] ?>');
+        console.log('Is New Form: <?= $debugInfo['isNewForm'] ? 'YES' : 'NO' ?>');
+        console.log('Form Data Loaded: <?= $debugInfo['formDataLoaded'] ? 'YES' : 'NO' ?>');
+        console.log('======================');
+    </script>
+    <?php endif; ?>
 </body>
 </html>
