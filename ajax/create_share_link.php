@@ -2,6 +2,8 @@
 require_once '../config.php';
 require_once '../DeceasedForm.php';
 
+echo 'test 2 \n'
+
 // לוודא שהמשתמש מחובר
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
