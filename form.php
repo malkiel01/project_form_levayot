@@ -229,8 +229,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // עדכון טופס קיים
                 $form->updateForm($postData);
-                $formData = $form->getFormData(); // שלב חשוב - טען מחדש מהשרת
-
                 $successMessage = "הטופס עודכן בהצלחה";
 
                 // אם המשתמש לחץ על "שמור וצפה"
@@ -239,10 +237,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
 
-                // הפניה לטעינה מחודשת (ולא השארה על אותו POST)
+                // בצע הפניה לדף GET לאחר POST, כדי להבטיח שהנתונים המעודכנים יוצגו
                 header("Location: form.php?id=" . $formUuid . "&saved=1");
                 exit;
             }
+
         } catch (Exception $e) {
             $errorMessage = "שגיאה בשמירת הטופס: " . $e->getMessage();
             error_log("Form save error: " . $e->getMessage());
