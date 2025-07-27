@@ -1063,6 +1063,8 @@ if ($form) {
                     return;
                 }
 
+                alert(response)
+
                 const formUrl = response.link;
 
                 if (navigator.share) {
