@@ -1059,7 +1059,7 @@ if ($form) {
             // צור קישור חדש באמצעות AJAX
             $.post('ajax/create_share_link.php', { form_uuid: formUuid }, function(response) {
                 if (response.error) {
-                    alert('שגיאה ביצירת קישור: ' + response.error);
+                    alert('שגיאה ביצירת קישור2: ' + response.error);
                     return;
                 }
 
