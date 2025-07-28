@@ -9,6 +9,8 @@ $isLinkAccess = false;
 $linkPermissions = null;
 $viewOnly = false;
 
+$formUuid = null;
+
 if (isset($_GET['link'])) {
     $linkUuid = $_GET['link'];
     
