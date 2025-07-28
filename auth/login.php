@@ -15,7 +15,7 @@ if (isset($_SESSION['user_id'])) {
             $redirect = DASHBOARD_URL;
         }
     }
-    header('Location: ../' . ltrim($redirect, '/'));
+    header('Location: ' . ltrim($redirect, '/'));
     exit;
 }
 
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $redirect = DASHBOARD_URL;
                         }
                     }
-                    header('Location: ../' . ltrim($redirect, '/'));
+                    header('Location: ' . ltrim($redirect, '/'));
                     exit;
                 } else {
                     // סיסמה שגויה
