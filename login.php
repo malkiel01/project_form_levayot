@@ -20,24 +20,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = sanitizeInput($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
     
-    // כאן תוסיף את הלוגיקה לבדיקת משתמש מול הדטהבייס
-    // לצורך הדגמה:
-    if ($username === 'admin' && $password === 'admin123') {
-        $_SESSION['user_id'] = 1;
-        $_SESSION['username'] = $username;
-        $_SESSION['permission_level'] = 4; // מנהל
+    // // כאן תוסיף את הלוגיקה לבדיקת משתמש מול הדטהבייס
+    // // לצורך הדגמה:
+    // if ($username === 'admin' && $password === 'admin123') {
+    //     $_SESSION['user_id'] = 1;
+    //     $_SESSION['username'] = $username;
+    //     $_SESSION['permission_level'] = 4; // מנהל
         
-        header('Location: dashboard.php');
-        exit;
-    } elseif ($username === 'editor' && $password === 'editor123') {
-        $_SESSION['user_id'] = 2;
-        $_SESSION['username'] = $username;
-        $_SESSION['permission_level'] = 2; // עורך
+    //     header('Location: dashboard.php');
+    //     exit;
+    // } elseif ($username === 'editor' && $password === 'editor123') {
+    //     $_SESSION['user_id'] = 2;
+    //     $_SESSION['username'] = $username;
+    //     $_SESSION['permission_level'] = 2; // עורך
         
-        header('Location: ' . FORM_URL );
-        exit;
+    //     header('Location: ' . FORM_URL );
+    //     exit;
+    // } else {
+    //     $error = 'שם משתמש או סיסמה שגויים';
+    // }
+
+    if (empty($username) || empty($password)) {
+        $error = 'יש להזין שם משתמש וסיסמה';
     } else {
-        $error = 'שם משתמש או סיסמה שגויים';
+        try {
+            $db = getDbConnection();
+            $stmt = $db->prepare("SELECT id, username, password, full_name, permission_level, is_active, failed_login_attempts, locked_until FROM users WHERE username = ?");
+            $stmt->execute([$username]);
+            $user = $stmt->fetch();
+            if ($user) {
+                if ($user['locked_until'] && strtotime($user['locked_until']) > time()) {
+                    $error = 'החשבון נעול זמנית. נסה שוב מאוחר יותר.';
+                } elseif (!$user['is_active']) {
+                    $error = 'החשבון לא פעיל. פנה למנהל המערכת.';
+                } elseif (password_verify($password, $user['password'])) {
+                    // אפס ניסיונות כושלים
+                    $db->prepare("UPDATE users SET failed_login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?")->execute([$user['id']]);
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['full_name'] = $user['full_name'];
+                    $_SESSION['permission_level'] = $user['permission_level'];
+                    $_SESSION['login_time'] = time();
+                    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                    // רישום בלוג
+                    $db->prepare("INSERT INTO activity_log (user_id, action, details, ip_address, user_agent) VALUES (?, 'login_success', ?, ?, ?)")
+                       ->execute([$user['id'], json_encode(['redirect' => $redirect]), $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '']);
+                    // הפניה
+                    if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
+                        $redirect = basename($redirect);
+                        if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
+                            $redirect = 'dashboard.php';
+                        }
+                    }
+                    header('Location: /' . ltrim($redirect, '/'));
+                    exit;
+                } else {
+                    // סיסמה שגויה
+                    $attempts = $user['failed_login_attempts'] + 1;
+                    $lockUntil = null;
+                    if ($attempts >= 5) {
+                        $lockUntil = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+                        $error = 'יותר מדי ניסיונות התחברות כושלים. החשבון נעול ל-30 דקות.';
+                    } else {
+                        $error = 'שם משתמש או סיסמה שגויים. נותרו ' . (5 - $attempts) . ' ניסיונות.';
+                    }
+                    $db->prepare("UPDATE users SET failed_login_attempts = ?, locked_until = ? WHERE id = ?")->execute([$attempts, $lockUntil, $user['id']]);
+                    $db->prepare("INSERT INTO activity_log (user_id, action, details, ip_address, user_agent) VALUES (?, 'login_failed', ?, ?, ?)")
+                       ->execute([$user['id'], json_encode(['reason' => 'wrong_password', 'attempts' => $attempts]), $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '']);
+                }
+            } else {
+                $error = 'שם משתמש או סיסמה שגויים';
+                $db->prepare("INSERT INTO activity_log (user_id, action, details, ip_address, user_agent) VALUES (NULL, 'login_failed', ?, ?, ?)")
+                   ->execute([json_encode(['reason' => 'user_not_found', 'username' => $username]), $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '']);
+            }
+        } catch (Exception $e) {
+            error_log("Login error: " . $e->getMessage());
+            $error = 'שגיאה במערכת. נסה שוב מאוחר יותר.';
+        }
     }
 }
 ?>
