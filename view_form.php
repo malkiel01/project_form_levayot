@@ -1,5 +1,5 @@
 <?php
-// view_form.php - צפייה בטופס נפטר - גרסה מתוקנת
+// view_form.php - צפייה בטופס נפטר
 
 require_once 'config.php';
 require_once 'DeceasedForm.php';
@@ -20,18 +20,18 @@ $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 $form = new DeceasedForm($formUuid, $userPermissionLevel);
 
 // בדיקה אם הטופס נמצא
-$formData = $form->getFormData();
-if (!$formData) {
+if (!$form->getFormData()) {
     header('Location: forms_list.php');
     exit;
 }
 
+$formData = $form->getFormData();
 $documents = $form->getDocuments();
 
 // קבלת פרטי בית העלמין אם קיים
 $db = getDbConnection();
 $locationDetails = null;
-if (!empty($formData['cemetery_id'])) {
+if ($formData['cemetery_id']) {
     $stmt = $db->prepare("
         SELECT 
             c.name as cemetery_name,
@@ -53,40 +53,13 @@ if (!empty($formData['cemetery_id'])) {
     $locationDetails = $stmt->fetch();
 }
 
-// פונקציות עזר למניעת שגיאות
-function safeGet($array, $key, $default = '') {
-    return isset($array[$key]) && $array[$key] !== null ? $array[$key] : $default;
-}
-
-function safeHtml($value, $default = '') {
-    return htmlspecialchars($value ?: $default);
-}
-
-function safeDate($date, $format = 'd/m/Y') {
-    if (empty($date)) return '-';
-    try {
-        return date($format, strtotime($date));
-    } catch (Exception $e) {
-        return '-';
-    }
-}
-
-function safeTime($time, $format = 'H:i') {
-    if (empty($time)) return '-';
-    try {
-        return date($format, strtotime($time));
-    } catch (Exception $e) {
-        return '-';
-    }
-}
-
 ?>
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>צפייה בטופס - <?= safeHtml(safeGet($formData, 'deceased_name', 'טופס נפטר')) ?></title>
+    <title>צפייה בטופס - <?= htmlspecialchars($formData['deceased_name']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
@@ -151,14 +124,6 @@ function safeTime($time, $format = 'H:i') {
                 margin: 0;
             }
         }
-        .form-uuid-display {
-            background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-family: monospace;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
@@ -183,26 +148,23 @@ function safeTime($time, $format = 'H:i') {
             <!-- כותרת -->
             <div class="text-center mb-4">
                 <h2>טופס הזנת נפטר</h2>
-                <div class="form-uuid-display">
-                    <small>מספר טופס: <strong><?= safeHtml(safeGet($formData, 'form_uuid', 'לא זמין')) ?></strong></small>
-                </div>
+                <p class="text-muted">מספר טופס: <?= htmlspecialchars($formData['form_uuid']) ?></p>
                 <?php
-                $status = safeGet($formData, 'status', 'draft');
                 $statusLabels = [
                     'draft' => '<span class="badge bg-secondary status-badge">טיוטה</span>',
                     'in_progress' => '<span class="badge bg-warning status-badge">בתהליך</span>',
                     'completed' => '<span class="badge bg-success status-badge">הושלם</span>',
                     'archived' => '<span class="badge bg-dark status-badge">ארכיון</span>'
                 ];
-                echo $statusLabels[$status] ?? '<span class="badge bg-secondary status-badge">' . safeHtml($status) . '</span>';
+                echo $statusLabels[$formData['status']] ?? $formData['status'];
                 ?>
             </div>
 
             <!-- Progress Bar -->
             <div class="progress mb-4" style="height: 25px;">
                 <div class="progress-bar" role="progressbar" 
-                     style="width: <?= intval(safeGet($formData, 'progress_percentage', 0)) ?>%">
-                    <?= intval(safeGet($formData, 'progress_percentage', 0)) ?>% הושלם
+                     style="width: <?= $formData['progress_percentage'] ?? 0 ?>%">
+                    <?= $formData['progress_percentage'] ?? 0 ?>% הושלם
                 </div>
             </div>
 
@@ -213,44 +175,43 @@ function safeTime($time, $format = 'H:i') {
                     <div class="info-row">
                         <span class="info-label">סוג זיהוי:</span>
                         <?php
-                        $idType = safeGet($formData, 'identification_type');
                         $idTypes = [
                             'tz' => 'תעודת זהות',
                             'passport' => 'דרכון',
                             'anonymous' => 'אלמוני',
                             'baby' => 'תינוק'
                         ];
-                        echo $idTypes[$idType] ?? safeHtml($idType);
+                        echo $idTypes[$formData['identification_type']] ?? $formData['identification_type'];
                         ?>
                     </div>
-                    <?php if (safeGet($formData, 'identification_number')): ?>
+                    <?php if ($formData['identification_number']): ?>
                     <div class="info-row">
                         <span class="info-label">מספר זיהוי:</span>
-                        <?= safeHtml(safeGet($formData, 'identification_number')) ?>
+                        <?= htmlspecialchars($formData['identification_number']) ?>
                     </div>
                     <?php endif; ?>
                     <div class="info-row">
                         <span class="info-label">שם הנפטר:</span>
-                        <strong><?= safeHtml(safeGet($formData, 'deceased_name', 'לא צוין')) ?></strong>
+                        <strong><?= htmlspecialchars($formData['deceased_name']) ?></strong>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <?php if (safeGet($formData, 'father_name')): ?>
+                    <?php if ($formData['father_name']): ?>
                     <div class="info-row">
                         <span class="info-label">שם האב:</span>
-                        <?= safeHtml(safeGet($formData, 'father_name')) ?>
+                        <?= htmlspecialchars($formData['father_name']) ?>
                     </div>
                     <?php endif; ?>
-                    <?php if (safeGet($formData, 'mother_name')): ?>
+                    <?php if ($formData['mother_name']): ?>
                     <div class="info-row">
                         <span class="info-label">שם האם:</span>
-                        <?= safeHtml(safeGet($formData, 'mother_name')) ?>
+                        <?= htmlspecialchars($formData['mother_name']) ?>
                     </div>
                     <?php endif; ?>
-                    <?php if (safeGet($formData, 'birth_date')): ?>
+                    <?php if ($formData['birth_date']): ?>
                     <div class="info-row">
                         <span class="info-label">תאריך לידה:</span>
-                        <?= safeDate(safeGet($formData, 'birth_date')) ?>
+                        <?= date('d/m/Y', strtotime($formData['birth_date'])) ?>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -262,65 +223,65 @@ function safeTime($time, $format = 'H:i') {
                 <div class="col-md-6">
                     <div class="info-row">
                         <span class="info-label">תאריך פטירה:</span>
-                        <?= safeDate(safeGet($formData, 'death_date')) ?>
+                        <?= date('d/m/Y', strtotime($formData['death_date'])) ?>
                     </div>
                     <div class="info-row">
                         <span class="info-label">שעת פטירה:</span>
-                        <?= safeTime(safeGet($formData, 'death_time')) ?>
+                        <?= date('H:i', strtotime($formData['death_time'])) ?>
                     </div>
-                    <?php if (safeGet($formData, 'death_location')): ?>
+                    <?php if ($formData['death_location']): ?>
                     <div class="info-row">
                         <span class="info-label">מקום הפטירה:</span>
-                        <?= safeHtml(safeGet($formData, 'death_location')) ?>
+                        <?= htmlspecialchars($formData['death_location']) ?>
                     </div>
                     <?php endif; ?>
                 </div>
                 <div class="col-md-6">
                     <div class="info-row">
                         <span class="info-label">תאריך קבורה:</span>
-                        <?= safeDate(safeGet($formData, 'burial_date')) ?>
+                        <?= date('d/m/Y', strtotime($formData['burial_date'])) ?>
                     </div>
                     <div class="info-row">
                         <span class="info-label">שעת קבורה:</span>
-                        <?= safeTime(safeGet($formData, 'burial_time')) ?>
+                        <?= date('H:i', strtotime($formData['burial_time'])) ?>
                     </div>
                     <div class="info-row">
                         <span class="info-label">רשיון קבורה:</span>
-                        <?= safeHtml(safeGet($formData, 'burial_license', 'לא צוין')) ?>
+                        <?= htmlspecialchars($formData['burial_license']) ?>
                     </div>
                 </div>
             </div>
 
             <!-- מקום הקבורה -->
-            <?php if ($locationDetails && (safeGet($locationDetails, 'cemetery_name') || safeGet($locationDetails, 'plot_name'))): ?>
+            <?php if ($locationDetails && ($locationDetails['cemetery_name'] || $locationDetails['plot_name'])): ?>
             <div class="section-title">מקום הקבורה</div>
             <div class="row">
                 <div class="col-12">
-                    <?php if (safeGet($locationDetails, 'cemetery_name')): ?>
+                    <?php if ($locationDetails['cemetery_name']): ?>
                     <div class="info-row">
                         <span class="info-label">בית עלמין:</span>
-                        <?= safeHtml(safeGet($locationDetails, 'cemetery_name')) ?>
+                        <?= htmlspecialchars($locationDetails['cemetery_name']) ?>
                     </div>
                     <?php endif; ?>
                     
-                    <?php 
-                    $locationParts = [];
-                    if (safeGet($locationDetails, 'block_name')) $locationParts[] = "גוש: " . safeGet($locationDetails, 'block_name');
-                    if (safeGet($locationDetails, 'section_name')) $locationParts[] = "חלקה: " . safeGet($locationDetails, 'section_name');
-                    if (safeGet($locationDetails, 'row_name')) $locationParts[] = "שורה: " . safeGet($locationDetails, 'row_name');
-                    if (safeGet($locationDetails, 'grave_name')) $locationParts[] = "קבר: " . safeGet($locationDetails, 'grave_name');
-                    
-                    if (!empty($locationParts)): ?>
+                    <?php if ($locationDetails['block_name'] || $locationDetails['section_name'] || $locationDetails['row_name'] || $locationDetails['grave_name']): ?>
                     <div class="info-row">
                         <span class="info-label">מיקום:</span>
-                        <?= safeHtml(implode(', ', $locationParts)) ?>
+                        <?php
+                        $location = [];
+                        if ($locationDetails['block_name']) $location[] = "גוש: " . $locationDetails['block_name'];
+                        if ($locationDetails['section_name']) $location[] = "חלקה: " . $locationDetails['section_name'];
+                        if ($locationDetails['row_name']) $location[] = "שורה: " . $locationDetails['row_name'];
+                        if ($locationDetails['grave_name']) $location[] = "קבר: " . $locationDetails['grave_name'];
+                        echo implode(', ', $location);
+                        ?>
                     </div>
                     <?php endif; ?>
                     
-                    <?php if (safeGet($locationDetails, 'plot_name')): ?>
+                    <?php if ($locationDetails['plot_name']): ?>
                     <div class="info-row">
                         <span class="info-label">אחוזת קבר:</span>
-                        <?= safeHtml(safeGet($locationDetails, 'plot_name')) ?>
+                        <?= htmlspecialchars($locationDetails['plot_name']) ?>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -328,30 +289,30 @@ function safeTime($time, $format = 'H:i') {
             <?php endif; ?>
 
             <!-- פרטי המודיע -->
-            <?php if (safeGet($formData, 'informant_name') || safeGet($formData, 'informant_phone') || safeGet($formData, 'informant_relationship')): ?>
+            <?php if ($formData['informant_name'] || $formData['informant_phone'] || $formData['informant_relationship']): ?>
             <div class="section-title">פרטי המודיע</div>
             <div class="row">
                 <div class="col-md-4">
-                    <?php if (safeGet($formData, 'informant_name')): ?>
+                    <?php if ($formData['informant_name']): ?>
                     <div class="info-row">
                         <span class="info-label">שם:</span>
-                        <?= safeHtml(safeGet($formData, 'informant_name')) ?>
+                        <?= htmlspecialchars($formData['informant_name']) ?>
                     </div>
                     <?php endif; ?>
                 </div>
                 <div class="col-md-4">
-                    <?php if (safeGet($formData, 'informant_phone')): ?>
+                    <?php if ($formData['informant_phone']): ?>
                     <div class="info-row">
                         <span class="info-label">טלפון:</span>
-                        <?= safeHtml(safeGet($formData, 'informant_phone')) ?>
+                        <?= htmlspecialchars($formData['informant_phone']) ?>
                     </div>
                     <?php endif; ?>
                 </div>
                 <div class="col-md-4">
-                    <?php if (safeGet($formData, 'informant_relationship')): ?>
+                    <?php if ($formData['informant_relationship']): ?>
                     <div class="info-row">
                         <span class="info-label">קרבה:</span>
-                        <?= safeHtml(safeGet($formData, 'informant_relationship')) ?>
+                        <?= htmlspecialchars($formData['informant_relationship']) ?>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -359,22 +320,22 @@ function safeTime($time, $format = 'H:i') {
             <?php endif; ?>
 
             <!-- הערות -->
-            <?php if (safeGet($formData, 'notes')): ?>
+            <?php if ($formData['notes']): ?>
             <div class="section-title">הערות</div>
             <div class="row">
                 <div class="col-12">
-                    <p><?= nl2br(safeHtml(safeGet($formData, 'notes'))) ?></p>
+                    <p><?= nl2br(htmlspecialchars($formData['notes'])) ?></p>
                 </div>
             </div>
             <?php endif; ?>
 
             <!-- חתימת לקוח -->
-            <?php if (safeGet($formData, 'client_signature')): ?>
+            <?php if ($formData['client_signature']): ?>
             <div class="section-title">חתימת לקוח</div>
             <div class="row">
                 <div class="col-12">
                     <div class="signature-container">
-                        <img src="<?= safeHtml(safeGet($formData, 'client_signature')) ?>" alt="חתימת לקוח" style="max-width: 100%; max-height: 180px;">
+                        <img src="<?= htmlspecialchars($formData['client_signature']) ?>" alt="חתימת לקוח" style="max-width: 100%; max-height: 180px;">
                     </div>
                 </div>
             </div>
@@ -387,9 +348,9 @@ function safeTime($time, $format = 'H:i') {
                 <div class="col-12">
                     <div class="list-group">
                         <?php foreach ($documents as $doc): ?>
-                        <a href="download.php?id=<?= intval($doc['id']) ?>" class="list-group-item list-group-item-action">
-                            <i class="fas fa-file"></i> <?= safeHtml(safeGet($doc, 'file_name', 'קובץ')) ?>
-                            <small class="text-muted">(<?= number_format(intval(safeGet($doc, 'file_size', 0)) / 1024, 2) ?> KB)</small>
+                        <a href="download.php?id=<?= $doc['id'] ?>" class="list-group-item list-group-item-action">
+                            <i class="fas fa-file"></i> <?= htmlspecialchars($doc['file_name']) ?>
+                            <small class="text-muted">(<?= number_format($doc['file_size'] / 1024, 2) ?> KB)</small>
                         </a>
                         <?php endforeach; ?>
                     </div>
@@ -401,12 +362,12 @@ function safeTime($time, $format = 'H:i') {
             <div class="row mt-4 pt-3 border-top">
                 <div class="col-md-6">
                     <small class="text-muted">
-                        נוצר ב: <?= safeDate(safeGet($formData, 'created_at'), 'd/m/Y H:i') ?>
+                        נוצר ב: <?= date('d/m/Y H:i', strtotime($formData['created_at'])) ?>
                     </small>
                 </div>
                 <div class="col-md-6 text-end">
                     <small class="text-muted">
-                        עודכן לאחרונה: <?= safeDate(safeGet($formData, 'updated_at'), 'd/m/Y H:i') ?>
+                        עודכן לאחרונה: <?= date('d/m/Y H:i', strtotime($formData['updated_at'])) ?>
                     </small>
                 </div>
             </div>
@@ -414,13 +375,13 @@ function safeTime($time, $format = 'H:i') {
             <!-- כפתורי פעולה -->
             <div class="row mt-4 no-print">
                 <div class="col-12 text-center">
-                    <a href="form.php?id=<?= safeHtml(safeGet($formData, 'form_uuid')) ?>" class="btn btn-primary">
+                    <a href="form.php?id=<?= $formData['form_uuid'] ?>" class="btn btn-primary">
                         <i class="fas fa-edit"></i> ערוך טופס
                     </a>
                     <button type="button" class="btn btn-secondary" onclick="window.print()">
                         <i class="fas fa-print"></i> הדפס
                     </button>
-                    <a href="export_pdf.php?id=<?= safeHtml(safeGet($formData, 'form_uuid')) ?>" class="btn btn-danger">
+                    <a href="export_pdf.php?id=<?= $formData['form_uuid'] ?>" class="btn btn-danger">
                         <i class="fas fa-file-pdf"></i> ייצוא ל-PDF
                     </a>
                     <button type="button" class="btn btn-info" onclick="shareForm()">
@@ -438,11 +399,9 @@ function safeTime($time, $format = 'H:i') {
     <script>
         function shareForm() {
             const formUrl = window.location.href;
-            const formName = '<?= safeHtml(safeGet($formData, 'deceased_name', 'טופס נפטר'), ENT_QUOTES) ?>';
-            
             if (navigator.share) {
                 navigator.share({
-                    title: 'טופס נפטר - ' + formName,
+                    title: 'טופס נפטר - <?= htmlspecialchars($formData['deceased_name']) ?>',
                     url: formUrl
                 }).catch(() => {
                     copyToClipboard(formUrl);
@@ -453,71 +412,18 @@ function safeTime($time, $format = 'H:i') {
         }
         
         function copyToClipboard(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showNotification('הקישור הועתק ללוח', 'success');
-                }).catch(() => {
-                    fallbackCopyToClipboard(text);
-                });
-            } else {
-                fallbackCopyToClipboard(text);
-            }
-        }
-        
-        function fallbackCopyToClipboard(text) {
-            const input = document.createElement('input');
-            input.value = text;
-            input.style.position = 'fixed';
-            input.style.left = '-999999px';
-            document.body.appendChild(input);
-            input.focus();
-            input.select();
-            
-            try {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('הקישור הועתק ללוח');
+            }).catch(() => {
+                const input = document.createElement('input');
+                input.value = text;
+                document.body.appendChild(input);
+                input.select();
                 document.execCommand('copy');
-                showNotification('הקישור הועתק ללוח', 'success');
-            } catch (err) {
-                showNotification('לא ניתן להעתיק את הקישור: ' + text, 'error');
-            }
-            
-            document.body.removeChild(input);
-        }
-        
-        function showNotification(message, type = 'info') {
-            const alertClass = type === 'success' ? 'alert-success' : 
-                              type === 'error' ? 'alert-danger' : 'alert-info';
-            
-            const notification = document.createElement('div');
-            notification.className = `alert ${alertClass} alert-dismissible position-fixed`;
-            notification.style.cssText = 'top: 70px; right: 20px; z-index: 9999; max-width: 400px;';
-            notification.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            // הסר אוטומטית אחרי 5 שניות
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 5000);
-        }
-        
-        // בדיקת טעינת התמונות
-        document.addEventListener('DOMContentLoaded', function() {
-            const images = document.querySelectorAll('img');
-            images.forEach(img => {
-                img.addEventListener('error', function() {
-                    this.style.display = 'none';
-                    const container = this.closest('.signature-container');
-                    if (container) {
-                        container.innerHTML = '<div class="text-muted">לא ניתן להציג חתימה</div>';
-                    }
-                });
+                document.body.removeChild(input);
+                alert('הקישור הועתק ללוח');
             });
-        });
+        }
     </script>
 </body>
 </html>
