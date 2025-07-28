@@ -19,5 +19,5 @@ if (ini_get("session.use_cookies")) {
 session_destroy();
 
 // הפניה לדף ההתחברות
-header("Location: login.php");
+header("Location: " . LOGIN_URL );
 exit;

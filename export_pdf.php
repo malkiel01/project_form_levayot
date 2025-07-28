@@ -7,7 +7,7 @@ require_once 'vendor/autoload.php'; // עבור TCPDF
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ' . LOGIN_URL);
     exit;
 }
 

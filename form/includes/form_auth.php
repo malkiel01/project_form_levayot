@@ -71,7 +71,7 @@ function handleFormAuth() {
     } else {
         // כניסה רגילה - דורשת התחברות
         if (!isUserLoggedIn()) {
-            header('Location: ../login.php');
+            header('Location: ../' . LOGIN_URL);
             exit;
         }
     }
@@ -118,7 +118,7 @@ function logLinkAccess($linkUuid, $formUuid) {
 }
 
 function showAccessDenied() {
-    $loginUrl = '../login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']);
+    $loginUrl = '../' . LOGIN_URL . '?redirect=' . urlencode($_SERVER['REQUEST_URI']);
     die('
         <!DOCTYPE html>
         <html dir="rtl" lang="he">
@@ -163,6 +163,7 @@ function showAccessDenied() {
 }
 
 function showInvalidLink() {
+    $loginUrl = LOGIN_URL; // אם זה קבוע
     die('
         <!DOCTYPE html>
         <html dir="rtl" lang="he">
@@ -191,7 +192,7 @@ function showInvalidLink() {
                     <h3>קישור לא תקף</h3>
                     <p class="text-muted">הקישור אינו קיים, פג תוקפו, או שאינו תקין.</p>
                     <div class="mt-4">
-                        <a href="../login.php" class="btn btn-primary">
+                        <a href="../' . $loginUrl . '" class="btn btn-primary">
                             <i class="fas fa-sign-in-alt"></i> עבור לדף הכניסה
                         </a>
                         <a href="../forms_list.php" class="btn btn-secondary">
@@ -216,7 +217,7 @@ function handleFormData($formUuid, $userPermissionLevel) {
     if (!$formUuid) {
         // יצירת טופס חדש - רק למשתמשים מחוברים
         if (!isUserLoggedIn()) {
-            header('Location: ../login.php');
+            header('Location: ../' . LOGIN_URL);
             exit;
         }
         

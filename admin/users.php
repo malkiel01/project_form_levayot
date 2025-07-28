@@ -4,7 +4,7 @@ require_once '../config.php';
 
 // בדיקת הרשאות מנהל
 if (!isset($_SESSION['permission_level']) || $_SESSION['permission_level'] < 4) {
-    header('Location: ../login.php');
+    header('Location: ../' . LOGIN_URL);
     exit;
 }
 

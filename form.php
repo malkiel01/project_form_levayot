@@ -92,7 +92,7 @@ if (isset($_GET['link'])) {
             
         } else {
             // הצג הודעת הרשאה ידידותית יותר
-            $loginUrl = 'login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']);
+            $loginUrl = LOGIN_URL . '?redirect=' . urlencode($_SERVER['REQUEST_URI']);
             die('
                 <!DOCTYPE html>
                 <html dir="rtl" lang="he">
@@ -163,7 +163,7 @@ if (isset($_GET['link'])) {
                         <h3>קישור לא תקף</h3>
                         <p class="text-muted">הקישור אינו קיים, פג תוקפו, או שאינו תקין.</p>
                         <div class="mt-4">
-                            <a href="login.php" class="btn btn-primary">
+                            <a href="<?= LOGIN_URL ?>" class="btn btn-primary">
                                 <i class="fas fa-sign-in-alt"></i> עבור לדף הכניסה
                             </a>
                             <a href="forms_list.php" class="btn btn-secondary">
@@ -179,7 +179,7 @@ if (isset($_GET['link'])) {
 } else {
     // כניסה רגילה - דורשת התחברות
     if (!isUserLoggedIn()) {
-        header('Location: login.php');
+        header('Location: ' . LOGIN_URL);
         exit;
     }
 }
@@ -204,7 +204,7 @@ $form = null;
 // אם אין ID בכתובת - יצירת טופס חדש (רק למשתמשים מחוברים)
 if (!$formUuid) {
     if (!isUserLoggedIn()) {
-        header('Location: login.php');
+        header('Location: ' . LOGIN_URL);
         exit;
     }
     
@@ -901,7 +901,7 @@ if ($form) {
                                 <i class="fas fa-list"></i> רשימת טפסים
                             </a>
                         <?php else: ?>
-                            <a href="login.php" class="btn btn-outline-primary btn-lg ms-2">
+                            <a href="<?= LOGIN_URL ?>" class="btn btn-outline-primary btn-lg ms-2">
                                 <i class="fas fa-sign-in-alt"></i> התחבר למערכת
                             </a>
                         <?php endif; ?>

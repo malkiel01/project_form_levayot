@@ -12,7 +12,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ' . LOGIN_URL);
     exit;
 }
 

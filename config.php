@@ -17,6 +17,7 @@ define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']);
 // לינקים וקישורים
 define('FORM_URL', 'form/index.php');
 // define('FORM_URL', 'form.php');
+define('LOGIN_URL', 'auth/login.php');
 
 // הגדרות אבטחה
 define('SESSION_NAME', 'deceased_forms_session');

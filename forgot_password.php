@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </button>
                 
                 <div class="text-center mt-3">
-                    <a href="login.php" class="text-decoration-none">
+                    <a href="<?= LOGIN_URL ?>" class="text-decoration-none">
                         <i class="fas fa-arrow-right"></i> חזרה להתחברות
                     </a>
                 </div>

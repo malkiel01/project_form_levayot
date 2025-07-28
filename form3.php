@@ -78,28 +78,30 @@ if (isset($_GET['link'])) {
             
         } else {
             // אין הרשאה
+            $loginUrl = LOGIN_URL; // אם זה קבוע
             die('
                 <div style="text-align: center; margin-top: 50px; font-family: Arial;">
                     <h2>אין לך הרשאה לצפות בטופס זה</h2>
                     <p>הקישור מוגבל למשתמשים ספציפיים בלבד.</p>
-                    <a href="login.php">התחבר למערכת</a>
+                    <a href="' . $loginUrl . '">התחבר למערכת</a>
                 </div>
             ');
         }
     } else {
         // קישור לא תקף
+        $loginUrl = LOGIN_URL; // אם זה קבוע
         die('
             <div style="text-align: center; margin-top: 50px; font-family: Arial;">
                 <h2>קישור לא תקף</h2>
                 <p>הקישור אינו קיים או שפג תוקפו.</p>
-                <a href="login.php">עבור לדף הכניסה</a>
+                <a href="' . $loginUrl . '">עבור לדף הכניסה</a>
             </div>
         ');
     }
 } else {
     // כניסה רגילה - דורשת התחברות
     if (!isset($_SESSION['user_id'])) {
-        header('Location: login.php');
+        header('Location: ' . LOGIN_URL);
         exit;
     }
 }
@@ -165,78 +167,6 @@ $debugInfo = [
 
 // משתנה לזיהוי אם צריך להפנות לתצוגה
 $shouldRedirectToView = false;
-
-// טיפול בשליחת הטופס
-// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-//     // בדיקת CSRF token
-//     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-//         die('Invalid CSRF token');
-//     }
-    
-//     // סניטציה של הנתונים
-//     $postData = sanitizeInput($_POST);
-//     unset($postData['csrf_token']);
-    
-//     // בדיקה אם לחצו על כפתור "שמור וצפה"
-//     $saveAndView = isset($_POST['save_and_view']);
-    
-//     // אל תבצע ולידציה של שדות חובה - רק ולידציה של פורמט
-//     $formatErrors = [];
-    
-//     // בדיקת פורמט תעודת זהות אם קיימת
-//     if (!empty($postData['identification_type']) && $postData['identification_type'] === 'tz' && 
-//         !empty($postData['identification_number']) && !validateIsraeliId($postData['identification_number'])) {
-//         $formatErrors['identification_number'] = "מספר תעודת זהות לא תקין";
-//     }
-    
-//     // בדיקת תאריכים
-//     if (!empty($postData['death_date']) && !empty($postData['burial_date'])) {
-//         if (strtotime($postData['burial_date']) < strtotime($postData['death_date'])) {
-//             $formatErrors['burial_date'] = "תאריך הקבורה לא יכול להיות לפני תאריך הפטירה";
-//         }
-//     }
-    
-//     if (empty($formatErrors)) {
-//         try {
-//             if ($isNewForm) {
-//                 // יצירת טופס חדש
-//                 $postData['form_uuid'] = $formUuid; // וודא שה-UUID נשמר
-//                 $postData['status'] = 'draft'; // תמיד התחל כטיוטה
-//                 $form->createForm($postData);
-//                 $successMessage = "הטופס נוצר בהצלחה";
-                
-//                 // אם יצירת הטופס הצליחה והמשתמש לחץ על "שמור וצפה"
-//                 if ($saveAndView) {
-//                     header("Location: view_form.php?id=" . $formUuid);
-//                     exit;
-//                 }
-                
-//                 // אחרת, טען מחדש את הטופס לעריכה
-//                 header("Location: " . FORM_URL . "?id=" . $formUuid);
-//                 exit;
-                
-//             } else {
-//                 // עדכון טופס קיים
-//                 $form->updateForm($postData);
-//                 $successMessage = "הטופס עודכן בהצלחה";
-                
-//                 // אם המשתמש לחץ על "שמור וצפה"
-//                 if ($saveAndView) {
-//                     header("Location: view_form.php?id=" . $formUuid);
-//                     exit;
-//                 }
-                
-//                 // טען מחדש את הנתונים המעודכנים
-//                 $formData = $form->getFormData();
-//             }
-//         } catch (Exception $e) {
-//             $errorMessage = "שגיאה בשמירת הטופס: " . $e->getMessage();
-//             error_log("Form save error: " . $e->getMessage());
-//         }
-//     } else {
-//         $errors = $formatErrors;
-//     }
-// }
 
 // טיפול בשליחת הטופס
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

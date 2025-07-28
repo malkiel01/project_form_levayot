@@ -6,7 +6,7 @@ require_once '../DeceasedForm.php';
 
 // בדיקת הרשאות
 if (($_SESSION['permission_level'] ?? 0) < 2) {
-    header('Location: ../login.php');
+    header('Location: ../' . LOGIN_URL);
     exit;
 }
 

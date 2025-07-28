@@ -343,7 +343,7 @@ function renderActionButtons($isNewForm, $formUuid, $viewOnly, $isLinkAccess) {
                     <i class="fas fa-list"></i> רשימת טפסים
                 </a>
             <?php else: ?>
-                <a href="../login.php" class="btn btn-outline-primary btn-lg ms-2">
+                <a href="../<?= LOGIN_URL ?>" class="btn btn-outline-primary btn-lg ms-2">
                     <i class="fas fa-sign-in-alt"></i> התחבר למערכת
                 </a>
             <?php endif; ?>

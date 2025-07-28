@@ -6,7 +6,7 @@ require_once 'DeceasedForm.php';
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ' . LOGIN_URL);
     exit;
 }
 
