@@ -1,6 +1,15 @@
 <?php
 // config.php - קובץ הגדרות משופר
 
+// הגדרות אבטחה
+define('SESSION_NAME', 'deceased_forms_session');
+define('CSRF_TOKEN_NAME', 'csrf_token');
+
+session_name(SESSION_NAME);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // הגדרות חיבור לדטהבייס
 define('DB_HOST', 'mbe-plus.com');
@@ -20,10 +29,6 @@ define('FORM_URL', 'form/index.php');
 // define('FORM_URL', 'form.php');
 define('LOGIN_URL', 'auth/login.php');
 define('LOGOUT_URL', 'auth/logout.php');
-
-// הגדרות אבטחה
-define('SESSION_NAME', 'deceased_forms_session');
-define('CSRF_TOKEN_NAME', 'csrf_token');
 
 // הגדרות זמן
 date_default_timezone_set('Asia/Jerusalem');
@@ -165,12 +170,6 @@ function debugLog($message, $data = null) {
         $message .= ' - ' . json_encode($data);
     }
     echo "<script>console.log('DEBUG: " . addslashes($message) . "');</script>";
-}
-
-session_name(SESSION_NAME);
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
 }
 
 // יצירת CSRF token אם לא קיים
