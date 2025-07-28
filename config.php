@@ -29,6 +29,7 @@ define('FORM_URL', 'form/index.php');
 // define('FORM_URL', 'form.php');
 define('LOGIN_URL', 'auth/login.php');
 define('LOGOUT_URL', 'auth/logout.php');
+define('DASHBOARD_URL', SITE_URL . '/dashboard.php');
 
 // הגדרות זמן
 date_default_timezone_set('Asia/Jerusalem');

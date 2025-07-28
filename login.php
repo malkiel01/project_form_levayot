@@ -19,26 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $username = sanitizeInput($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
-    
-    // // כאן תוסיף את הלוגיקה לבדיקת משתמש מול הדטהבייס
-    // // לצורך הדגמה:
-    // if ($username === 'admin' && $password === 'admin123') {
-    //     $_SESSION['user_id'] = 1;
-    //     $_SESSION['username'] = $username;
-    //     $_SESSION['permission_level'] = 4; // מנהל
-        
-    //     header('Location: dashboard.php');
-    //     exit;
-    // } elseif ($username === 'editor' && $password === 'editor123') {
-    //     $_SESSION['user_id'] = 2;
-    //     $_SESSION['username'] = $username;
-    //     $_SESSION['permission_level'] = 2; // עורך
-        
-    //     header('Location: ' . FORM_URL );
-    //     exit;
-    // } else {
-    //     $error = 'שם משתמש או סיסמה שגויים';
-    // }
 
     if (empty($username) || empty($password)) {
         $error = 'יש להזין שם משתמש וסיסמה';

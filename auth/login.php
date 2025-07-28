@@ -8,19 +8,19 @@ if (empty($_SESSION['csrf_token'])) {
 
 // אם המשתמש כבר מחובר
 if (isset($_SESSION['user_id'])) {
-    $redirect = $_GET['redirect'] ?? 'dashboard.php';
+    $redirect = $_GET['redirect'] ?? DASHBOARD_URL;
     if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
         $redirect = basename($redirect);
         if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
-            $redirect = 'dashboard.php';
+            $redirect = DASHBOARD_URL;
         }
     }
-    header('Location: /' . ltrim($redirect, '/'));
+    header('Location: ../' . ltrim($redirect, '/'));
     exit;
 }
 
 $error = '';
-$redirect = $_GET['redirect'] ?? 'dashboard.php';
+$redirect = $_GET['redirect'] ?? DASHBOARD_URL;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // בדיקת CSRF token
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $username = sanitizeInput($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
-    $redirect = sanitizeInput($_POST['redirect'] ?? 'dashboard.php');
+    $redirect = sanitizeInput($_POST['redirect'] ?? DASHBOARD_URL);
 
     if (empty($username) || empty($password)) {
         $error = 'יש להזין שם משתמש וסיסמה';
@@ -60,10 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
                         $redirect = basename($redirect);
                         if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
-                            $redirect = 'dashboard.php';
+                            $redirect = DASHBOARD_URL;
                         }
                     }
-                    header('Location: /' . ltrim($redirect, '/'));
+                    header('Location: ../' . ltrim($redirect, '/'));
                     exit;
                 } else {
                     // סיסמה שגויה
@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h3>התחברות למערכת</h3>
                 <p class="text-muted">מערכת ניהול טפסי נפטרים</p>
             </div>
-            <?php if ($redirect !== 'dashboard.php'): ?>
+            <?php if ($redirect !== DASHBOARD_URL): ?>
                 <div class="redirect-info">
                     <i class="fas fa-info-circle"></i>
                     <strong>הודעה:</strong> תועבר לטופס לאחר ההתחברות
