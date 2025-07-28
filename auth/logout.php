@@ -1,5 +1,6 @@
 <?php
 // logout.php - יציאה מהמערכת
+require_once '../config.php'; // או הנתיב היחסי שלך ל־config.php
 
 session_start();
 
