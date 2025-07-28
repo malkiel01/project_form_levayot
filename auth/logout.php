@@ -1,24 +1,19 @@
 <?php
-// logout.php - יציאה מהמערכת
-require_once '../config.php'; // או הנתיב היחסי שלך ל־config.php
+require_once '../config.php'; // חייב להיות לפני כל שורה אחרת
+// אין צורך ב-session_start() כאן, זה כבר נטען מהקונפיג!
 
-session_start();
-
-// ניקוי כל משתני הסשן
 $_SESSION = array();
 
-// מחיקת cookie הסשן
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(session_name(), '', time() - 42000,
         $params["path"], $params["domain"],
-        $params["secure"], $params["httponly"]
+        $params["secure"] ?? false,
+        $params["httponly"] ?? false
     );
 }
 
-// הרס הסשן
 session_destroy();
 
-// הפניה לדף ההתחברות
-header("Location: " . LOGIN_URL );
+header("Location: " . LOGIN_URL);
 exit;
