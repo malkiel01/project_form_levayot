@@ -1,17 +1,5 @@
 <?php
-// form/includes/form_auth.php - ניהול אימות והרשאות מתוקן
-
-function isUserLoggedIn() {
-    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
-}
-
-function getSafeUserId() {
-    return isUserLoggedIn() ? $_SESSION['user_id'] : null;
-}
-
-function getSafePermissionLevel() {
-    return isset($_SESSION['permission_level']) ? $_SESSION['permission_level'] : 1;
-}
+// form/includes/form_auth.php - ניהול אימות והרשאות
 
 function handleFormAuth() {
     $isLinkAccess = false;
@@ -38,8 +26,7 @@ function handleFormAuth() {
             $accessGranted = true;
             if ($linkData['allowed_user_ids']) {
                 $allowedUsers = json_decode($linkData['allowed_user_ids'], true);
-                $currentUserId = getSafeUserId();
-                if (!$currentUserId || !in_array($currentUserId, $allowedUsers)) {
+                if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_id'], $allowedUsers)) {
                     $accessGranted = false;
                 }
             }
@@ -47,8 +34,8 @@ function handleFormAuth() {
             if ($accessGranted) {
                 $linkPermissions = [
                     'form_uuid' => $linkData['form_uuid'],
-                    'permission_level' => isUserLoggedIn() ? 
-                        getSafePermissionLevel() : $linkData['permission_level'],
+                    'permission_level' => isset($_SESSION['permission_level']) ? 
+                        $_SESSION['permission_level'] : $linkData['permission_level'],
                     'can_edit' => $linkData['can_edit'],
                     'link_uuid' => $linkUuid
                 ];
@@ -70,7 +57,7 @@ function handleFormAuth() {
         }
     } else {
         // כניסה רגילה - דורשת התחברות
-        if (!isUserLoggedIn()) {
+        if (!isset($_SESSION['user_id'])) {
             header('Location: ../login.php');
             exit;
         }
@@ -80,7 +67,7 @@ function handleFormAuth() {
     if ($isLinkAccess && $linkPermissions) {
         $userPermissionLevel = $linkPermissions['permission_level'];
     } else {
-        $userPermissionLevel = getSafePermissionLevel();
+        $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
     }
     
     // בדיקה אם יש ID של טופס ב-URL
@@ -94,20 +81,17 @@ function handleFormAuth() {
 function logLinkAccess($linkUuid, $formUuid) {
     $db = getDbConnection();
     
-    // רישום גישה בלוג - רק אם המשתמש מחובר
-    if (isUserLoggedIn()) {
-        $logStmt = $db->prepare("
-            INSERT INTO activity_log (user_id, form_id, action, details, ip_address, user_agent) 
-            VALUES (?, (SELECT id FROM deceased_forms WHERE form_uuid = ?), 'access_via_link', ?, ?, ?)
-        ");
-        $logStmt->execute([
-            getSafeUserId(),
-            $formUuid,
-            json_encode(['link_uuid' => $linkUuid]),
-            $_SERVER['REMOTE_ADDR'] ?? '',
-            $_SERVER['HTTP_USER_AGENT'] ?? ''
-        ]);
-    }
+    $logStmt = $db->prepare("
+        INSERT INTO activity_log (user_id, form_id, action, details, ip_address, user_agent) 
+        VALUES (?, (SELECT id FROM deceased_forms WHERE form_uuid = ?), 'access_via_link', ?, ?, ?)
+    ");
+    $logStmt->execute([
+        $_SESSION['user_id'] ?? null,
+        $formUuid,
+        json_encode(['link_uuid' => $linkUuid]),
+        $_SERVER['REMOTE_ADDR'] ?? '',
+        $_SERVER['HTTP_USER_AGENT'] ?? ''
+    ]);
     
     $updateStmt = $db->prepare("
         UPDATE form_links 
@@ -127,7 +111,6 @@ function showAccessDenied() {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>נדרשת התחברות</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
             <style>
                 body { background-color: #f8f9fa; }
                 .auth-container { 
@@ -171,7 +154,6 @@ function showInvalidLink() {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>קישור לא תקף</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
             <style>
                 body { background-color: #f8f9fa; }
                 .error-container { 
@@ -209,17 +191,9 @@ function handleFormData($formUuid, $userPermissionLevel) {
     $isNewForm = false;
     $formData = [];
     $form = null;
-    $successMessage = null;
-    $errorMessage = null;
-    $errors = [];
     
     if (!$formUuid) {
-        // יצירת טופס חדש - רק למשתמשים מחוברים
-        if (!isUserLoggedIn()) {
-            header('Location: ../login.php');
-            exit;
-        }
-        
+        // יצירת טופס חדש
         $formUuid = generateUUID();
         $isNewForm = true;
         header("Location: index.php?id=" . $formUuid);
@@ -243,9 +217,9 @@ function handleFormData($formUuid, $userPermissionLevel) {
         }
     }
     
-    error_log("FORM ACCESS - UUID: $formUuid, Is New: " . ($isNewForm ? 'YES' : 'NO') . ", User: " . getSafeUserId());
+    error_log("FORM ACCESS - UUID: $formUuid, Is New: " . ($isNewForm ? 'YES' : 'NO') . ", User: " . ($_SESSION['user_id'] ?? 'GUEST'));
     
-    return compact('isNewForm', 'formData', 'form', 'successMessage', 'errorMessage', 'errors');
+    return compact('isNewForm', 'formData', 'form');
 }
 
 function getFormHelpers($form, $formData, $userPermissionLevel) {
