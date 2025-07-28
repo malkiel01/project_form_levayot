@@ -20,7 +20,7 @@ if (isset($_SESSION['user_id'])) {
 }
 
 $error = '';
-// $redirect = $_GET['redirect'] ?? DASHBOARD_URL;
+$redirect = $_GET['redirect'] ?? DASHBOARD_URL;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // בדיקת CSRF token

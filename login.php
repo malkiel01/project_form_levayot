@@ -49,10 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
                         $redirect = basename($redirect);
                         if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
-                            $redirect = '../dashboard.php';
+                            $redirect = 'dashboard.php';
                         }
                     }
-                    header('Location: ../' . ltrim($redirect, '/'));
+                    header('Location: ' . ltrim($redirect, '/'));
                     exit;
                 } else {
                     // סיסמה שגויה
