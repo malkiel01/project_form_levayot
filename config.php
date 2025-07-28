@@ -1,12 +1,6 @@
 <?php
 // config.php - קובץ הגדרות משופר
 
-// הגדרת שם סשן (חייב לבוא לפני session_start)
-session_name(SESSION_NAME);
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 // הגדרות חיבור לדטהבייס
 define('DB_HOST', 'mbe-plus.com');
@@ -171,6 +165,12 @@ function debugLog($message, $data = null) {
         $message .= ' - ' . json_encode($data);
     }
     echo "<script>console.log('DEBUG: " . addslashes($message) . "');</script>";
+}
+
+session_name(SESSION_NAME);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
 // יצירת CSRF token אם לא קיים
