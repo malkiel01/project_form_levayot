@@ -178,7 +178,7 @@ $userNotifications = $notifications->fetchAll();
                             <li><a class="dropdown-item" href="profile.php">הפרופיל שלי</a></li>
                             <li><a class="dropdown-item" href="settings.php">הגדרות</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="logout.php">יציאה</a></li>
+                            <li><a class="dropdown-item" href="<?= LOGOUT_URL ?>">יציאה</a></li>
                         </ul>
                     </li>
                 </ul>

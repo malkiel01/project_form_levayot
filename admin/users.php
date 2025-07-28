@@ -204,7 +204,7 @@ $permissions = $db->query("SELECT * FROM permissions ORDER BY permission_level")
                             <i class="fas fa-user"></i> <?= htmlspecialchars($_SESSION['username']) ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="../logout.php">יציאה</a></li>
+                            <li><a class="dropdown-item" href="../<?= LOGOUT_URL ?>">יציאה</a></li>
                         </ul>
                     </li>
                 </ul>

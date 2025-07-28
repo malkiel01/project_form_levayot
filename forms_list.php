@@ -179,7 +179,7 @@ $cemeteries = $db->query("SELECT id, name FROM cemeteries WHERE is_active = 1 OR
                             <li><a class="dropdown-item" href="profile.php">הפרופיל שלי</a></li>
                             <li><a class="dropdown-item" href="settings.php">הגדרות</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="logout.php">יציאה</a></li>
+                            <li><a class="dropdown-item" href="<?= LOGOUT_URL ?>">יציאה</a></li>
                         </ul>
                     </li>
                 </ul>
