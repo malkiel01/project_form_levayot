@@ -164,6 +164,78 @@ $debugInfo = [
 $shouldRedirectToView = false;
 
 // טיפול בשליחת הטופס
+// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+//     // בדיקת CSRF token
+//     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+//         die('Invalid CSRF token');
+//     }
+    
+//     // סניטציה של הנתונים
+//     $postData = sanitizeInput($_POST);
+//     unset($postData['csrf_token']);
+    
+//     // בדיקה אם לחצו על כפתור "שמור וצפה"
+//     $saveAndView = isset($_POST['save_and_view']);
+    
+//     // אל תבצע ולידציה של שדות חובה - רק ולידציה של פורמט
+//     $formatErrors = [];
+    
+//     // בדיקת פורמט תעודת זהות אם קיימת
+//     if (!empty($postData['identification_type']) && $postData['identification_type'] === 'tz' && 
+//         !empty($postData['identification_number']) && !validateIsraeliId($postData['identification_number'])) {
+//         $formatErrors['identification_number'] = "מספר תעודת זהות לא תקין";
+//     }
+    
+//     // בדיקת תאריכים
+//     if (!empty($postData['death_date']) && !empty($postData['burial_date'])) {
+//         if (strtotime($postData['burial_date']) < strtotime($postData['death_date'])) {
+//             $formatErrors['burial_date'] = "תאריך הקבורה לא יכול להיות לפני תאריך הפטירה";
+//         }
+//     }
+    
+//     if (empty($formatErrors)) {
+//         try {
+//             if ($isNewForm) {
+//                 // יצירת טופס חדש
+//                 $postData['form_uuid'] = $formUuid; // וודא שה-UUID נשמר
+//                 $postData['status'] = 'draft'; // תמיד התחל כטיוטה
+//                 $form->createForm($postData);
+//                 $successMessage = "הטופס נוצר בהצלחה";
+                
+//                 // אם יצירת הטופס הצליחה והמשתמש לחץ על "שמור וצפה"
+//                 if ($saveAndView) {
+//                     header("Location: view_form.php?id=" . $formUuid);
+//                     exit;
+//                 }
+                
+//                 // אחרת, טען מחדש את הטופס לעריכה
+//                 header("Location: form.php?id=" . $formUuid);
+//                 exit;
+                
+//             } else {
+//                 // עדכון טופס קיים
+//                 $form->updateForm($postData);
+//                 $successMessage = "הטופס עודכן בהצלחה";
+                
+//                 // אם המשתמש לחץ על "שמור וצפה"
+//                 if ($saveAndView) {
+//                     header("Location: view_form.php?id=" . $formUuid);
+//                     exit;
+//                 }
+                
+//                 // טען מחדש את הנתונים המעודכנים
+//                 $formData = $form->getFormData();
+//             }
+//         } catch (Exception $e) {
+//             $errorMessage = "שגיאה בשמירת הטופס: " . $e->getMessage();
+//             error_log("Form save error: " . $e->getMessage());
+//         }
+//     } else {
+//         $errors = $formatErrors;
+//     }
+// }
+
+// טיפול בשליחת הטופס
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // בדיקת CSRF token
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
@@ -197,34 +269,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             if ($isNewForm) {
                 // יצירת טופס חדש
-                $postData['form_uuid'] = $formUuid; // וודא שה-UUID נשמר
-                $postData['status'] = 'draft'; // תמיד התחל כטיוטה
+                $postData['form_uuid'] = $formUuid;
+                $postData['status'] = 'draft';
                 $form->createForm($postData);
-                $successMessage = "הטופס נוצר בהצלחה";
                 
-                // אם יצירת הטופס הצליחה והמשתמש לחץ על "שמור וצפה"
-                if ($saveAndView) {
-                    header("Location: view_form.php?id=" . $formUuid);
-                    exit;
+                // חשוב! וודא שהשמירה הסתיימה על ידי טעינת הנתונים חזרה
+                $verifyForm = new DeceasedForm($formUuid, $userPermissionLevel);
+                $verifyData = $verifyForm->getFormData();
+                
+                // המתן עד 5 שניות לשמירה
+                $attempts = 0;
+                while (!$verifyData && $attempts < 10) {
+                    usleep(500000); // חצי שנייה
+                    $verifyForm = new DeceasedForm($formUuid, $userPermissionLevel);
+                    $verifyData = $verifyForm->getFormData();
+                    $attempts++;
                 }
                 
-                // אחרת, טען מחדש את הטופס לעריכה
-                header("Location: form.php?id=" . $formUuid);
-                exit;
+                if ($verifyData) {
+                    // השמירה הצליחה
+                    $_SESSION['form_saved_message'] = "הטופס נוצר בהצלחה";
+                    
+                    if ($saveAndView) {
+                        header("Location: view_form.php?id=" . $formUuid);
+                        exit;
+                    } else {
+                        header("Location: form.php?id=" . $formUuid . "&saved=1");
+                        exit;
+                    }
+                } else {
+                    // השמירה נכשלה
+                    $errorMessage = "שגיאה בשמירת הטופס. אנא נסה שוב.";
+                }
                 
             } else {
                 // עדכון טופס קיים
                 $form->updateForm($postData);
-                $successMessage = "הטופס עודכן בהצלחה";
                 
-                // אם המשתמש לחץ על "שמור וצפה"
+                // וודא שהעדכון הסתיים
+                $verifyForm = new DeceasedForm($formUuid, $userPermissionLevel);
+                $verifyData = $verifyForm->getFormData();
+                
                 if ($saveAndView) {
+                    $_SESSION['form_saved_message'] = "הטופס עודכן בהצלחה";
                     header("Location: view_form.php?id=" . $formUuid);
                     exit;
+                } else {
+                    // טען מחדש את הנתונים המעודכנים
+                    $formData = $verifyData;
+                    $successMessage = "הטופס עודכן בהצלחה";
                 }
-                
-                // טען מחדש את הנתונים המעודכנים
-                $formData = $form->getFormData();
             }
         } catch (Exception $e) {
             $errorMessage = "שגיאה בשמירת הטופס: " . $e->getMessage();
@@ -233,6 +327,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $errors = $formatErrors;
     }
+}
+
+// בדוק אם יש הודעת הצלחה מהסשן
+if (isset($_SESSION['form_saved_message'])) {
+    $successMessage = $_SESSION['form_saved_message'];
+    unset($_SESSION['form_saved_message']);
 }
 
 // קבלת רשימות לשדות תלויים (אם יש נתונים)
@@ -356,9 +456,78 @@ if ($form) {
             border-radius: 5px;
             margin-bottom: 20px;
         }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loading-spinner {
+            color: white;
+            font-size: 3rem;
+        }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay משופר -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="spinner-container">
+                <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+                    <span class="visually-hidden">טוען...</span>
+                </div>
+            </div>
+            <h3 class="text-white mt-3">שומר נתונים...</h3>
+            <div class="progress mt-3" style="width: 300px; margin: 0 auto;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                    role="progressbar" style="width: 100%"></div>
+            </div>
+            <p class="text-white mt-2">אנא המתן, מעדכן את הטופס במערכת...</p>
+        </div>
+    </div>
+
+    <style>
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner-container {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .loading-overlay .progress {
+            height: 25px;
+        }
+    </style>
+
+
     <div class="container">
         <div class="form-container">
             <h2 class="text-center mb-4">
@@ -1529,7 +1698,29 @@ if ($form) {
         console.log('Form Data Loaded: <?= $debugInfo['formDataLoaded'] ? 'YES' : 'NO' ?>');
         console.log('======================');
     </script>
+
+    <script>
+        // הצג אנימציה בעת שמירה
+        $('#deceasedForm').on('submit', function(e) {
+            // אם יש שגיאות ולידציה, אל תציג את האנימציה
+            if ($(this).find('.is-invalid').length > 0) {
+                return;
+            }
+            
+            // הצג את האנימציה
+            $('#loadingOverlay').css('display', 'flex');
+            
+            // השבת את כל הכפתורים
+            $(this).find('button[type="submit"]').prop('disabled', true);
+        });
+
+        // הסר את האנימציה אם הדף נטען עם שגיאות
+        $(document).ready(function() {
+            <?php if (isset($errors) && !empty($errors)): ?>
+            $('#loadingOverlay').hide();
+            <?php endif; ?>
+        });
+    </script>
     <?php endif; ?>
 </body>
 </html>
-
