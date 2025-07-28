@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['username'] = $username;
             $_SESSION['permission_level'] = 4; // מנהל
             
-            header('Location: dashboard.php');
+            header('Location: ' . DASHBOARD_URL);
             exit;
         } elseif ($username === 'editor' && $password === 'editor123') {
             $_SESSION['user_id'] = 2;
