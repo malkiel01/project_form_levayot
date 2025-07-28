@@ -1,6 +1,5 @@
 <?php
 require_once '../config.php'; // עדכן נתיב בהתאם למבנה
-session_start();
 
 // הגדרת CSRF TOKEN אם לא קיים
 if (empty($_SESSION['csrf_token'])) {
