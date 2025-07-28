@@ -1,32 +1,26 @@
 <?php
 require_once '../config.php'; // עדכן נתיב בהתאם למבנה
 
-// // הגדרת CSRF TOKEN אם לא קיים
-// if (empty($_SESSION['csrf_token'])) {
-//     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-// }
-
-// // אם המשתמש כבר מחובר
-// if (isset($_SESSION['user_id'])) {
-//     $redirect = $_GET['redirect'] ?? DASHBOARD_URL;
-//     if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
-//         $redirect = basename($redirect);
-//         if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
-//             $redirect = DASHBOARD_URL;
-//         }
-//     }
-//     header('Location: ' . ltrim($redirect, '/'));
-//     exit;
-// }
+// הגדרת CSRF TOKEN אם לא קיים
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
 // אם המשתמש כבר מחובר
 if (isset($_SESSION['user_id'])) {
-    header('Location: dashboard.php');
+    $redirect = $_GET['redirect'] ?? DASHBOARD_URL;
+    if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
+        $redirect = basename($redirect);
+        if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
+            $redirect = DASHBOARD_URL;
+        }
+    }
+    header('Location: ' . ltrim($redirect, '/'));
     exit;
 }
 
 $error = '';
-$redirect = $_GET['redirect'] ?? DASHBOARD_URL;
+// $redirect = $_GET['redirect'] ?? DASHBOARD_URL;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // בדיקת CSRF token
