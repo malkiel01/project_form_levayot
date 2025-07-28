@@ -138,7 +138,7 @@ $userNotifications = $notifications->fetchAll();
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="form.php">
+                        <a class="nav-link" href="<?= FORM_URL ?>">
                             <i class="fas fa-plus"></i> טופס חדש
                         </a>
                     </li>
@@ -268,7 +268,7 @@ $userNotifications = $notifications->fetchAll();
                                         </td>
                                         <td><?= date('d/m/Y H:i', strtotime($form['created_at'])) ?></td>
                                         <td>
-                                            <a href="form.php?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-primary">
+                                            <a href="<?= FORM_URL ?>?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <a href="view_form.php?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-info">
@@ -298,7 +298,7 @@ $userNotifications = $notifications->fetchAll();
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <a href="form.php" class="btn btn-success">
+                            <a href="<?= FORM_URL ?>" class="btn btn-success">
                                 <i class="fas fa-plus"></i> יצירת טופס חדש
                             </a>
                             <a href="search.php" class="btn btn-primary">

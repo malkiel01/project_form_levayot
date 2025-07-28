@@ -213,7 +213,7 @@ if (!$formUuid) {
     $isNewForm = true;
     
     // הפניה לכתובת עם ה-UUID החדש
-    header("Location: form.php?id=" . $formUuid);
+    header("Location: " . FORM_URL . "?id=" . $formUuid);
     exit;
 } else {
     // יש UUID - בדוק אם הטופס קיים
@@ -302,7 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         header("Location: view_form.php?id=" . $formUuid);
                         exit;
                     } else {
-                        header("Location: form.php?id=" . $formUuid . "&saved=1");
+                        header("Location: " . FORM_URL . "?id=" . $formUuid . "&saved=1");
                         exit;
                     }
                 } else {

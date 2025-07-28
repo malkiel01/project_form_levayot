@@ -147,7 +147,7 @@ $cemeteries = $db->query("SELECT id, name FROM cemeteries WHERE is_active = 1 OR
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="form.php">
+                        <a class="nav-link" href="<?= FORM_URL ?>">
                             <i class="fas fa-plus"></i> טופס חדש
                         </a>
                     </li>
@@ -262,7 +262,7 @@ $cemeteries = $db->query("SELECT id, name FROM cemeteries WHERE is_active = 1 OR
                     <h5>נמצאו <?= number_format($totalRecords) ?> טפסים</h5>
                 </div>
                 <div class="col-6 text-end">
-                    <a href="form.php" class="btn btn-success">
+                    <a href="<?= FORM_URL ?>" class="btn btn-success">
                         <i class="fas fa-plus"></i> טופס חדש
                     </a>
                 </div>
@@ -343,7 +343,7 @@ $cemeteries = $db->query("SELECT id, name FROM cemeteries WHERE is_active = 1 OR
                                 <small><?= date('d/m/Y H:i', strtotime($form['created_at'])) ?></small>
                             </td>
                             <td class="action-buttons">
-                                <a href="form.php?id=<?= $form['form_uuid'] ?>" 
+                                <a href="<?= FORM_URL ?>?id=<?= $form['form_uuid'] ?>" 
                                    class="btn btn-primary btn-sm" title="עריכה">
                                     <i class="fas fa-edit"></i>
                                 </a>

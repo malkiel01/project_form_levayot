@@ -14,6 +14,10 @@ define('UPLOAD_PATH', __DIR__ . '/uploads/');
 define('MAX_FILE_SIZE', 10 * 1024 * 1024); // 10MB
 define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']);
 
+// לינקים וקישורים
+define('FORM_URL', 'form/index.php');
+// define('FORM_URL', 'form.php');
+
 // הגדרות אבטחה
 define('SESSION_NAME', 'deceased_forms_session');
 define('CSRF_TOKEN_NAME', 'csrf_token');

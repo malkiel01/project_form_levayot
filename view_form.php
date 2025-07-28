@@ -375,7 +375,7 @@ if ($formData['cemetery_id']) {
             <!-- כפתורי פעולה -->
             <div class="row mt-4 no-print">
                 <div class="col-12 text-center">
-                    <a href="form.php?id=<?= $formData['form_uuid'] ?>" class="btn btn-primary">
+                    <a href="<?= FORM_URL ?>?id=<?= $formData['form_uuid'] ?>" class="btn btn-primary">
                         <i class="fas fa-edit"></i> ערוך טופס
                     </a>
                     <button type="button" class="btn btn-secondary" onclick="window.print()">

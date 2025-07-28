@@ -4,7 +4,8 @@
 RewriteEngine On
 
 # הפניה לדף הראשי
-DirectoryIndex form.php
+# DirectoryIndex form.php
+DirectoryIndex form/index.php
 
 # מניעת גישה לקבצי config
 <Files "config.php">

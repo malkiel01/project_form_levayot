@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['username'] = $username;
         $_SESSION['permission_level'] = 2; // עורך
         
-        header('Location: form.php');
+        header('Location: ' . FORM_URL );
         exit;
     } else {
         $error = 'שם משתמש או סיסמה שגויים';

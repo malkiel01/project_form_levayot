@@ -282,7 +282,7 @@ $links = $stmt->fetchAll();
     
     <script>
         function showLink(linkUuid) {
-            const url = '<?= SITE_URL ?>/form.php?link=' + linkUuid;
+            const url = '<?= SITE_URL ?>/<?= FORM_URL ?>?link=' + linkUuid;
             document.getElementById('linkUrl').value = url;
             $('#showLinkModal').modal('show');
         }

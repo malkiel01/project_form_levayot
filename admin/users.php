@@ -177,7 +177,7 @@ $permissions = $db->query("SELECT * FROM permissions ORDER BY permission_level")
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="../form.php">
+                        <a class="nav-link" href="../<?= FORM_URL ?>">
                             <i class="fas fa-plus"></i> טופס חדש
                         </a>
                     </li>

@@ -103,7 +103,7 @@ try {
     // החזרת תוצאה
     $response = [
         'success' => true,
-        'link' => SITE_URL . '/form.php?link=' . $linkUuid,
+        'link' => SITE_URL . '/' . FORM_URL . '?link=' . $linkUuid,
         'link_uuid' => $linkUuid,
         'access_type' => $accessType,
         'can_edit' => $canEdit,
