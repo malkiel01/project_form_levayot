@@ -1,6 +1,5 @@
 <?php
 // ajax/get_sections.php - קבלת רשימת חלקות
-
 require_once '../config.php';
 require_once '../DeceasedForm.php';
 

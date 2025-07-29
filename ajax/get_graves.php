@@ -1,6 +1,5 @@
 <?php
 // ajax/get_graves.php - קבלת רשימת קברים
-
 require_once '../config.php';
 require_once '../DeceasedForm.php';
 

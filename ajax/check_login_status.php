@@ -1,6 +1,5 @@
 <?php
 // ajax/check_login_status.php - בדיקת סטטוס התחברות של המשתמש
-
 require_once '../config.php';
 
 header('Content-Type: application/json; charset=utf-8');

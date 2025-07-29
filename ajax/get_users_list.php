@@ -1,6 +1,5 @@
 <?php
 // ajax/get_users_list.php - קבלת רשימת משתמשים לבחירה
-
 require_once '../config.php';
 
 // בדיקת הרשאות

@@ -1,6 +1,5 @@
 <?php
 // ajax/save_signature.php - שמירת חתימה
-
 require_once '../config.php';
 require_once '../DeceasedForm.php';
 

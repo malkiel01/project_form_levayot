@@ -1,6 +1,5 @@
 <?php
 // ajax/upload_document.php - העלאת מסמך
-
 require_once '../config.php';
 require_once '../DeceasedForm.php';
 

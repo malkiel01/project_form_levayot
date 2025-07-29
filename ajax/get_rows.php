@@ -1,6 +1,5 @@
 <?php
 // ajax/get_rows.php - קבלת רשימת שורות
-
 require_once '../config.php';
 require_once '../DeceasedForm.php';
 

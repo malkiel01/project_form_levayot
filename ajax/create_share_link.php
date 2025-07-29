@@ -1,6 +1,5 @@
 <?php
 // ajax/create_share_link.php - יצירת קישור שיתוף מתקדם
-
 require_once '../config.php';
 require_once '../DeceasedForm.php';
 

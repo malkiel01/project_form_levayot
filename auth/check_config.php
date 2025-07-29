@@ -1,5 +1,6 @@
 <?php
 // בדיקת הגדרות config.php
+require_once '../config.php';
 
 echo "<h2>בדיקת הגדרות המערכת</h2>";
 
@@ -7,7 +8,6 @@ echo "<h2>בדיקת הגדרות המערכת</h2>";
 if (file_exists('../config.php')) {
     echo "<p style='color: green;'>✓ קובץ config.php נמצא</p>";
     
-    require_once '../config.php';
     
     // בדיקת קבועים
     echo "<h3>קבועים מוגדרים:</h3>";

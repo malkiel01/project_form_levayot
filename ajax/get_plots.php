@@ -1,6 +1,5 @@
 <?php
 // ajax/get_plots.php - קבלת רשימת אחוזות קבר
-
 require_once '../config.php';
 require_once '../DeceasedForm.php';
 

@@ -1,6 +1,5 @@
 <?php
 // ajax/auto_save.php - שמירה אוטומטית עם עדכון סטטוס
-
 require_once '../config.php';
 require_once '../DeceasedForm.php';
 

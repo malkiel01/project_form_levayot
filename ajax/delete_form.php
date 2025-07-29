@@ -1,6 +1,5 @@
 <?php
 // admin/delete_form.php - מחיקת טופס
-
 require_once '../config.php';
 
 header('Content-Type: application/json');
