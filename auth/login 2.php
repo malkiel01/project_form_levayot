@@ -24,132 +24,9 @@ $success = '';
 $redirect = $_GET['redirect'] ?? DASHBOARD_URL;
 
 // טיפול בהתחברות רגילה
-// if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
-//     // בדיקת CSRF token
-//     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-//         die('Invalid CSRF token');
-//     }
-    
-//     $username = sanitizeInput($_POST['username'] ?? '');
-//     $password = $_POST['password'] ?? '';
-//     $redirect = sanitizeInput($_POST['redirect'] ?? DASHBOARD_URL);
-
-//     if (empty($username) || empty($password)) {
-//         $error = 'יש להזין שם משתמש וסיסמה';
-//     } else {
-//         try {
-//             $db = getDbConnection();
-//             $stmt = $db->prepare("
-//                 SELECT id, username, password, full_name, permission_level, 
-//                        is_active, failed_login_attempts, locked_until 
-//                 FROM users 
-//                 WHERE username = ? OR email = ?
-//             ");
-//             $stmt->execute([$username, $username]);
-//             $user = $stmt->fetch();
-            
-//             if ($user) {
-//                 // בדיקת נעילת חשבון
-//                 if ($user['locked_until'] && strtotime($user['locked_until']) > time()) {
-//                     $error = 'החשבון נעול זמנית. נסה שוב מאוחר יותר.';
-//                 } elseif (!$user['is_active']) {
-//                     $error = 'החשבון לא פעיל. פנה למנהל המערכת.';
-//                 } elseif (password_verify($password, $user['password'])) {
-//                     // התחברות מוצלחת
-//                     $db->prepare("
-//                         UPDATE users 
-//                         SET failed_login_attempts = 0, 
-//                             locked_until = NULL, 
-//                             last_login = NOW() 
-//                         WHERE id = ?
-//                     ")->execute([$user['id']]);
-                    
-//                     // הגדרת סשן
-//                     $_SESSION['user_id'] = $user['id'];
-//                     $_SESSION['username'] = $user['username'];
-//                     $_SESSION['full_name'] = $user['full_name'];
-//                     $_SESSION['permission_level'] = $user['permission_level'];
-//                     $_SESSION['login_time'] = time();
-//                     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-                    
-//                     // רישום בלוג
-//                     $db->prepare("
-//                         INSERT INTO activity_log 
-//                         (user_id, action, details, ip_address, user_agent) 
-//                         VALUES (?, 'login_success', ?, ?, ?)
-//                     ")->execute([
-//                         $user['id'], 
-//                         json_encode(['redirect' => $redirect]), 
-//                         $_SERVER['REMOTE_ADDR'] ?? '', 
-//                         $_SERVER['HTTP_USER_AGENT'] ?? ''
-//                     ]);
-                    
-//                     // הפניה
-//                     if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
-//                         $redirect = basename($redirect);
-//                         if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
-//                             $redirect = DASHBOARD_URL;
-//                         }
-//                     }
-//                     header('Location: ' . ltrim($redirect, '/'));
-//                     exit;
-//                 } else {
-//                     // סיסמה שגויה
-//                     $attempts = $user['failed_login_attempts'] + 1;
-//                     $lockUntil = null;
-                    
-//                     if ($attempts >= 5) {
-//                         $lockUntil = date('Y-m-d H:i:s', strtotime('+30 minutes'));
-//                         $error = 'יותר מדי ניסיונות התחברות כושלים. החשבון נעול ל-30 דקות.';
-//                     } else {
-//                         $error = 'שם משתמש או סיסמה שגויים. נותרו ' . (5 - $attempts) . ' ניסיונות.';
-//                     }
-                    
-//                     $db->prepare("
-//                         UPDATE users 
-//                         SET failed_login_attempts = ?, locked_until = ? 
-//                         WHERE id = ?
-//                     ")->execute([$attempts, $lockUntil, $user['id']]);
-                    
-//                     // רישום בלוג
-//                     $db->prepare("
-//                         INSERT INTO activity_log 
-//                         (user_id, action, details, ip_address, user_agent) 
-//                         VALUES (?, 'login_failed', ?, ?, ?)
-//                     ")->execute([
-//                         $user['id'], 
-//                         json_encode(['reason' => 'wrong_password', 'attempts' => $attempts]), 
-//                         $_SERVER['REMOTE_ADDR'] ?? '', 
-//                         $_SERVER['HTTP_USER_AGENT'] ?? ''
-//                     ]);
-//                 }
-//             } else {
-//                 $error = 'שם משתמש או סיסמה שגויים';
-                
-//                 // רישום בלוג
-//                 $db->prepare("
-//                     INSERT INTO activity_log 
-//                     (user_id, action, details, ip_address, user_agent) 
-//                     VALUES (NULL, 'login_failed', ?, ?, ?)
-//                 ")->execute([
-//                     json_encode(['reason' => 'user_not_found', 'username' => $username]), 
-//                     $_SERVER['REMOTE_ADDR'] ?? '', 
-//                     $_SERVER['HTTP_USER_AGENT'] ?? ''
-//                 ]);
-//             }
-//         } catch (Exception $e) {
-//             error_log("Login error: " . $e->getMessage());
-//             $error = 'שגיאה במערכת. נסה שוב מאוחר יותר.';
-//         }
-//     }
-// }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
-    error_log("===== LOGIN ATTEMPT =====");
     // בדיקת CSRF token
-    error_log("POST CSRF: " . ($_POST['csrf_token'] ?? 'NULL'));
-    error_log("SESSION CSRF: " . ($_SESSION['csrf_token'] ?? 'NULL'));
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        error_log("ERROR: CSRF mismatch!");
         die('Invalid CSRF token');
     }
     
@@ -157,12 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $password = $_POST['password'] ?? '';
     $redirect = sanitizeInput($_POST['redirect'] ?? DASHBOARD_URL);
 
-    error_log("Username entered: $username");
-    error_log("Password entered: [$password] (len=" . strlen($password) . ")");
-
     if (empty($username) || empty($password)) {
         $error = 'יש להזין שם משתמש וסיסמה';
-        error_log("ERROR: Username or password empty");
     } else {
         try {
             $db = getDbConnection();
@@ -176,114 +49,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $user = $stmt->fetch();
             
             if ($user) {
-                error_log("User found: id=" . $user['id'] . ", username=" . $user['username']);
-                error_log("DB password hash: " . $user['password'] . " (len=" . strlen($user['password']) . ")");
-                error_log("is_active: " . $user['is_active'] . ", locked_until: " . $user['locked_until']);
-                
-                // השוואה תו-לתו של הסיסמה עם מה שנשלח (לראות אם יש רווחים/תוים מוזרים)
-                $inputPassHex = bin2hex($password);
-                error_log("Password entered (hex): $inputPassHex");
-                
-                // בדוק נעילה/לא פעיל
+                // בדיקת נעילת חשבון
                 if ($user['locked_until'] && strtotime($user['locked_until']) > time()) {
                     $error = 'החשבון נעול זמנית. נסה שוב מאוחר יותר.';
-                    error_log("ERROR: Account locked (locked_until=" . $user['locked_until'] . ")");
                 } elseif (!$user['is_active']) {
                     $error = 'החשבון לא פעיל. פנה למנהל המערכת.';
-                    error_log("ERROR: Account not active");
+                } elseif (password_verify($password, $user['password'])) {
+                    // התחברות מוצלחת
+                    $db->prepare("
+                        UPDATE users 
+                        SET failed_login_attempts = 0, 
+                            locked_until = NULL, 
+                            last_login = NOW() 
+                        WHERE id = ?
+                    ")->execute([$user['id']]);
+                    
+                    // הגדרת סשן
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['full_name'] = $user['full_name'];
+                    $_SESSION['permission_level'] = $user['permission_level'];
+                    $_SESSION['login_time'] = time();
+                    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                    
+                    // רישום בלוג
+                    $db->prepare("
+                        INSERT INTO activity_log 
+                        (user_id, action, details, ip_address, user_agent) 
+                        VALUES (?, 'login_success', ?, ?, ?)
+                    ")->execute([
+                        $user['id'], 
+                        json_encode(['redirect' => $redirect]), 
+                        $_SERVER['REMOTE_ADDR'] ?? '', 
+                        $_SERVER['HTTP_USER_AGENT'] ?? ''
+                    ]);
+                    
+                    // הפניה
+                    if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
+                        $redirect = basename($redirect);
+                        if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
+                            $redirect = DASHBOARD_URL;
+                        }
+                    }
+                    header('Location: ' . ltrim($redirect, '/'));
+                    exit;
                 } else {
-                    // בדיקת התאמה
-                    $pwResult = password_verify($password, $user['password']);
-                    error_log("password_verify result: " . ($pwResult ? "TRUE" : "FALSE"));
-
-                    // הדפס פערים תו-לתו בין סיסמה לסיסמה ב־DB (במקרה של סיסמאות פשוטות לטסט בלבד)
-                    // (שים לב - לא מומלץ לייצור, רק לדיבוג)
-                    $diff = [];
-                    for ($i = 0; $i < max(strlen($password), strlen($user['password'])); $i++) {
-                        $a = $password[$i] ?? '';
-                        $b = $user['password'][$i] ?? '';
-                        if ($a !== $b) $diff[] = "pos $i: entered='" . addslashes($a) . "', db='" . addslashes($b) . "'";
-                    }
-                    if ($diff) {
-                        error_log("DIFF password vs db: " . implode(' | ', $diff));
-                    }
-
-                    if ($pwResult) {
-                        // התחברות מוצלחת
-                        error_log("LOGIN SUCCESS for user " . $user['username']);
-                        $db->prepare("
-                            UPDATE users 
-                            SET failed_login_attempts = 0, 
-                                locked_until = NULL, 
-                                last_login = NOW() 
-                            WHERE id = ?
-                        ")->execute([$user['id']]);
-                        
-                        // הגדרת סשן
-                        $_SESSION['user_id'] = $user['id'];
-                        $_SESSION['username'] = $user['username'];
-                        $_SESSION['full_name'] = $user['full_name'];
-                        $_SESSION['permission_level'] = $user['permission_level'];
-                        $_SESSION['login_time'] = time();
-                        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-                        
-                        // רישום בלוג
-                        $db->prepare("
-                            INSERT INTO activity_log 
-                            (user_id, action, details, ip_address, user_agent) 
-                            VALUES (?, 'login_success', ?, ?, ?)
-                        ")->execute([
-                            $user['id'], 
-                            json_encode(['redirect' => $redirect]), 
-                            $_SERVER['REMOTE_ADDR'] ?? '', 
-                            $_SERVER['HTTP_USER_AGENT'] ?? ''
-                        ]);
-                        
-                        // הפניה
-                        if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
-                            $redirect = basename($redirect);
-                            if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
-                                $redirect = DASHBOARD_URL;
-                            }
-                        }
-                        header('Location: ' . ltrim($redirect, '/'));
-                        exit;
+                    // סיסמה שגויה
+                    $attempts = $user['failed_login_attempts'] + 1;
+                    $lockUntil = null;
+                    
+                    if ($attempts >= 5) {
+                        $lockUntil = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+                        $error = 'יותר מדי ניסיונות התחברות כושלים. החשבון נעול ל-30 דקות.';
                     } else {
-                        // סיסמה שגויה
-                        $attempts = $user['failed_login_attempts'] + 1;
-                        $lockUntil = null;
-                        
-                        if ($attempts >= 5) {
-                            $lockUntil = date('Y-m-d H:i:s', strtotime('+30 minutes'));
-                            $error = 'יותר מדי ניסיונות התחברות כושלים. החשבון נעול ל-30 דקות.';
-                            error_log("ERROR: too many login attempts, locking account!");
-                        } else {
-                            $error = 'שם משתמש או סיסמה שגויים. נותרו ' . (5 - $attempts) . ' ניסיונות.';
-                            error_log("ERROR: wrong password, $attempts attempts");
-                        }
-                        
-                        $db->prepare("
-                            UPDATE users 
-                            SET failed_login_attempts = ?, locked_until = ? 
-                            WHERE id = ?
-                        ")->execute([$attempts, $lockUntil, $user['id']]);
-                        
-                        // רישום בלוג
-                        $db->prepare("
-                            INSERT INTO activity_log 
-                            (user_id, action, details, ip_address, user_agent) 
-                            VALUES (?, 'login_failed', ?, ?, ?)
-                        ")->execute([
-                            $user['id'], 
-                            json_encode(['reason' => 'wrong_password', 'attempts' => $attempts]), 
-                            $_SERVER['REMOTE_ADDR'] ?? '', 
-                            $_SERVER['HTTP_USER_AGENT'] ?? ''
-                        ]);
+                        $error = 'שם משתמש או סיסמה שגויים. נותרו ' . (5 - $attempts) . ' ניסיונות.';
                     }
+                    
+                    $db->prepare("
+                        UPDATE users 
+                        SET failed_login_attempts = ?, locked_until = ? 
+                        WHERE id = ?
+                    ")->execute([$attempts, $lockUntil, $user['id']]);
+                    
+                    // רישום בלוג
+                    $db->prepare("
+                        INSERT INTO activity_log 
+                        (user_id, action, details, ip_address, user_agent) 
+                        VALUES (?, 'login_failed', ?, ?, ?)
+                    ")->execute([
+                        $user['id'], 
+                        json_encode(['reason' => 'wrong_password', 'attempts' => $attempts]), 
+                        $_SERVER['REMOTE_ADDR'] ?? '', 
+                        $_SERVER['HTTP_USER_AGENT'] ?? ''
+                    ]);
                 }
             } else {
                 $error = 'שם משתמש או סיסמה שגויים';
-                error_log("ERROR: User not found for username: $username");
+                
                 // רישום בלוג
                 $db->prepare("
                     INSERT INTO activity_log 
@@ -301,7 +143,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
 }
-
 
 // בדיקה אם יש הודעה מהרישום
 if (isset($_SESSION['registration_success'])) {
