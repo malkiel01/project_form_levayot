@@ -13,7 +13,7 @@ if (!isset($data['credential'])) {
 }
 
 // אימות הטוקן של Google
-$client = new Google_Client(['client_id' => 'YOUR_GOOGLE_CLIENT_ID']);
+$client = new Google_Client(['client_id' => '453102975463-3fhe60iqfqh7bgprufpkddv4v29cobfb.apps.googleusercontent.com']);
 $payload = $client->verifyIdToken($data['credential']);
 
 if (!$payload) {
