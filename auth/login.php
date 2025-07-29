@@ -432,6 +432,7 @@ if (isset($_SESSION['registration_success'])) {
                 <i class="fas fa-user-circle"></i>
                 <h3>התחברות למערכת</h3>
                 <p class="text-muted">מערכת ניהול טפסי נפטרים</p>
+                <p class="text-muted">v2</p>
             </div>
             
             <?php if ($redirect !== DASHBOARD_URL): ?>
