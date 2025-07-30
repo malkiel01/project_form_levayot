@@ -17,27 +17,12 @@ window.FileManager = {
         maxFileSize: 10 * 1024 * 1024 // 10MB
     },
 
-    // משתנים נוספים לתפריט
-    contextMenuTarget: null,
-    touchTimer: null,
-    selectedFolder: null,
-
     // אתחול
     init(formUuid) {
         this.config.formUuid = formUuid;
         this.loadFiles();
         this.bindEvents();
         this.setView(localStorage.getItem('fileManagerView') || 'medium');
-        this.initExtended();
-    },
-
-    // אתחול מורחב
-    initExtended() {
-        // הוסף אירועי מגע למכשירים ניידים
-        this.bindTouchEvents();
-        
-        // הוסף אירועי תפריט
-        this.bindContextMenuEvents();
     },
 
     // קישור אירועים
@@ -61,39 +46,6 @@ window.FileManager = {
         // פעולות תפריט
         document.querySelectorAll('.context-menu-item').forEach(item => {
             item.addEventListener('click', this.handleMenuAction.bind(this));
-        });
-    },
-
-    // אירועי תפריט נוספים
-    bindContextMenuEvents() {
-        // כבר מטופל ב-bindEvents
-    },
-
-    // אירועי מגע
-    bindTouchEvents() {
-        document.addEventListener('touchstart', (e) => {
-            const fileItem = e.target.closest('.file-item');
-            if (!fileItem) return;
-            
-            this.touchTimer = setTimeout(() => {
-                fileItem.classList.add('touch-hold');
-                this.showContextMenuForItem(fileItem, e.touches[0].clientX, e.touches[0].clientY);
-            }, 500);
-        });
-        
-        document.addEventListener('touchend', () => {
-            if (this.touchTimer) {
-                clearTimeout(this.touchTimer);
-                document.querySelectorAll('.file-item.touch-hold').forEach(item => {
-                    item.classList.remove('touch-hold');
-                });
-            }
-        });
-        
-        document.addEventListener('touchmove', () => {
-            if (this.touchTimer) {
-                clearTimeout(this.touchTimer);
-            }
         });
     },
 
@@ -595,25 +547,7 @@ window.FileManager = {
             this.toggleSelection(parseInt(fileId));
         }
 
-        this.showContextMenuForItem(fileItem, e.pageX, e.pageY);
-    },
-
-    // הצגת תפריט לפריט ספציפי
-    showContextMenuForItem(fileItem, x, y) {
-        const fileId = parseInt(fileItem.dataset.fileId);
-        const file = this.config.files.find(f => f.id === fileId);
-        
-        if (!file) return;
-        
-        this.contextMenuTarget = file;
-        
-        // אם הקובץ לא נבחר, בחר רק אותו
-        if (!this.config.selectedFiles.has(fileId)) {
-            this.clearSelection();
-            this.toggleSelection(fileId);
-        }
-        
-        this.showContextMenu(x, y);
+        this.showContextMenu(e.pageX, e.pageY);
     },
 
     // הצגת תפריט
@@ -621,17 +555,13 @@ window.FileManager = {
         const menu = document.getElementById('contextMenu');
         if (!menu) return;
 
-        // הצג/הסתר פריטים לפי הקשר
+        // התאמת פריטי תפריט
         const selectedCount = this.config.selectedFiles.size;
-        const hasSelection = selectedCount > 0;
-        
-        // התאם את הטקסט של "בחר"
-        const selectItem = menu.querySelector('[data-action="select"]');
-        if (selectItem) {
-            selectItem.innerHTML = hasSelection ? 
-                '<i class="fas fa-times-circle"></i> בטל בחירה' : 
-                '<i class="fas fa-check-square"></i> בחר';
-        }
+        const singleFile = selectedCount === 1;
+
+        // הצג/הסתר פריטים לפי הקשר
+        document.querySelector('[data-action="rename"]').style.display = singleFile ? '' : 'none';
+        document.querySelector('[data-action="paste"]').style.display = this.config.clipboard.files.length ? '' : 'none';
 
         // מיקום
         menu.style.display = 'block';
@@ -646,18 +576,12 @@ window.FileManager = {
         if (rect.bottom > window.innerHeight) {
             menu.style.top = (y - rect.height) + 'px';
         }
-
-        // הוסף class למסך למניעת גלילה במובייל
-        document.body.classList.add('context-menu-open');
     },
 
     // הסתרת תפריט
     hideContextMenu() {
         const menu = document.getElementById('contextMenu');
         if (menu) menu.style.display = 'none';
-        
-        // הסר class מהמסך
-        document.body.classList.remove('context-menu-open');
     },
 
     // טיפול בפעולת תפריט
@@ -666,20 +590,17 @@ window.FileManager = {
         this.hideContextMenu();
 
         switch (action) {
-            case 'select':
-                this.toggleSelectionFromMenu();
-                break;
             case 'rename':
                 this.renameFile();
                 break;
             case 'properties':
-                this.showPropertiesEnhanced();
+                this.showProperties();
                 break;
             case 'copy':
-                this.showFolderSelector('copy');
+                this.copyFiles();
                 break;
             case 'cut':
-                this.showFolderSelector('cut');
+                this.cutFiles();
                 break;
             case 'paste':
                 this.pasteFiles();
@@ -691,151 +612,8 @@ window.FileManager = {
                 this.downloadFiles();
                 break;
             case 'delete':
-                this.deleteFilesWithConfirm();
+                this.deleteFiles();
                 break;
-            case 'associate':
-                this.associateToAnotherForm();
-                break;
-        }
-    },
-
-    // החלפת בחירה מהתפריט
-    toggleSelectionFromMenu() {
-        if (this.contextMenuTarget) {
-            this.toggleSelection(this.contextMenuTarget.id);
-        }
-    },
-
-    // הצגת בורר תיקיות
-    async showFolderSelector(action) {
-        const modal = new bootstrap.Modal(document.getElementById('folderSelectModal'));
-        const title = document.getElementById('folderSelectTitle');
-        
-        title.textContent = action === 'copy' ? 'בחר תיקיה להעתקה' : 'בחר תיקיה להעברה';
-        
-        // בנה עץ תיקיות
-        await this.buildFolderTree();
-        
-        // הגדר פעולת אישור
-        document.getElementById('confirmFolderSelect').onclick = () => {
-            this.executeFolderAction(action);
-            modal.hide();
-        };
-        
-        modal.show();
-    },
-
-    // בניית עץ תיקיות
-    async buildFolderTree() {
-        const treeContainer = document.getElementById('folderTree');
-        treeContainer.innerHTML = '';
-        
-        // תיקיית שורש
-        const rootItem = this.createFolderTreeItem({
-            name: 'תיקיית ראשית',
-            path: '/',
-            isCurrent: this.config.currentPath === '/'
-        });
-        treeContainer.appendChild(rootItem);
-        
-        // טען את כל התיקיות
-        await this.loadFolderStructure('/', rootItem);
-    },
-
-    // טעינת מבנה תיקיות
-    async loadFolderStructure(path, parentElement) {
-        try {
-            const response = await fetch('ajax/get_form_files.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `form_uuid=${this.config.formUuid}&path=${encodeURIComponent(path)}`
-            });
-            
-            const data = await response.json();
-            const folders = data.files.filter(f => f.is_folder);
-            
-            if (folders.length > 0) {
-                const childrenContainer = document.createElement('div');
-                childrenContainer.className = 'folder-tree-children';
-                
-                for (const folder of folders) {
-                    const folderPath = path === '/' ? '/' + folder.name : path + '/' + folder.name;
-                    const folderItem = this.createFolderTreeItem({
-                        name: folder.name,
-                        path: folderPath,
-                        isCurrent: this.config.currentPath === folderPath
-                    });
-                    
-                    childrenContainer.appendChild(folderItem);
-                    
-                    // טען תת-תיקיות
-                    await this.loadFolderStructure(folderPath, folderItem);
-                }
-                
-                parentElement.appendChild(childrenContainer);
-            }
-        } catch (error) {
-            console.error('Error loading folder structure:', error);
-        }
-    },
-
-    // יצירת פריט עץ תיקיות
-    createFolderTreeItem(folder) {
-        const item = document.createElement('div');
-        item.className = 'folder-tree-item';
-        if (folder.isCurrent) item.classList.add('current');
-        
-        item.innerHTML = `
-            <i class="fas fa-folder${folder.isCurrent ? '-open' : ''}"></i>
-            <span>${folder.name}</span>
-        `;
-        
-        item.onclick = (e) => {
-            e.stopPropagation();
-            document.querySelectorAll('.folder-tree-item').forEach(i => i.classList.remove('selected'));
-            item.classList.add('selected');
-            this.selectedFolder = folder.path;
-        };
-        
-        return item;
-    },
-
-    // ביצוע פעולת תיקייה
-    async executeFolderAction(action) {
-        if (!this.selectedFolder) {
-            this.showNotification('לא נבחרה תיקיית יעד', 'warning');
-            return;
-        }
-        
-        const selectedFiles = Array.from(this.config.selectedFiles);
-        
-        try {
-            const response = await fetch('ajax/move_copy_files.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: action,
-                    files: selectedFiles,
-                    source: this.config.currentPath,
-                    destination: this.selectedFolder,
-                    form_uuid: this.config.formUuid
-                })
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                this.clearSelection();
-                this.refresh();
-                this.showNotification(
-                    action === 'copy' ? 'הקבצים הועתקו בהצלחה' : 'הקבצים הועברו בהצלחה',
-                    'success'
-                );
-            } else {
-                this.showNotification(data.message || 'שגיאה בביצוע הפעולה', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            this.showNotification('שגיאה בביצוע הפעולה', 'error');
         }
     },
 
@@ -901,88 +679,6 @@ window.FileManager = {
             `;
         }
 
-        document.getElementById('propertiesContent').innerHTML = content;
-        const modal = new bootstrap.Modal(document.getElementById('propertiesModal'));
-        modal.show();
-    },
-
-    // הצגת מאפיינים משופרת
-    showPropertiesEnhanced() {
-        const fileIds = Array.from(this.config.selectedFiles);
-        const files = this.config.files.filter(f => fileIds.includes(f.id));
-        
-        let content = '';
-        
-        if (files.length === 1) {
-            const file = files[0];
-            content = `
-                <div class="properties-content">
-                    <div class="text-center mb-3">
-                        <div style="font-size: 64px;">${this.getFileIcon(file.extension)}</div>
-                        <h5 class="mt-2">${file.name}</h5>
-                    </div>
-                    <table class="table table-sm table-striped">
-                        <tr>
-                            <td width="40%"><strong>סוג:</strong></td>
-                            <td>${file.is_folder ? 'תיקייה' : (file.extension ? file.extension.toUpperCase() : 'קובץ')}</td>
-                        </tr>
-                        ${!file.is_folder ? `
-                        <tr>
-                            <td><strong>גודל:</strong></td>
-                            <td>${this.formatFileSize(file.size)}</td>
-                        </tr>
-                        ` : ''}
-                        <tr>
-                            <td><strong>מיקום:</strong></td>
-                            <td>${file.path || this.config.currentPath}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>תאריך העלאה:</strong></td>
-                            <td>${this.formatDate(file.upload_date)}</td>
-                        </tr>
-                        ${file.uploaded_by ? `
-                        <tr>
-                            <td><strong>הועלה על ידי:</strong></td>
-                            <td>${file.uploaded_by}</td>
-                        </tr>
-                        ` : ''}
-                    </table>
-                </div>
-            `;
-        } else {
-            const totalSize = files.filter(f => !f.is_folder).reduce((sum, f) => sum + (f.size || 0), 0);
-            const folderCount = files.filter(f => f.is_folder).length;
-            const fileCount = files.filter(f => !f.is_folder).length;
-            
-            content = `
-                <div class="properties-content">
-                    <h5 class="text-center mb-3">מאפיינים מרובים</h5>
-                    <table class="table table-sm">
-                        <tr>
-                            <td><strong>סה"כ פריטים:</strong></td>
-                            <td>${files.length}</td>
-                        </tr>
-                        ${folderCount > 0 ? `
-                        <tr>
-                            <td><strong>תיקיות:</strong></td>
-                            <td>${folderCount}</td>
-                        </tr>
-                        ` : ''}
-                        ${fileCount > 0 ? `
-                        <tr>
-                            <td><strong>קבצים:</strong></td>
-                            <td>${fileCount}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>גודל כולל:</strong></td>
-                            <td>${this.formatFileSize(totalSize)}</td>
-                        </tr>
-                        ` : ''}
-                    </table>
-                </div>
-            `;
-        }
-        
         document.getElementById('propertiesContent').innerHTML = content;
         const modal = new bootstrap.Modal(document.getElementById('propertiesModal'));
         modal.show();
@@ -1097,39 +793,6 @@ window.FileManager = {
         }
     },
 
-    // מחיקה עם אישור משופר
-    async deleteFilesWithConfirm() {
-        const selectedFiles = Array.from(this.config.selectedFiles);
-        const count = selectedFiles.length;
-        
-        // הצג הודעה מפורטת יותר
-        const files = this.config.files.filter(f => selectedFiles.includes(f.id));
-        const folders = files.filter(f => f.is_folder);
-        const regularFiles = files.filter(f => !f.is_folder);
-        
-        let message = `האם אתה בטוח שברצונך למחוק `;
-        if (folders.length && regularFiles.length) {
-            message += `${folders.length} תיקיות ו-${regularFiles.length} קבצים?`;
-        } else if (folders.length) {
-            message += `${folders.length} תיקיות?`;
-        } else {
-            message += `${regularFiles.length} קבצים?`;
-        }
-        
-        if (folders.length) {
-            message += '\n\nאזהרה: מחיקת תיקייה תמחק את כל תוכנה!';
-        }
-        
-        if (!confirm(message)) return;
-        
-        await this.deleteFiles();
-    },
-
-    // שיוך לטופס אחר - לטיפול בהמשך
-    associateToAnotherForm() {
-        this.showNotification('פונקציה זו תהיה זמינה בקרוב', 'info');
-    },
-
     // תצוגה מקדימה
     previewFile(file) {
         // פתיחה בחלון חדש או הצגה במודל
@@ -1169,6 +832,9 @@ window.FileManager = {
         }, 3000);
     }
 };
+
+// אישור שהאובייקט נטען
+console.log('FileManager loaded successfully:', typeof window.FileManager);
 
 // אישור שהאובייקט נטען
 console.log('FileManager loaded successfully:', typeof window.FileManager);

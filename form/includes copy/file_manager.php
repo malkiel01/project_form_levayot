@@ -69,11 +69,13 @@
 </div>
 
 <!-- תפריט קליק ימני -->
- <!-- new -->
 <div class="context-menu" id="contextMenu">
     <ul class="context-menu-list">
-        <li class="context-menu-item" data-action="select">
-            <i class="fas fa-check-square"></i> בחר
+        <li class="context-menu-item" data-action="rename">
+            <i class="fas fa-edit"></i> שינוי שם
+        </li>
+        <li class="context-menu-item" data-action="properties">
+            <i class="fas fa-info-circle"></i> מאפיינים
         </li>
         <li class="context-menu-divider"></li>
         <li class="context-menu-item" data-action="copy">
@@ -82,42 +84,50 @@
         <li class="context-menu-item" data-action="cut">
             <i class="fas fa-cut"></i> גזור
         </li>
+        <li class="context-menu-item" data-action="paste" id="pasteOption" style="display:none;">
+            <i class="fas fa-paste"></i> הדבק
+        </li>
+        <li class="context-menu-divider"></li>
+        <li class="context-menu-item" data-action="share">
+            <i class="fas fa-share-alt"></i> שתף
+        </li>
+        <li class="context-menu-item" data-action="download">
+            <i class="fas fa-download"></i> הורד
+        </li>
         <li class="context-menu-divider"></li>
         <li class="context-menu-item" data-action="delete">
             <i class="fas fa-trash"></i> מחק
         </li>
-        <li class="context-menu-divider"></li>
-        <li class="context-menu-item" data-action="properties">
-            <i class="fas fa-info-circle"></i> מאפיינים
-        </li>
-        <li class="context-menu-item" data-action="associate">
-            <i class="fas fa-link"></i> שיוך לטופס אחר
-        </li>
     </ul>
 </div>
 
-<!-- new -->
-<!-- מודל בחירת תיקיית יעד -->
-<div class="modal fade" id="folderSelectModal" tabindex="-1">
-    <div class="modal-dialog">
+<!-- מודל העלאת קבצים -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="folderSelectTitle">בחר תיקיית יעד</h5>
+                <h5 class="modal-title">העלאת קבצים</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="folder-tree" id="folderTree">
-                    <!-- עץ תיקיות יוצג כאן -->
+                <div class="upload-dropzone" id="uploadDropzone">
+                    <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                    <p>גרור קבצים לכאן או לחץ לבחירה</p>
+                    <input type="file" id="fileInput" multiple style="display: none;">
+                </div>
+                <div class="upload-queue mt-3" id="uploadQueue">
+                    <!-- רשימת קבצים להעלאה -->
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ביטול</button>
-                <button type="button" class="btn btn-primary" id="confirmFolderSelect">אישור</button>
+                <button type="button" class="btn btn-primary" onclick="FileManager.startUpload()">
+                    <i class="fas fa-upload"></i> התחל העלאה
+                </button>
             </div>
         </div>
     </div>
 </div>
-
 
 <!-- מודל מאפייני קובץ -->
 <div class="modal fade" id="propertiesModal" tabindex="-1">
