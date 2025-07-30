@@ -1,4 +1,6 @@
-<!-- form/includes/file_manager.php -->
+<?php
+// form/includes/file_manager.php
+?>
 <div class="section-title">מסמכים וקבצים</div>
 <div class="file-manager-container" id="fileManagerContainer">
     <!-- כלי עבודה עליונים -->
@@ -147,3 +149,16 @@
 
 <!-- קלט מוסתר לשמירת רשימת הקבצים -->
 <input type="hidden" id="form_files" name="form_files" value="">
+
+<script>
+// אתחול מנהל הקבצים אחרי שהדף נטען
+document.addEventListener('DOMContentLoaded', function() {
+    // וידוא שהאובייקט FileManager קיים
+    if (typeof FileManager !== 'undefined' && typeof formConfig !== 'undefined' && formConfig.formUuid) {
+        // אתחול מנהל הקבצים
+        FileManager.init(formConfig.formUuid);
+    } else {
+        console.error('FileManager not loaded or formConfig.formUuid missing');
+    }
+});
+</script>
