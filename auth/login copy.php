@@ -23,6 +23,126 @@ $error = '';
 $success = '';
 $redirect = $_GET['redirect'] ?? DASHBOARD_URL;
 
+// טיפול בהתחברות רגילה
+// if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
+//     // בדיקת CSRF token
+//     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+//         die('Invalid CSRF token');
+//     }
+    
+//     $username = sanitizeInput($_POST['username'] ?? '');
+//     $password = $_POST['password'] ?? '';
+//     $redirect = sanitizeInput($_POST['redirect'] ?? DASHBOARD_URL);
+
+//     if (empty($username) || empty($password)) {
+//         $error = 'יש להזין שם משתמש וסיסמה';
+//     } else {
+//         try {
+//             $db = getDbConnection();
+//             $stmt = $db->prepare("
+//                 SELECT id, username, password, full_name, permission_level, 
+//                        is_active, failed_login_attempts, locked_until 
+//                 FROM users 
+//                 WHERE username = ? OR email = ?
+//             ");
+//             $stmt->execute([$username, $username]);
+//             $user = $stmt->fetch();
+            
+//             if ($user) {
+//                 // בדיקת נעילת חשבון
+//                 if ($user['locked_until'] && strtotime($user['locked_until']) > time()) {
+//                     $error = 'החשבון נעול זמנית. נסה שוב מאוחר יותר.';
+//                 } elseif (!$user['is_active']) {
+//                     $error = 'החשבון לא פעיל. פנה למנהל המערכת.';
+//                 } elseif (password_verify($password, $user['password'])) {
+//                     // התחברות מוצלחת
+//                     $db->prepare("
+//                         UPDATE users 
+//                         SET failed_login_attempts = 0, 
+//                             locked_until = NULL, 
+//                             last_login = NOW() 
+//                         WHERE id = ?
+//                     ")->execute([$user['id']]);
+                    
+//                     // הגדרת סשן
+//                     $_SESSION['user_id'] = $user['id'];
+//                     $_SESSION['username'] = $user['username'];
+//                     $_SESSION['full_name'] = $user['full_name'];
+//                     $_SESSION['permission_level'] = $user['permission_level'];
+//                     $_SESSION['login_time'] = time();
+//                     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                    
+//                     // רישום בלוג
+//                     $db->prepare("
+//                         INSERT INTO activity_log 
+//                         (user_id, action, details, ip_address, user_agent) 
+//                         VALUES (?, 'login_success', ?, ?, ?)
+//                     ")->execute([
+//                         $user['id'], 
+//                         json_encode(['redirect' => $redirect]), 
+//                         $_SERVER['REMOTE_ADDR'] ?? '', 
+//                         $_SERVER['HTTP_USER_AGENT'] ?? ''
+//                     ]);
+                    
+//                     // הפניה
+//                     if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
+//                         $redirect = basename($redirect);
+//                         if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
+//                             $redirect = DASHBOARD_URL;
+//                         }
+//                     }
+//                     header('Location: ' . ltrim($redirect, '/'));
+//                     exit;
+//                 } else {
+//                     // סיסמה שגויה
+//                     $attempts = $user['failed_login_attempts'] + 1;
+//                     $lockUntil = null;
+                    
+//                     if ($attempts >= 5) {
+//                         $lockUntil = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+//                         $error = 'יותר מדי ניסיונות התחברות כושלים. החשבון נעול ל-30 דקות.';
+//                     } else {
+//                         $error = 'שם משתמש או סיסמה שגויים. נותרו ' . (5 - $attempts) . ' ניסיונות.';
+//                     }
+                    
+//                     $db->prepare("
+//                         UPDATE users 
+//                         SET failed_login_attempts = ?, locked_until = ? 
+//                         WHERE id = ?
+//                     ")->execute([$attempts, $lockUntil, $user['id']]);
+                    
+//                     // רישום בלוג
+//                     $db->prepare("
+//                         INSERT INTO activity_log 
+//                         (user_id, action, details, ip_address, user_agent) 
+//                         VALUES (?, 'login_failed', ?, ?, ?)
+//                     ")->execute([
+//                         $user['id'], 
+//                         json_encode(['reason' => 'wrong_password', 'attempts' => $attempts]), 
+//                         $_SERVER['REMOTE_ADDR'] ?? '', 
+//                         $_SERVER['HTTP_USER_AGENT'] ?? ''
+//                     ]);
+//                 }
+//             } else {
+//                 $error = 'שם משתמש או סיסמה שגויים';
+                
+//                 // רישום בלוג
+//                 $db->prepare("
+//                     INSERT INTO activity_log 
+//                     (user_id, action, details, ip_address, user_agent) 
+//                     VALUES (NULL, 'login_failed', ?, ?, ?)
+//                 ")->execute([
+//                     json_encode(['reason' => 'user_not_found', 'username' => $username]), 
+//                     $_SERVER['REMOTE_ADDR'] ?? '', 
+//                     $_SERVER['HTTP_USER_AGENT'] ?? ''
+//                 ]);
+//             }
+//         } catch (Exception $e) {
+//             error_log("Login error: " . $e->getMessage());
+//             $error = 'שגיאה במערכת. נסה שוב מאוחר יותר.';
+//         }
+//     }
+// }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
     error_log("===== LOGIN ATTEMPT =====");
     // בדיקת CSRF token
@@ -181,6 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
 }
+
 
 // בדיקה אם יש הודעה מהרישום
 if (isset($_SESSION['registration_success'])) {
@@ -409,20 +530,6 @@ if (isset($_SESSION['registration_success'])) {
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // // Toggle password visibility
-        // document.getElementById('togglePassword').addEventListener('click', function() {
-        //     const passwordField = document.getElementById('password');
-        //     const icon = this.querySelector('i');
-        //     if (passwordField.type === 'password') {
-        //         passwordField.type = 'text';
-        //         icon.classList.remove('fa-eye');
-        //         icon.classList.add('fa-eye-slash');
-        //     } else {
-        //         passwordField.type = 'password';
-        //         icon.classList.remove('fa-eye-slash');
-        //         icon.classList.add('fa-eye');
-        //     }
-        // });
         // Toggle password visibility
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordField = document.getElementById('password');
@@ -437,20 +544,7 @@ if (isset($_SESSION['registration_success'])) {
                 icon.classList.add('fa-eye');
             }
         });
-
-        // // Form submission loading
-        // document.getElementById('loginForm').addEventListener('submit', function() {
-        //     const btn = document.getElementById('loginBtn');
-        //     const originalHTML = btn.innerHTML;
-        //     btn.disabled = true;
-        //     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מתחבר...';
-            
-        //     // Safety timeout
-        //     setTimeout(function() {
-        //         btn.disabled = false;
-        //         btn.innerHTML = originalHTML;
-        //     }, 5000);
-        // });
+        
         // Form submission loading
         document.getElementById('loginForm').addEventListener('submit', function() {
             const btn = document.getElementById('loginBtn');
@@ -462,149 +556,34 @@ if (isset($_SESSION['registration_success'])) {
             setTimeout(function() {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
-            }, 10000); // הגדלתי הזמן ל-10 שניות
+            }, 5000);
         });
         
-        // // Google Sign-In callback
-        // function handleGoogleSignIn(response) {
-        //     // שלח את הטוקן לשרת
-        //     fetch('google_auth.php', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //         body: JSON.stringify({
-        //             credential: response.credential,
-        //             redirect: '<?= htmlspecialchars($redirect) ?>'
-        //         })
-        //     })
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         if (data.success) {
-        //             window.location.href = data.redirect;
-        //         } else {
-        //             alert(data.message || 'שגיאה בהתחברות עם Google');
-        //         }
-        //     })
-        //     .catch(error => {
-        //         console.error('Error:', error);
-        //         alert('שגיאה בהתחברות עם Google');
-        //     });
-        // }
-        // Google Sign-In callback עם טיפול שגיאות משופר
+        // Google Sign-In callback
         function handleGoogleSignIn(response) {
-            console.log('Google Sign-In started');
-            
-            // הוספת אינדיקציה חזותית
-            const originalContent = document.querySelector('.auth-container').innerHTML;
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'text-center p-4';
-            loadingDiv.innerHTML = `
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2">מתחבר עם Google...</p>
-            `;
-            
-            // הסתר את הטופס והראה loading
-            document.querySelector('.auth-container').appendChild(loadingDiv);
-            
-            // הכן את הנתונים
-            const requestData = {
-                credential: response.credential,
-                action: 'login', // או 'register' במקרה של רישום
-                redirect: '<?= htmlspecialchars($redirect) ?>'
-            };
-            
-            console.log('Sending request to server:', requestData);
-            
             // שלח את הטוקן לשרת
             fetch('google_auth.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
                 },
-                body: JSON.stringify(requestData)
+                body: JSON.stringify({
+                    credential: response.credential,
+                    redirect: '<?= htmlspecialchars($redirect) ?>'
+                })
             })
-            .then(response => {
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers);
-                
-                // בדוק אם התגובה היא JSON תקין
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    throw new Error('התגובה מהשרת אינה JSON תקין');
-                }
-                
-                return response.text(); // קודם נקרא כטקסט
-            })
-            .then(text => {
-                console.log('Raw response:', text);
-                
-                // נסה לפרש כ-JSON
-                try {
-                    const data = JSON.parse(text);
-                    console.log('Parsed JSON:', data);
-                    
-                    // הסר את ה-loading
-                    loadingDiv.remove();
-                    
-                    if (data.success) {
-                        console.log('Login successful, redirecting to:', data.redirect);
-                        
-                        // הצג הודעת הצלחה אם יש
-                        if (data.message) {
-                            const successDiv = document.createElement('div');
-                            successDiv.className = 'alert alert-success text-center';
-                            successDiv.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
-                            document.querySelector('.auth-container').insertBefore(successDiv, document.querySelector('.auth-container').firstChild);
-                            
-                            // חכה רגע לפני הפניה
-                            setTimeout(() => {
-                                window.location.href = data.redirect || '/dashboard/';
-                            }, 1500);
-                        } else {
-                            window.location.href = data.redirect || '/dashboard/';
-                        }
-                    } else {
-                        console.error('Login failed:', data.message);
-                        showError(data.message || 'שגיאה בהתחברות עם Google');
-                    }
-                } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
-                    console.error('Response text:', text);
-                    showError('שגיאה בתקשורת עם השרת. נסה שוב.');
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    alert(data.message || 'שגיאה בהתחברות עם Google');
                 }
             })
             .catch(error => {
-                console.error('Fetch error:', error);
-                loadingDiv.remove();
-                showError('שגיאה בהתחברות עם Google: ' + error.message);
+                console.error('Error:', error);
+                alert('שגיאה בהתחברות עם Google');
             });
-        }
-        // -----------------
-
-        // פונקציה להצגת שגיאות
-        function showError(message) {
-            // הסר שגיאות קודמות
-            const existingErrors = document.querySelectorAll('.alert-danger');
-            existingErrors.forEach(el => el.remove());
-            
-            // צור שגיאה חדשה
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'alert alert-danger alert-dismissible fade show';
-            errorDiv.innerHTML = `
-                <i class="fas fa-exclamation-circle"></i> ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            // הוסף בתחילת הקונטיינר
-            const container = document.querySelector('.auth-container');
-            container.insertBefore(errorDiv, container.firstChild);
-            
-            // גלול למעלה
-            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     </script>
 </body>

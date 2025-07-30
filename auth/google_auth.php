@@ -1,60 +1,95 @@
 <?php
-require_once '../config.php';
-require_once '../vendor/autoload.php'; // אם משתמש ב-Composer
+// מניעת הצגת שגיאות PHP (חשוב מאוד!)
+ini_set('display_errors', 0);
+error_reporting(0);
 
-header('Content-Type: application/json');
-
-// קריאה ל־input RAW ושמירה ללוג
-$rawInput = file_get_contents('php://input');
-file_put_contents('/tmp/google_auth_debug.txt', "--- RAW INPUT ---\n" . $rawInput . "\n", FILE_APPEND);
-
-// נסה לפענח JSON
-$data = json_decode($rawInput, true);
-file_put_contents('/tmp/google_auth_debug.txt', "--- DECODED DATA ---\n" . print_r($data, 1) . "\n", FILE_APPEND);
-
-
-// קבלת הנתונים
-// $data = json_decode(file_get_contents('php://input'), true);
-
-if (!isset($data['credential'])) {
-    echo json_encode(['success' => false, 'message' => 'חסר אסימון אימות']);
-    exit;
-}
-
-// אימות הטוקן של Google
-$client = new Google_Client(['client_id' => '453102975463-3fhe60iqfqh7bgprufpkddv4v29cobfb.apps.googleusercontent.com']);
-$payload = $client->verifyIdToken($data['credential']);
-
-if (!$payload) {
-    echo json_encode(['success' => false, 'message' => 'אסימון לא תקף']);
-    exit;
-}
-
-// קבלת פרטי המשתמש מ-Google
-$googleId = $payload['sub'];
-$email = $payload['email'];
-$name = $payload['name'];
-$picture = $payload['picture'] ?? '';
-$emailVerified = $payload['email_verified'];
-
-if (!$emailVerified) {
-    echo json_encode(['success' => false, 'message' => 'האימייל לא אומת על ידי Google']);
+// אם יש שגיאה, נשמור אותה בלוג ולא נציג אותה
+function handleError($message, $debugInfo = null) {
+    error_log("Google Auth Error: " . $message . ($debugInfo ? " | Debug: " . json_encode($debugInfo) : ""));
+    http_response_code(200); // חשוב לא לשלוח קוד שגיאה HTTP
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => $message]);
     exit;
 }
 
 try {
-    $db = getDbConnection();
+    require_once '../config.php';
+    
+    // ודא שיש לנו Content-Type נכון מההתחלה
+    header('Content-Type: application/json');
+    
+    // קריאה ל־input RAW
+    $rawInput = file_get_contents('php://input');
+    
+    // ולידציה בסיסית של הקלט
+    if (empty($rawInput)) {
+        handleError('לא התקבל מידע מGoogle');
+    }
+    
+    // לוג לדיבוג (אופציונלי)
+    error_log("Google Auth Raw Input: " . $rawInput);
+    
+    // נסה לפענח JSON
+    $data = json_decode($rawInput, true);
+    
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        handleError('פורמט מידע לא תקין מGoogle', ['json_error' => json_last_error_msg()]);
+    }
+    
+    if (!isset($data['credential']) || empty($data['credential'])) {
+        handleError('חסר אסימון אימות מGoogle');
+    }
+    
+    // בדיקה אם יש לנו את ה-Google Client
+    if (!class_exists('Google_Client')) {
+        handleError('שירות Google לא זמין במערכת');
+    }
+    
+    // אימות הטוקן של Google
+    $client = new Google_Client(['client_id' => '453102975463-3fhe60iqfqh7bgprufpkddv4v29cobfb.apps.googleusercontent.com']);
+    
+    try {
+        $payload = $client->verifyIdToken($data['credential']);
+    } catch (Exception $e) {
+        handleError('שגיאה באימות טוקן Google', ['error' => $e->getMessage()]);
+    }
+    
+    if (!$payload) {
+        handleError('אסימון Google לא תקף');
+    }
+    
+    // קבלת פרטי המשתמש מ-Google
+    $googleId = $payload['sub'] ?? '';
+    $email = $payload['email'] ?? '';
+    $name = $payload['name'] ?? '';
+    $picture = $payload['picture'] ?? '';
+    $emailVerified = $payload['email_verified'] ?? false;
+    
+    if (!$emailVerified) {
+        handleError('האימייל לא אומת על ידי Google');
+    }
+    
+    if (empty($email) || empty($googleId)) {
+        handleError('חסרים פרטים חיוניים מGoogle');
+    }
+    
+    try {
+        $db = getDbConnection();
+    } catch (Exception $e) {
+        handleError('שגיאה בחיבור לבסיס הנתונים', ['db_error' => $e->getMessage()]);
+    }
     
     // בדיקה אם המשתמש קיים
     $stmt = $db->prepare("SELECT * FROM users WHERE email = ? OR google_id = ?");
     $stmt->execute([$email, $googleId]);
     $user = $stmt->fetch();
     
-    if ($data['action'] === 'register') {
+    $action = $data['action'] ?? 'login'; // ברירת מחדל התחברות
+    
+    if ($action === 'register') {
         // רישום משתמש חדש
         if ($user) {
-            echo json_encode(['success' => false, 'message' => 'משתמש עם אימייל זה כבר קיים במערכת']);
-            exit;
+            handleError('משתמש עם אימייל זה כבר קיים במערכת');
         }
         
         // יצירת שם משתמש ייחודי
@@ -69,31 +104,43 @@ try {
             ) VALUES (?, ?, ?, ?, ?, 1, 0, 1, NOW())
         ");
         
-        $insertStmt->execute([
+        $result = $insertStmt->execute([
             $username, $email, $name, $googleId, $picture
         ]);
+        
+        if (!$result) {
+            handleError('שגיאה ביצירת החשבון');
+        }
         
         $userId = $db->lastInsertId();
         
         // רישום בלוג
-        $logStmt = $db->prepare("
-            INSERT INTO activity_log 
-            (user_id, action, details, ip_address, user_agent) 
-            VALUES (?, 'user_registered', ?, ?, ?)
-        ");
+        try {
+            $logStmt = $db->prepare("
+                INSERT INTO activity_log 
+                (user_id, action, details, ip_address, user_agent) 
+                VALUES (?, 'user_registered', ?, ?, ?)
+            ");
+            
+            $logStmt->execute([
+                $userId,
+                json_encode([
+                    'registration_type' => 'google',
+                    'google_id' => $googleId
+                ]),
+                $_SERVER['REMOTE_ADDR'] ?? '',
+                $_SERVER['HTTP_USER_AGENT'] ?? ''
+            ]);
+        } catch (Exception $e) {
+            error_log("Failed to log registration: " . $e->getMessage());
+        }
         
-        $logStmt->execute([
-            $userId,
-            json_encode([
-                'registration_type' => 'google',
-                'google_id' => $googleId
-            ]),
-            $_SERVER['REMOTE_ADDR'] ?? '',
-            $_SERVER['HTTP_USER_AGENT'] ?? ''
-        ]);
-        
-        // הודעה למנהלים
-        notifyAdminsAboutNewUser($userId, $username, $email, $name, 'Google');
+        // הודעה למנהלים (אופציונלי)
+        try {
+            notifyAdminsAboutNewUser($userId, $username, $email, $name, 'Google');
+        } catch (Exception $e) {
+            error_log("Failed to notify admins: " . $e->getMessage());
+        }
         
         echo json_encode([
             'success' => true, 
@@ -103,37 +150,38 @@ try {
     } else {
         // התחברות
         if (!$user) {
-            echo json_encode([
-                'success' => false, 
-                'message' => 'לא נמצא חשבון עם אימייל זה. אנא הרשם תחילה.'
-            ]);
-            exit;
+            handleError('לא נמצא חשבון עם אימייל זה. אנא הרשם תחילה.');
         }
         
         // בדיקת סטטוס החשבון
         if (!$user['is_active']) {
-            echo json_encode([
-                'success' => false, 
-                'message' => 'החשבון שלך ממתין לאישור מנהל'
-            ]);
-            exit;
+            handleError('החשבון שלך ממתין לאישור מנהל');
         }
         
         // עדכון פרטי Google אם צריך
         if (!$user['google_id']) {
-            $updateStmt = $db->prepare("
-                UPDATE users 
-                SET google_id = ?, profile_picture = ? 
-                WHERE id = ?
-            ");
-            $updateStmt->execute([$googleId, $picture, $user['id']]);
+            try {
+                $updateStmt = $db->prepare("
+                    UPDATE users 
+                    SET google_id = ?, profile_picture = ? 
+                    WHERE id = ?
+                ");
+                $updateStmt->execute([$googleId, $picture, $user['id']]);
+            } catch (Exception $e) {
+                error_log("Failed to update Google info: " . $e->getMessage());
+            }
         }
         
         // עדכון זמן כניסה אחרון
-        $db->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")
-           ->execute([$user['id']]);
+        try {
+            $db->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")
+               ->execute([$user['id']]);
+        } catch (Exception $e) {
+            error_log("Failed to update last login: " . $e->getMessage());
+        }
         
         // הגדרת סשן
+        session_regenerate_id(true); // אבטחה נוספת
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['full_name'] = $user['full_name'];
@@ -142,34 +190,40 @@ try {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         
         // רישום בלוג
-        $logStmt = $db->prepare("
-            INSERT INTO activity_log 
-            (user_id, action, details, ip_address, user_agent) 
-            VALUES (?, 'login_success', ?, ?, ?)
-        ");
-        
-        $logStmt->execute([
-            $user['id'],
-            json_encode(['method' => 'google']),
-            $_SERVER['REMOTE_ADDR'] ?? '',
-            $_SERVER['HTTP_USER_AGENT'] ?? ''
-        ]);
+        try {
+            $logStmt = $db->prepare("
+                INSERT INTO activity_log 
+                (user_id, action, details, ip_address, user_agent) 
+                VALUES (?, 'login_success', ?, ?, ?)
+            ");
+            
+            $logStmt->execute([
+                $user['id'],
+                json_encode(['method' => 'google']),
+                $_SERVER['REMOTE_ADDR'] ?? '',
+                $_SERVER['HTTP_USER_AGENT'] ?? ''
+            ]);
+        } catch (Exception $e) {
+            error_log("Failed to log login: " . $e->getMessage());
+        }
         
         // קביעת כתובת להפניה
         $redirect = $data['redirect'] ?? DASHBOARD_URL;
         
+        // ולידציה בסיסית של ה-redirect
+        if (!filter_var($redirect, FILTER_VALIDATE_URL)) {
+            $redirect = DASHBOARD_URL;
+        }
+        
         echo json_encode([
             'success' => true,
-            'redirect' => $redirect
+            'redirect' => $redirect,
+            'message' => 'התחברות הצליחה!'
         ]);
     }
     
 } catch (Exception $e) {
-    error_log("Google auth error: " . $e->getMessage());
-    echo json_encode([
-        'success' => false, 
-        'message' => 'שגיאה במערכת. נסה שוב מאוחר יותר.'
-    ]);
+    handleError('שגיאה במערכת. נסה שוב מאוחר יותר.', ['exception' => $e->getMessage()]);
 }
 
 // פונקציה ליצירת שם משתמש ייחודי
@@ -177,19 +231,33 @@ function generateUniqueUsername($email, $db) {
     $baseUsername = explode('@', $email)[0];
     $baseUsername = preg_replace('/[^a-zA-Z0-9]/', '', $baseUsername);
     
+    if (empty($baseUsername)) {
+        $baseUsername = 'user';
+    }
+    
     $username = $baseUsername;
     $counter = 1;
     
     while (true) {
-        $stmt = $db->prepare("SELECT id FROM users WHERE username = ?");
-        $stmt->execute([$username]);
-        
-        if (!$stmt->fetch()) {
-            return $username;
+        try {
+            $stmt = $db->prepare("SELECT id FROM users WHERE username = ?");
+            $stmt->execute([$username]);
+            
+            if (!$stmt->fetch()) {
+                return $username;
+            }
+            
+            $username = $baseUsername . $counter;
+            $counter++;
+            
+            // מניעת לולאה אינסופית
+            if ($counter > 1000) {
+                return $baseUsername . '_' . time();
+            }
+        } catch (Exception $e) {
+            error_log("Error checking username uniqueness: " . $e->getMessage());
+            return $baseUsername . '_' . time();
         }
-        
-        $username = $baseUsername . $counter;
-        $counter++;
     }
 }
 
@@ -228,3 +296,4 @@ function notifyAdminsAboutNewUser($userId, $username, $email, $fullName, $method
         error_log("Error notifying admins: " . $e->getMessage());
     }
 }
+?>
