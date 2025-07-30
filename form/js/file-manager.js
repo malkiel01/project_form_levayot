@@ -40,30 +40,6 @@ window.FileManager = {
         this.bindContextMenuEvents();
     },
 
-    // קישור אירועים
-    bindEvents() {
-        // אזור גרירה
-        const dropzone = document.getElementById('uploadDropzone');
-        if (dropzone) {
-            dropzone.addEventListener('click', () => document.getElementById('fileInput').click());
-            dropzone.addEventListener('dragover', this.handleDragOver.bind(this));
-            dropzone.addEventListener('dragleave', this.handleDragLeave.bind(this));
-            dropzone.addEventListener('drop', this.handleDrop.bind(this));
-        }
-
-        // בחירת קבצים
-        document.getElementById('fileInput')?.addEventListener('change', this.handleFileSelect.bind(this));
-
-        // תפריט קליק ימני
-        document.addEventListener('contextmenu', this.handleContextMenu.bind(this));
-        document.addEventListener('click', this.hideContextMenu);
-
-        // פעולות תפריט
-        document.querySelectorAll('.context-menu-item').forEach(item => {
-            item.addEventListener('click', this.handleMenuAction.bind(this));
-        });
-    },
-
     // אירועי תפריט נוספים
     bindContextMenuEvents() {
         // כבר מטופל ב-bindEvents
@@ -582,6 +558,7 @@ window.FileManager = {
         }
     },
 
+    // -----------
     // תפריט קליק ימני
     handleContextMenu(e) {
         const fileItem = e.target.closest('.file-item');
@@ -589,37 +566,65 @@ window.FileManager = {
 
         e.preventDefault();
 
-        const fileId = fileItem.dataset.fileId;
-        if (fileId && !this.config.selectedFiles.has(parseInt(fileId))) {
-            this.clearSelection();
-            this.toggleSelection(parseInt(fileId));
-        }
-
-        this.showContextMenuForItem(fileItem, e.pageX, e.pageY);
-    },
-
-    // הצגת תפריט לפריט ספציפי
-    showContextMenuForItem(fileItem, x, y) {
         const fileId = parseInt(fileItem.dataset.fileId);
-        const file = this.config.files.find(f => f.id === fileId);
-        
-        if (!file) return;
-        
-        this.contextMenuTarget = file;
-        
+        if (!fileId) return;
+
         // אם הקובץ לא נבחר, בחר רק אותו
         if (!this.config.selectedFiles.has(fileId)) {
             this.clearSelection();
             this.toggleSelection(fileId);
         }
+
+        this.showContextMenuForItem(fileItem, e.pageX, e.pageY);
+    },
+
+    // קישור אירועים
+    // וודא שהפונקציה hideContextMenu קשורה נכון:
+    bindEvents() {
+        // אזור גרירה
+        const dropzone = document.getElementById('uploadDropzone');
+        if (dropzone) {
+            dropzone.addEventListener('click', () => document.getElementById('fileInput').click());
+            dropzone.addEventListener('dragover', this.handleDragOver.bind(this));
+            dropzone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+            dropzone.addEventListener('drop', this.handleDrop.bind(this));
+        }
+
+        // בחירת קבצים
+        document.getElementById('fileInput')?.addEventListener('change', this.handleFileSelect.bind(this));
+
+        // תפריט קליק ימני
+        document.addEventListener('contextmenu', this.handleContextMenu.bind(this));
+        document.addEventListener('click', this.hideContextMenu.bind(this)); // חשוב להוסיף bind כאן!
+
+        // פעולות תפריט
+        document.querySelectorAll('.context-menu-item').forEach(item => {
+            item.addEventListener('click', this.handleMenuAction.bind(this));
+        });
+    },
+
+    // הסתרת תפריט
+    // וודא שהפונקציה hideContextMenu עובדת נכון:
+    hideContextMenu() {
+        const menu = document.getElementById('contextMenu');
+        if (menu) {
+            menu.style.display = 'none';
+        }
         
-        this.showContextMenu(x, y);
+        // הסר class מהמסך
+        document.body.classList.remove('context-menu-open');
     },
 
     // הצגת תפריט
+    // בדיקת דיבוג - הוסף זאת זמנית לפונקציה showContextMenu:
     showContextMenu(x, y) {
         const menu = document.getElementById('contextMenu');
-        if (!menu) return;
+        if (!menu) {
+            console.error('Context menu element not found!');
+            return;
+        }
+
+        console.log('Showing context menu at:', x, y); // דיבוג
 
         // הצג/הסתר פריטים לפי הקשר
         const selectedCount = this.config.selectedFiles.size;
@@ -650,14 +655,24 @@ window.FileManager = {
         // הוסף class למסך למניעת גלילה במובייל
         document.body.classList.add('context-menu-open');
     },
+    // -----------
 
-    // הסתרת תפריט
-    hideContextMenu() {
-        const menu = document.getElementById('contextMenu');
-        if (menu) menu.style.display = 'none';
+    // הצגת תפריט לפריט ספציפי
+    showContextMenuForItem(fileItem, x, y) {
+        const fileId = parseInt(fileItem.dataset.fileId);
+        const file = this.config.files.find(f => f.id === fileId);
         
-        // הסר class מהמסך
-        document.body.classList.remove('context-menu-open');
+        if (!file) return;
+        
+        this.contextMenuTarget = file;
+        
+        // אם הקובץ לא נבחר, בחר רק אותו
+        if (!this.config.selectedFiles.has(fileId)) {
+            this.clearSelection();
+            this.toggleSelection(fileId);
+        }
+        
+        this.showContextMenu(x, y);
     },
 
     // טיפול בפעולת תפריט
