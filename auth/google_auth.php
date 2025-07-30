@@ -4,6 +4,15 @@ require_once '../vendor/autoload.php'; // אם משתמש ב-Composer
 
 header('Content-Type: application/json');
 
+// קריאה ל־input RAW ושמירה ללוג
+$rawInput = file_get_contents('php://input');
+file_put_contents('/tmp/google_auth_debug.txt', "--- RAW INPUT ---\n" . $rawInput . "\n", FILE_APPEND);
+
+// נסה לפענח JSON
+$data = json_decode($rawInput, true);
+file_put_contents('/tmp/google_auth_debug.txt', "--- DECODED DATA ---\n" . print_r($data, 1) . "\n", FILE_APPEND);
+
+
 // קבלת הנתונים
 $data = json_decode(file_get_contents('php://input'), true);
 
