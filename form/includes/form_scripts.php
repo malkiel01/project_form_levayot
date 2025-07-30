@@ -10,5 +10,6 @@ function renderFormScripts() {
     <script src="js/form-fields.js"></script>
     <script src="js/form-autosave.js"></script>
     <script src="js/form-login-check.js"></script>
+    <script src="js/form-login-check.js"></script>
     <?php
 }
