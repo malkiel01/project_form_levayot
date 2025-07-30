@@ -372,7 +372,7 @@ window.FileManager = {
         if (!name) return;
 
         try {
-            const response = await fetch('../ajax/create_folder.php', {
+            const response = await fetch('ajax/create_folder.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `form_uuid=${this.config.formUuid}&path=${this.config.currentPath}&name=${encodeURIComponent(name)}`
@@ -618,7 +618,7 @@ window.FileManager = {
         if (!newName || newName === file.name) return;
 
         try {
-            const response = await fetch('../ajax/rename_file.php', {
+            const response = await fetch('ajax/rename_file.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `file_id=${fileId}&new_name=${encodeURIComponent(newName)}`
@@ -749,7 +749,7 @@ window.FileManager = {
             const file = this.config.files.find(f => f.id === fileId);
             if (file && !file.is_folder) {
                 const a = document.createElement('a');
-                a.href = `../ajax/download_file.php?id=${fileId}`;
+                a.href = `ajax/download_file.php?id=${fileId}`;
                 a.download = file.name;
                 a.click();
             }
@@ -764,7 +764,7 @@ window.FileManager = {
         if (!confirm(`האם למחוק ${count} פריטים?`)) return;
 
         try {
-            const response = await fetch('../ajax/delete_files.php', {
+            const response = await fetch('ajax/delete_files.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ files: fileIds })
@@ -787,7 +787,7 @@ window.FileManager = {
     // תצוגה מקדימה
     previewFile(file) {
         // פתיחה בחלון חדש או הצגה במודל
-        window.open(`../ajax/preview_file.php?id=${file.id}`, '_blank');
+        window.open(`ajax/preview_file.php?id=${file.id}`, '_blank');
     },
 
     // פונקציות עזר
