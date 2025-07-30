@@ -52,7 +52,7 @@ window.FileManager = {
     // טעינת קבצים
     async loadFiles(path = '/') {
         try {
-            const response = await fetch('../ajax/get_form_files.php', {
+            const response = await fetch('ajax/get_form_files.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `form_uuid=${this.config.formUuid}&path=${encodeURIComponent(path)}`
@@ -496,7 +496,7 @@ window.FileManager = {
             status.textContent = 'מעלה...';
             status.className = 'upload-item-status text-primary';
 
-            const response = await fetch('../ajax/upload_file.php', {
+            const response = await fetch('ajax/upload_file.php', {
                 method: 'POST',
                 body: formData,
                 onUploadProgress: (e) => {
