@@ -88,21 +88,3 @@ try {
     error_log("Delete error: " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Failed to delete files']);
 }
-
-// פונקציה רקורסיבית למחיקת תיקייה
-function deleteDirectory($dir) {
-    if (!is_dir($dir)) {
-        return;
-    }
-    
-    $files = array_diff(scandir($dir), array('.', '..'));
-    foreach ($files as $file) {
-        $path = $dir . '/' . $file;
-        if (is_dir($path)) {
-            deleteDirectory($path);
-        } else {
-            unlink($path);
-        }
-    }
-    rmdir($dir);
-}

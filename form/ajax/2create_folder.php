@@ -13,48 +13,28 @@ if (empty($formUuid) || empty($name)) {
     exit;
 }
 
-// ניקוי שם התיקייה
-$name = preg_replace('/[^a-zA-Z0-9א-ת_\-\s]/u', '', $name);
-$name = trim($name);
-
-if (empty($name)) {
-    echo json_encode(['success' => false, 'message' => 'שם תיקייה לא תקין']);
-    exit;
-}
-
 try {
     $db = getDbConnection();
     
-    // בניית הנתיב המלא
-    $fullPath = rtrim($path, '/') . '/' . $name;
-    
     // בדיקה אם התיקייה כבר קיימת
+    $fullPath = rtrim($path, '/') . '/' . $name;
     $stmt = $db->prepare("
         SELECT COUNT(*) FROM form_files 
-        WHERE form_uuid = ? AND full_path = ? AND is_folder = 1
+        WHERE form_uuid = ? AND folder_path = ? AND original_name = ? AND is_folder = 1
     ");
-    $stmt->execute([$formUuid, $fullPath]);
+    $stmt->execute([$formUuid, $path, $name]);
     
     if ($stmt->fetchColumn() > 0) {
         echo json_encode(['success' => false, 'message' => 'התיקייה כבר קיימת']);
         exit;
     }
     
-    // יצירת תיקייה פיזית בשרת
-    $physicalPath = UPLOAD_PATH . $formUuid . $fullPath;
-    if (!is_dir($physicalPath)) {
-        if (!mkdir($physicalPath, 0777, true)) {
-            throw new Exception('Failed to create physical directory');
-        }
-    }
-    
-    // יצירת רשומה בבסיס הנתונים
+    // יצירת התיקייה
     $stmt = $db->prepare("
         INSERT INTO form_files (
             form_uuid, file_uuid, original_name, stored_name,
-            is_folder, folder_path, full_path, uploaded_by,
-            upload_date
-        ) VALUES (?, ?, ?, ?, 1, ?, ?, ?, NOW())
+            is_folder, folder_path, uploaded_by
+        ) VALUES (?, ?, ?, ?, 1, ?, ?)
     ");
     
     $stmt->execute([
@@ -63,7 +43,6 @@ try {
         $name,
         $name,
         $path,
-        $fullPath,
         $_SESSION['user_id'] ?? null
     ]);
     

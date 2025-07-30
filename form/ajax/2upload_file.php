@@ -52,16 +52,10 @@ try {
         mkdir($formDir, 0777, true);
     }
     
-    // יצירת תיקיית היעד אם יש path
-    $targetDir = $formDir . $path;
-    if ($path !== '/' && !is_dir($targetDir)) {
-        mkdir($targetDir, 0777, true);
-    }
-    
     // יצירת שם קובץ ייחודי
     $fileUuid = generateUUID();
     $storedName = $fileUuid . '.' . $extension;
-    $filePath = $targetDir . '/' . $storedName;
+    $filePath = $formDir . '/' . $storedName;
     
     // העלאת הקובץ
     if (!move_uploaded_file($file['tmp_name'], $filePath)) {
@@ -71,21 +65,16 @@ try {
     // יצירת תצוגה מקדימה לתמונות
     $thumbnailPath = null;
     if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'bmp'])) {
-        $thumbDir = $formDir . '/thumbs' . $path;
-        if (!is_dir($thumbDir)) {
-            mkdir($thumbDir, 0777, true);
-        }
-        $thumbnailPath = createThumbnail($filePath, $thumbDir . '/', $storedName);
+        $thumbnailPath = createThumbnail($filePath, $formDir . '/thumbs/', $storedName);
     }
     
     // שמירה בדטהבייס
-    $fullPath = rtrim($path, '/') . '/' . $storedName;
     $stmt = $db->prepare("
         INSERT INTO form_files (
             form_uuid, file_uuid, original_name, stored_name, 
             file_type, file_size, mime_type, uploaded_by, 
-            folder_path, full_path, file_extension, thumbnail_path
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            folder_path, file_extension, thumbnail_path
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     
     $stmt->execute([
@@ -98,9 +87,8 @@ try {
         $file['type'],
         $_SESSION['user_id'] ?? null,
         $path,
-        $fullPath,
         $extension,
-        $thumbnailPath ? 'thumbs' . $path . '/' . $storedName : null
+        $thumbnailPath
     ]);
     
     echo json_encode([

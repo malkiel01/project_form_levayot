@@ -115,12 +115,7 @@ window.FileManager = {
         iconDiv.className = 'file-icon';
 
         if (file.is_folder) {
-            // הוסף אינדיקטור אם יש תוכן בתיקייה
-            if (file.item_count && file.item_count > 0) {
-                iconDiv.innerHTML = '<i class="fas fa-folder icon-folder"></i><small class="text-muted"> (' + file.item_count + ')</small>';
-            } else {
-                iconDiv.innerHTML = '<i class="fas fa-folder-open icon-folder"></i>';
-            }
+            iconDiv.innerHTML = '<i class="fas fa-folder icon-folder"></i>';
         } else if (file.thumbnail) {
             const img = document.createElement('img');
             img.src = file.thumbnail;
@@ -236,11 +231,7 @@ window.FileManager = {
     // טיפול בלחיצה כפולה
     handleFileDoubleClick(file) {
         if (file.is_folder) {
-            // ניווט לתוך התיקייה
-            const newPath = this.config.currentPath === '/' 
-                ? '/' + file.name 
-                : this.config.currentPath + '/' + file.name;
-            this.navigateTo(newPath);
+            this.navigateTo(file.path);
         } else {
             this.previewFile(file);
         }
