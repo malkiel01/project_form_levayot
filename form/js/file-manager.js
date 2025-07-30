@@ -1,6 +1,7 @@
 // form/js/file-manager.js
 
-const FileManager = {
+// הגדרת האובייקט FileManager בטווח גלובלי
+window.FileManager = {
     // הגדרות
     config: {
         formUuid: null,
@@ -820,9 +821,4 @@ const FileManager = {
     }
 };
 
-// אתחול בטעינת הדף
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof formConfig !== 'undefined' && formConfig.formUuid) {
-        FileManager.init(formConfig.formUuid);
-    }
-});
+// אתחול בטעינת הדף - הוסר כי האתחול נעשה בקובץ file_manager.php
