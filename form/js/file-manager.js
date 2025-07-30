@@ -1,5 +1,8 @@
 // form/js/file-manager.js
 
+// הודעת אישור שהקובץ נטען
+console.log('Loading file-manager.js...');
+
 // הגדרת האובייקט FileManager בטווח גלובלי
 window.FileManager = {
     // הגדרות
@@ -821,4 +824,8 @@ window.FileManager = {
     }
 };
 
-// אתחול בטעינת הדף - הוסר כי האתחול נעשה בקובץ file_manager.php
+// אישור שהאובייקט נטען
+console.log('FileManager loaded successfully:', typeof window.FileManager);
+
+// אישור שהאובייקט נטען
+console.log('FileManager loaded successfully:', typeof window.FileManager);
