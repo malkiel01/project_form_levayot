@@ -438,19 +438,6 @@ if (isset($_SESSION['registration_success'])) {
             }
         });
 
-        // // Form submission loading
-        // document.getElementById('loginForm').addEventListener('submit', function() {
-        //     const btn = document.getElementById('loginBtn');
-        //     const originalHTML = btn.innerHTML;
-        //     btn.disabled = true;
-        //     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מתחבר...';
-            
-        //     // Safety timeout
-        //     setTimeout(function() {
-        //         btn.disabled = false;
-        //         btn.innerHTML = originalHTML;
-        //     }, 5000);
-        // });
         // Form submission loading
         document.getElementById('loginForm').addEventListener('submit', function() {
             const btn = document.getElementById('loginBtn');
@@ -462,150 +449,163 @@ if (isset($_SESSION['registration_success'])) {
             setTimeout(function() {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
-            }, 10000); // הגדלתי הזמן ל-10 שניות
+            }, 5000);
         });
+        // // Form submission loading
+        // document.getElementById('loginForm').addEventListener('submit', function() {
+        //     const btn = document.getElementById('loginBtn');
+        //     const originalHTML = btn.innerHTML;
+        //     btn.disabled = true;
+        //     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מתחבר...';
+            
+        //     // Safety timeout
+        //     setTimeout(function() {
+        //         btn.disabled = false;
+        //         btn.innerHTML = originalHTML;
+        //     }, 10000); // הגדלתי הזמן ל-10 שניות
+        // });
         
-        // // Google Sign-In callback
-        // function handleGoogleSignIn(response) {
-        //     // שלח את הטוקן לשרת
-        //     fetch('google_auth.php', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //         body: JSON.stringify({
-        //             credential: response.credential,
-        //             redirect: '<?= htmlspecialchars($redirect) ?>'
-        //         })
-        //     })
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         if (data.success) {
-        //             window.location.href = data.redirect;
-        //         } else {
-        //             alert(data.message || 'שגיאה בהתחברות עם Google');
-        //         }
-        //     })
-        //     .catch(error => {
-        //         console.error('Error:', error);
-        //         alert('שגיאה בהתחברות עם Google');
-        //     });
-        // }
-        // Google Sign-In callback עם טיפול שגיאות משופר
+        // Google Sign-In callback
         function handleGoogleSignIn(response) {
-            console.log('Google Sign-In started');
-            
-            // הוספת אינדיקציה חזותית
-            const originalContent = document.querySelector('.auth-container').innerHTML;
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'text-center p-4';
-            loadingDiv.innerHTML = `
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2">מתחבר עם Google...</p>
-            `;
-            
-            // הסתר את הטופס והראה loading
-            document.querySelector('.auth-container').appendChild(loadingDiv);
-            
-            // הכן את הנתונים
-            const requestData = {
-                credential: response.credential,
-                action: 'login', // או 'register' במקרה של רישום
-                redirect: '<?= htmlspecialchars($redirect) ?>'
-            };
-            
-            console.log('Sending request to server:', requestData);
-            
             // שלח את הטוקן לשרת
             fetch('google_auth.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
                 },
-                body: JSON.stringify(requestData)
+                body: JSON.stringify({
+                    credential: response.credential,
+                    redirect: '<?= htmlspecialchars($redirect) ?>'
+                })
             })
-            .then(response => {
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers);
-                
-                // בדוק אם התגובה היא JSON תקין
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    throw new Error('התגובה מהשרת אינה JSON תקין');
-                }
-                
-                return response.text(); // קודם נקרא כטקסט
-            })
-            .then(text => {
-                console.log('Raw response:', text);
-                
-                // נסה לפרש כ-JSON
-                try {
-                    const data = JSON.parse(text);
-                    console.log('Parsed JSON:', data);
-                    
-                    // הסר את ה-loading
-                    loadingDiv.remove();
-                    
-                    if (data.success) {
-                        console.log('Login successful, redirecting to:', data.redirect);
-                        
-                        // הצג הודעת הצלחה אם יש
-                        if (data.message) {
-                            const successDiv = document.createElement('div');
-                            successDiv.className = 'alert alert-success text-center';
-                            successDiv.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
-                            document.querySelector('.auth-container').insertBefore(successDiv, document.querySelector('.auth-container').firstChild);
-                            
-                            // חכה רגע לפני הפניה
-                            setTimeout(() => {
-                                window.location.href = data.redirect || '/dashboard/';
-                            }, 1500);
-                        } else {
-                            window.location.href = data.redirect || '/dashboard/';
-                        }
-                    } else {
-                        console.error('Login failed:', data.message);
-                        showError(data.message || 'שגיאה בהתחברות עם Google');
-                    }
-                } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
-                    console.error('Response text:', text);
-                    showError('שגיאה בתקשורת עם השרת. נסה שוב.');
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    alert(data.message || 'שגיאה בהתחברות עם Google');
                 }
             })
             .catch(error => {
-                console.error('Fetch error:', error);
-                loadingDiv.remove();
-                showError('שגיאה בהתחברות עם Google: ' + error.message);
+                console.error('Error:', error);
+                alert('שגיאה בהתחברות עם Google');
             });
         }
-        // -----------------
+        // // Google Sign-In callback עם טיפול שגיאות משופר
+        // function handleGoogleSignIn(response) {
+        //     console.log('Google Sign-In started');
+            
+        //     // הוספת אינדיקציה חזותית
+        //     const originalContent = document.querySelector('.auth-container').innerHTML;
+        //     const loadingDiv = document.createElement('div');
+        //     loadingDiv.className = 'text-center p-4';
+        //     loadingDiv.innerHTML = `
+        //         <div class="spinner-border text-primary" role="status">
+        //             <span class="visually-hidden">Loading...</span>
+        //         </div>
+        //         <p class="mt-2">מתחבר עם Google...</p>
+        //     `;
+            
+        //     // הסתר את הטופס והראה loading
+        //     document.querySelector('.auth-container').appendChild(loadingDiv);
+            
+        //     // הכן את הנתונים
+        //     const requestData = {
+        //         credential: response.credential,
+        //         action: 'login', // או 'register' במקרה של רישום
+        //         redirect: '<?= htmlspecialchars($redirect) ?>'
+        //     };
+            
+        //     console.log('Sending request to server:', requestData);
+            
+        //     // שלח את הטוקן לשרת
+        //     fetch('google_auth.php', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //             'Accept': 'application/json'
+        //         },
+        //         body: JSON.stringify(requestData)
+        //     })
+        //     .then(response => {
+        //         console.log('Response status:', response.status);
+        //         console.log('Response headers:', response.headers);
+                
+        //         // בדוק אם התגובה היא JSON תקין
+        //         const contentType = response.headers.get('content-type');
+        //         if (!contentType || !contentType.includes('application/json')) {
+        //             throw new Error('התגובה מהשרת אינה JSON תקין');
+        //         }
+                
+        //         return response.text(); // קודם נקרא כטקסט
+        //     })
+        //     .then(text => {
+        //         console.log('Raw response:', text);
+                
+        //         // נסה לפרש כ-JSON
+        //         try {
+        //             const data = JSON.parse(text);
+        //             console.log('Parsed JSON:', data);
+                    
+        //             // הסר את ה-loading
+        //             loadingDiv.remove();
+                    
+        //             if (data.success) {
+        //                 console.log('Login successful, redirecting to:', data.redirect);
+                        
+        //                 // הצג הודעת הצלחה אם יש
+        //                 if (data.message) {
+        //                     const successDiv = document.createElement('div');
+        //                     successDiv.className = 'alert alert-success text-center';
+        //                     successDiv.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+        //                     document.querySelector('.auth-container').insertBefore(successDiv, document.querySelector('.auth-container').firstChild);
+                            
+        //                     // חכה רגע לפני הפניה
+        //                     setTimeout(() => {
+        //                         window.location.href = data.redirect || '/dashboard/';
+        //                     }, 1500);
+        //                 } else {
+        //                     window.location.href = data.redirect || '/dashboard/';
+        //                 }
+        //             } else {
+        //                 console.error('Login failed:', data.message);
+        //                 showError(data.message || 'שגיאה בהתחברות עם Google');
+        //             }
+        //         } catch (parseError) {
+        //             console.error('JSON parse error:', parseError);
+        //             console.error('Response text:', text);
+        //             showError('שגיאה בתקשורת עם השרת. נסה שוב.');
+        //         }
+        //     })
+        //     .catch(error => {
+        //         console.error('Fetch error:', error);
+        //         loadingDiv.remove();
+        //         showError('שגיאה בהתחברות עם Google: ' + error.message);
+        //     });
+        // }
+        // // -----------------
 
-        // פונקציה להצגת שגיאות
-        function showError(message) {
-            // הסר שגיאות קודמות
-            const existingErrors = document.querySelectorAll('.alert-danger');
-            existingErrors.forEach(el => el.remove());
+        // // פונקציה להצגת שגיאות
+        // function showError(message) {
+        //     // הסר שגיאות קודמות
+        //     const existingErrors = document.querySelectorAll('.alert-danger');
+        //     existingErrors.forEach(el => el.remove());
             
-            // צור שגיאה חדשה
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'alert alert-danger alert-dismissible fade show';
-            errorDiv.innerHTML = `
-                <i class="fas fa-exclamation-circle"></i> ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
+        //     // צור שגיאה חדשה
+        //     const errorDiv = document.createElement('div');
+        //     errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+        //     errorDiv.innerHTML = `
+        //         <i class="fas fa-exclamation-circle"></i> ${message}
+        //         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        //     `;
             
-            // הוסף בתחילת הקונטיינר
-            const container = document.querySelector('.auth-container');
-            container.insertBefore(errorDiv, container.firstChild);
+        //     // הוסף בתחילת הקונטיינר
+        //     const container = document.querySelector('.auth-container');
+        //     container.insertBefore(errorDiv, container.firstChild);
             
-            // גלול למעלה
-            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        //     // גלול למעלה
+        //     container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // }
     </script>
 </body>
 </html>
