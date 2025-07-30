@@ -14,7 +14,7 @@ file_put_contents('/tmp/google_auth_debug.txt', "--- DECODED DATA ---\n" . print
 
 
 // קבלת הנתונים
-$data = json_decode(file_get_contents('php://input'), true);
+// $data = json_decode(file_get_contents('php://input'), true);
 
 if (!isset($data['credential'])) {
     echo json_encode(['success' => false, 'message' => 'חסר אסימון אימות']);
