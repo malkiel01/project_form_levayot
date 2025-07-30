@@ -30,6 +30,7 @@ define('FORM_URL', 'form/index.php');
 define('LOGIN_URL', 'auth/login.php');
 define('LOGOUT_URL', 'auth/logout.php');
 define('DASHBOARD_URL', SITE_URL . '/dashboard.php');
+define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip', 'rar']);
 
 // הגדרות זמן
 date_default_timezone_set('Asia/Jerusalem');
