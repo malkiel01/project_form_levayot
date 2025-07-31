@@ -2,8 +2,136 @@
 // form/includes/file_manager.php
 ?>
 <div class="section-title">מסמכים וקבצים</div>
-<div class="file-manager-container" id="fileManagerContainer">
-    <!-- כלי עבודה עליונים -->
+
+<!-- כלי עבודה עליונים מעודכנים -->
+<div class="file-manager-toolbar">
+    <div class="toolbar-left">
+        <button type="button" class="btn btn-sm btn-primary" onclick="FileManager.uploadFiles()">
+            <i class="fas fa-upload"></i> 
+            <span class="btn-text">העלה קבצים</span>
+        </button>
+        
+        <!-- כפתורים נוספים למסכים גדולים -->
+        <div class="toolbar-desktop">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="FileManager.createFolder()">
+                <i class="fas fa-folder-plus"></i> 
+                <span class="btn-text">תיקייה חדשה</span>
+            </button>
+            
+            <!-- כפתורי בחירה דינמיים -->
+            <button type="button" class="btn btn-sm btn-outline-secondary" 
+                    id="selectAllBtn" 
+                    onclick="FileManager.selectAll()" 
+                    style="display: none;">
+                <i class="fas fa-check-square"></i> 
+                <span class="btn-text">בחר הכל</span>
+            </button>
+            
+            <button type="button" class="btn btn-sm btn-outline-secondary" 
+                    id="clearSelectionBtn" 
+                    onclick="FileManager.clearSelection()" 
+                    style="display: none;">
+                <i class="fas fa-square"></i> 
+                <span class="btn-text">נקה בחירה</span>
+            </button>
+        </div>
+    </div>
+    
+    <div class="toolbar-right">
+        <!-- כפתורי תצוגה למסכים גדולים -->
+        <div class="toolbar-desktop">
+            <div class="btn-group view-buttons" role="group">
+                <button type="button" class="btn btn-sm btn-outline-secondary" 
+                        onclick="FileManager.setView('list')" 
+                        title="תצוגת רשימה"
+                        data-view="list">
+                    <i class="fas fa-list"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" 
+                        onclick="FileManager.setView('small')" 
+                        title="אייקונים קטנים"
+                        data-view="small">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary active" 
+                        onclick="FileManager.setView('medium')" 
+                        title="אייקונים בינוניים"
+                        data-view="medium">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" 
+                        onclick="FileManager.setView('large')" 
+                        title="אייקונים גדולים"
+                        data-view="large">
+                    <i class="fas fa-square"></i>
+                </button>
+            </div>
+            
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="FileManager.refresh()">
+                <i class="fas fa-sync"></i>
+            </button>
+        </div>
+        
+        <!-- תפריט נייד -->
+        <div class="dropdown toolbar-mobile">
+            <button type="button" 
+                    class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="#" onclick="FileManager.createFolder(); return false;">
+                        <i class="fas fa-folder-plus"></i> תיקייה חדשה
+                    </a>
+                </li>
+                <li class="dropdown-divider"></li>
+                <li id="mobileSelectAll" style="display: none;">
+                    <a class="dropdown-item" href="#" onclick="FileManager.selectAll(); return false;">
+                        <i class="fas fa-check-square"></i> בחר הכל
+                    </a>
+                </li>
+                <li id="mobileClearSelection" style="display: none;">
+                    <a class="dropdown-item" href="#" onclick="FileManager.clearSelection(); return false;">
+                        <i class="fas fa-square"></i> נקה בחירה
+                    </a>
+                </li>
+                <li class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">תצוגה</h6></li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="FileManager.setView('list'); return false;">
+                        <i class="fas fa-list"></i> רשימה
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="FileManager.setView('small'); return false;">
+                        <i class="fas fa-th"></i> אייקונים קטנים
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="FileManager.setView('medium'); return false;">
+                        <i class="fas fa-th-large"></i> אייקונים בינוניים
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="FileManager.setView('large'); return false;">
+                        <i class="fas fa-square"></i> אייקונים גדולים
+                    </a>
+                </li>
+                <li class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="FileManager.refresh(); return false;">
+                        <i class="fas fa-sync"></i> רענן
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- <div class="file-manager-container" id="fileManagerContainer">
+    כלי עבודה עליונים
     <div class="file-manager-toolbar">
         <div class="toolbar-left">
             <button type="button" class="btn btn-sm btn-primary" onclick="FileManager.uploadFiles()">
@@ -42,7 +170,7 @@
         </div>
     </div>
 
-    <!-- נתיב נוכחי -->
+    נתיב נוכחי
     <div class="file-manager-breadcrumb">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb" id="breadcrumb">
@@ -51,14 +179,14 @@
         </nav>
     </div>
 
-    <!-- אזור הקבצים -->
+    אזור הקבצים
     <div class="file-manager-content" id="fileContent">
         <div class="files-grid view-medium" id="filesGrid">
-            <!-- הקבצים יוצגו כאן באמצעות JavaScript -->
+            הקבצים יוצגו כאן באמצעות JavaScript
         </div>
     </div>
 
-    <!-- שורת מצב -->
+    שורת מצב
     <div class="file-manager-status">
         <span id="fileCount">0 קבצים</span>
         <span class="separator">|</span>
@@ -66,7 +194,7 @@
         <span class="separator">|</span>
         <span id="totalSize">0 MB</span>
     </div>
-</div>
+</div> -->
 
 <!-- תפריט קליק ימני - מחוץ לקונטיינר אבל בתוך הדף -->
 <div class="context-menu" id="contextMenu" style="display: none;">
