@@ -1,7 +1,7 @@
 // form/js/form-share.js - פונקציונליות שיתוף טפסים
 
 // פונקציה לשיתוף טופס
-function shareForm() {
+function shareFormOld() {
     if (formConfig.isNewForm) {
         alert('יש לשמור את הטופס לפני השיתוף');
         return;
@@ -13,9 +13,29 @@ function shareForm() {
     // פתח את המודל
     $('#shareFormModal').modal('show');
 }
+function shareForm() {
+    // בדיקה האם המשתמש מחובר
+    if (!formConfig.isUserLoggedIn) {
+        showAlert('danger', 'עליך להתחבר למערכת כדי לשתף טפסים');
+        setTimeout(() => {
+            window.location.href = '../' + 'auth/login.php';
+        }, 2000);
+        return;
+    }
+    
+    // בדיקת הרשאות (נניח שנוסיף את זה ל-formConfig)
+    if (formConfig.userPermissionLevel && formConfig.userPermissionLevel < 3) {
+        showAlert('warning', 'אין לך הרשאה לשתף טפסים. פעולה זו מוגבלת לעורכים ומנהלים בלבד.');
+        return;
+    }
+    
+    // אם יש הרשאה, המשך עם תהליך השיתוף
+    loadUsersForShare();
+    $('#shareFormModal').modal('show');
+}
 
 // שיתוף מהיר
-function quickShareForm() {
+function quickShareFormOld() {
     if (formConfig.isNewForm) {
         alert('יש לשמור את הטופס לפני השיתוף');
         return;
@@ -63,6 +83,25 @@ function quickShareForm() {
             alert('שגיאה ביצירת הקישור');
         }
     });
+}
+function quickShareForm() {
+    // בדיקה האם המשתמש מחובר
+    if (!formConfig.isUserLoggedIn) {
+        showAlert('danger', 'עליך להתחבר למערכת כדי לשתף טפסים');
+        setTimeout(() => {
+            window.location.href = '../' + 'auth/login.php';
+        }, 2000);
+        return;
+    }
+    
+    // בדיקת הרשאות
+    if (formConfig.userPermissionLevel && formConfig.userPermissionLevel < 3) {
+        showAlert('warning', 'אין לך הרשאה לשתף טפסים. פעולה זו מוגבלת לעורכים ומנהלים בלבד.');
+        return;
+    }
+    
+    // אם יש הרשאה, צור שיתוף מהיר
+    createQuickShareLink();
 }
 
 // טעינת רשימת משתמשים
@@ -235,12 +274,31 @@ function shareViaEmail() {
 }
 
 // פונקציית עזר להצגת הודעות
-function showAlert(elementId, type, message) {
+function showAlertOld(elementId, type, message) {
     const alert = $('#' + elementId);
     alert.removeClass('alert-success alert-danger alert-info alert-warning');
     alert.addClass('alert-' + type);
     alert.html(message);
     alert.show();
+}
+function showAlert(type, message) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" 
+             style="z-index: 9999; min-width: 300px;" role="alert">
+            <i class="fas fa-${type === 'danger' ? 'exclamation-circle' : 'info-circle'}"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('body').append(alertHtml);
+    
+    // הסרה אוטומטית אחרי 5 שניות
+    setTimeout(() => {
+        $('.alert').fadeOut(() => {
+            $('.alert').remove();
+        });
+    }, 5000);
 }
 
 // פונקציה להעתקה ללוח
@@ -274,4 +332,39 @@ function fallbackCopyToClipboard(text) {
     }
     
     document.body.removeChild(textArea);
+}
+
+// יצירת שיתוף מהיר עם בדיקת הרשאות בצד השרת
+function createQuickShareLink() {
+    $.ajax({
+        url: 'ajax/quick_share.php',
+        method: 'POST',
+        data: {
+            form_uuid: formConfig.formUuid,
+            csrf_token: formConfig.csrfToken
+        },
+        success: function(response) {
+            if (response.success) {
+                // הצג את הקישור שנוצר
+                $('#generatedLink').val(response.share_url);
+                
+                // יצירת QR code
+                $('#qrcode').empty();
+                new QRCode(document.getElementById("qrcode"), {
+                    text: response.share_url,
+                    width: 200,
+                    height: 200
+                });
+                
+                // הצג את המודל
+                $('#shareFormModal').modal('hide');
+                $('#showLinkModal').modal('show');
+            } else {
+                showAlert('danger', response.message || 'שגיאה ביצירת קישור השיתוף');
+            }
+        },
+        error: function() {
+            showAlert('danger', 'שגיאה בתקשורת עם השרת');
+        }
+    });
 }

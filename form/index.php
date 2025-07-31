@@ -90,7 +90,7 @@ if (isset($_SESSION['form_saved_message'])) {
 
     <?php renderShareModals(); ?>
     
-    <script>
+    <!-- <script>
         // משתנים גלובליים לשימוש בסקריפטים
         const formConfig = {
             isNewForm: <?= $isNewForm ? 'true' : 'false' ?>,
@@ -103,6 +103,30 @@ if (isset($_SESSION['form_saved_message'])) {
         };
         
         const formData = <?= json_encode($formData) ?>;
+    </script> -->
+    <script>
+        // משתנים גלובליים לשימוש בסקריפטים
+        const formConfig = {
+            isNewForm: <?= $isNewForm ? 'true' : 'false' ?>,
+            isViewOnly: <?= $viewOnly ? 'true' : 'false' ?>,
+            isUserLoggedIn: <?= isset($_SESSION['user_id']) ? 'true' : 'false' ?>,
+            isLinkAccess: <?= $isLinkAccess ? 'true' : 'false' ?>,
+            formUuid: '<?= $formUuid ?>',
+            requiredFields: <?= json_encode($requiredFields) ?>,
+            csrfToken: '<?= $_SESSION['csrf_token'] ?>',
+            // הוספת רמת הרשאה
+            userPermissionLevel: <?= isset($_SESSION['permission_level']) ? $_SESSION['permission_level'] : 0 ?>,
+            userId: <?= isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null' ?>
+        };
+        
+        const formData = <?= json_encode($formData) ?>;
+        
+        // בדיקת הרשאות גלובלית
+        const userCanShare = formConfig.isUserLoggedIn && formConfig.userPermissionLevel >= 3;
+        
+        // הודעה בקונסול לדיבוג
+        console.log('User permission level:', formConfig.userPermissionLevel);
+        console.log('Can share forms:', userCanShare);
     </script>
     
     <script>
@@ -114,6 +138,10 @@ if (isset($_SESSION['form_saved_message'])) {
             }
         });
     </script>
+
+    // להחליף את הסקריפט הקיים ב-index.php
+
+
     <?php renderFormScripts(); ?>
 
 
