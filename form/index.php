@@ -90,20 +90,6 @@ if (isset($_SESSION['form_saved_message'])) {
 
     <?php renderShareModals(); ?>
     
-    <!-- <script>
-        // משתנים גלובליים לשימוש בסקריפטים
-        const formConfig = {
-            isNewForm: <?= $isNewForm ? 'true' : 'false' ?>,
-            isViewOnly: <?= $viewOnly ? 'true' : 'false' ?>,
-            isUserLoggedIn: <?= isset($_SESSION['user_id']) ? 'true' : 'false' ?>,
-            isLinkAccess: <?= $isLinkAccess ? 'true' : 'false' ?>,
-            formUuid: '<?= $formUuid ?>',
-            requiredFields: <?= json_encode($requiredFields) ?>,
-            csrfToken: '<?= $_SESSION['csrf_token'] ?>'
-        };
-        
-        const formData = <?= json_encode($formData) ?>;
-    </script> -->
     <script>
         // משתנים גלובליים לשימוש בסקריפטים
         const formConfig = {
