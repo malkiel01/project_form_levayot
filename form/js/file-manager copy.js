@@ -558,153 +558,146 @@ window.FileManager = {
         }
     },
 
-    // ------------
-    // תיקון ל-file-manager.js - החלף את הפונקציות הבאות:
+    // תפריט קליק ימני
+    handleContextMenu(e) {
+        const fileItem = e.target.closest('.file-item');
+        if (!fileItem) return;
 
-// תפריט קליק ימני
-// פונקציה לטיפול בקליק ימני
-handleContextMenu(e) {
-    const fileItem = e.target.closest('.file-item');
-    if (!fileItem) return;
+        e.preventDefault();
+        e.stopPropagation(); // חשוב למנוע התפשטות
 
-    e.preventDefault();
-    e.stopPropagation(); // חשוב למנוע התפשטות
+        const fileId = parseInt(fileItem.dataset.fileId);
+        if (!fileId) return;
 
-    const fileId = parseInt(fileItem.dataset.fileId);
-    if (!fileId) return;
-
-    // אם הקובץ לא נבחר, בחר רק אותו
-    if (!this.config.selectedFiles.has(fileId)) {
-        this.clearSelection();
-        this.toggleSelection(fileId);
-    }
-
-    // שמור את היעד
-    this.contextMenuTarget = this.config.files.find(f => f.id === fileId);
-
-    // הצג את התפריט עם המיקום הנכון
-    this.showContextMenu(e.clientX, e.clientY);
-},
-
-// הצגת תפריט
-// פונקציה להצגת התפריט
-showContextMenu(x, y) {
-    const menu = document.getElementById('contextMenu');
-    if (!menu) {
-        console.error('Context menu element not found!');
-        return;
-    }
-
-    // הצג/הסתר פריטים לפי הקשר
-    const selectedCount = this.config.selectedFiles.size;
-    const hasSelection = selectedCount > 0;
-    
-    // התאם את הטקסט של "בחר"
-    const selectItem = menu.querySelector('[data-action="select"]');
-    if (selectItem) {
-        selectItem.innerHTML = hasSelection ? 
-            '<i class="fas fa-times-circle"></i> בטל בחירה' : 
-            '<i class="fas fa-check-square"></i> בחר';
-    }
-
-    // הצג את התפריט
-    menu.style.display = 'block';
-    menu.style.visibility = 'visible';
-    menu.style.opacity = '1';
-    
-    // חשב מיקום ראשוני
-    let finalX = x;
-    let finalY = y;
-
-    // מקם את התפריט
-    menu.style.left = finalX + 'px';
-    menu.style.top = finalY + 'px';
-
-    // המתן frame אחד ואז בדוק אם חורג מהמסך
-    requestAnimationFrame(() => {
-        const rect = menu.getBoundingClientRect();
-        
-        // התאם אם חורג מצד ימין
-        if (rect.right > window.innerWidth) {
-            finalX = window.innerWidth - rect.width - 10;
+        // אם הקובץ לא נבחר, בחר רק אותו
+        if (!this.config.selectedFiles.has(fileId)) {
+            this.clearSelection();
+            this.toggleSelection(fileId);
         }
-        
-        // התאם אם חורג מלמטה
-        if (rect.bottom > window.innerHeight) {
-            finalY = window.innerHeight - rect.height - 10;
+
+        // שמור את היעד
+        this.contextMenuTarget = this.config.files.find(f => f.id === fileId);
+
+        // הצג את התפריט עם המיקום הנכון
+        this.showContextMenu(e.clientX, e.clientY);
+    },
+
+    // הצגת תפריט
+    // פונקציה להצגת התפריט
+    showContextMenu(x, y) {
+        const menu = document.getElementById('contextMenu');
+        if (!menu) {
+            console.error('Context menu element not found!');
+            return;
         }
+
+        // הצג/הסתר פריטים לפי הקשר
+        const selectedCount = this.config.selectedFiles.size;
+        const hasSelection = selectedCount > 0;
         
-        // וודא שלא חורג משמאל או מלמעלה
-        if (finalX < 10) finalX = 10;
-        if (finalY < 10) finalY = 10;
+        // התאם את הטקסט של "בחר"
+        const selectItem = menu.querySelector('[data-action="select"]');
+        if (selectItem) {
+            selectItem.innerHTML = hasSelection ? 
+                '<i class="fas fa-times-circle"></i> בטל בחירה' : 
+                '<i class="fas fa-check-square"></i> בחר';
+        }
+
+        // הצג את התפריט
+        menu.style.display = 'block';
+        menu.style.visibility = 'visible';
+        menu.style.opacity = '1';
         
-        // עדכן מיקום סופי
+        // חשב מיקום ראשוני
+        let finalX = x;
+        let finalY = y;
+
+        // מקם את התפריט
         menu.style.left = finalX + 'px';
         menu.style.top = finalY + 'px';
-    });
 
-    // הוסף מאזין לסגירה
-    setTimeout(() => {
-        document.addEventListener('click', this.handleClickOutside);
-        document.addEventListener('contextmenu', this.handleClickOutside);
-    }, 100);
-},
+        // המתן frame אחד ואז בדוק אם חורג מהמסך
+        requestAnimationFrame(() => {
+            const rect = menu.getBoundingClientRect();
+            
+            // התאם אם חורג מצד ימין
+            if (rect.right > window.innerWidth) {
+                finalX = window.innerWidth - rect.width - 10;
+            }
+            
+            // התאם אם חורג מלמטה
+            if (rect.bottom > window.innerHeight) {
+                finalY = window.innerHeight - rect.height - 10;
+            }
+            
+            // וודא שלא חורג משמאל או מלמעלה
+            if (finalX < 10) finalX = 10;
+            if (finalY < 10) finalY = 10;
+            
+            // עדכן מיקום סופי
+            menu.style.left = finalX + 'px';
+            menu.style.top = finalY + 'px';
+        });
 
-// הסתרת תפריט
-// פונקציה להסתרת התפריט
-hideContextMenu() {
-    const menu = document.getElementById('contextMenu');
-    if (menu) {
-        menu.style.display = 'none';
-        menu.style.visibility = 'hidden';
-        menu.style.opacity = '0';
-    }
-    
-    // הסר מאזינים
-    document.removeEventListener('click', this.handleClickOutside);
-    document.removeEventListener('contextmenu', this.handleClickOutside);
-},
+        // הוסף מאזין לסגירה
+        setTimeout(() => {
+            document.addEventListener('click', this.handleClickOutside);
+            document.addEventListener('contextmenu', this.handleClickOutside);
+        }, 100);
+    },
 
-// פונקציה לטיפול בקליק מחוץ לתפריט
-handleClickOutside(e) {
-    const menu = document.getElementById('contextMenu');
-    if (!menu || !menu.contains(e.target)) {
-        this.hideContextMenu();
-    }
-},
+    // הסתרת תפריט
+    // פונקציה להסתרת התפריט
+    hideContextMenu() {
+        const menu = document.getElementById('contextMenu');
+        if (menu) {
+            menu.style.display = 'none';
+            menu.style.visibility = 'hidden';
+            menu.style.opacity = '0';
+        }
+        
+        // הסר מאזינים
+        document.removeEventListener('click', this.handleClickOutside);
+        document.removeEventListener('contextmenu', this.handleClickOutside);
+    },
 
-// קישור אירועים
-// עדכון ל-bindEvents - וודא שהקישורים נכונים
-bindEvents() {
-    // אזור גרירה
-    const dropzone = document.getElementById('uploadDropzone');
-    if (dropzone) {
-        dropzone.addEventListener('click', () => document.getElementById('fileInput').click());
-        dropzone.addEventListener('dragover', this.handleDragOver.bind(this));
-        dropzone.addEventListener('dragleave', this.handleDragLeave.bind(this));
-        dropzone.addEventListener('drop', this.handleDrop.bind(this));
-    }
+    // פונקציה לטיפול בקליק מחוץ לתפריט
+    handleClickOutside(e) {
+        const menu = document.getElementById('contextMenu');
+        if (!menu || !menu.contains(e.target)) {
+            this.hideContextMenu();
+        }
+    },
 
-    // בחירת קבצים
-    document.getElementById('fileInput')?.addEventListener('change', this.handleFileSelect.bind(this));
+    // קישור אירועים
+    // עדכון ל-bindEvents - וודא שהקישורים נכונים
+    bindEvents() {
+        // אזור גרירה
+        const dropzone = document.getElementById('uploadDropzone');
+        if (dropzone) {
+            dropzone.addEventListener('click', () => document.getElementById('fileInput').click());
+            dropzone.addEventListener('dragover', this.handleDragOver.bind(this));
+            dropzone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+            dropzone.addEventListener('drop', this.handleDrop.bind(this));
+        }
 
-    // תפריט קליק ימני - חשוב לקשר לאזור הנכון
-    const fileContent = document.getElementById('fileContent');
-    if (fileContent) {
-        fileContent.addEventListener('contextmenu', this.handleContextMenu.bind(this));
-    }
+        // בחירת קבצים
+        document.getElementById('fileInput')?.addEventListener('change', this.handleFileSelect.bind(this));
 
-    // קשר את handleClickOutside עם bind
-    this.handleClickOutside = this.handleClickOutside.bind(this);
+        // תפריט קליק ימני - חשוב לקשר לאזור הנכון
+        const fileContent = document.getElementById('fileContent');
+        if (fileContent) {
+            fileContent.addEventListener('contextmenu', this.handleContextMenu.bind(this));
+        }
 
-    // פעולות תפריט
-    document.querySelectorAll('.context-menu-item').forEach(item => {
-        item.addEventListener('click', this.handleMenuAction.bind(this));
-    });
-},
+        // קשר את handleClickOutside עם bind
+        this.handleClickOutside = this.handleClickOutside.bind(this);
 
-
-    // -----------
+        // פעולות תפריט
+        document.querySelectorAll('.context-menu-item').forEach(item => {
+            item.addEventListener('click', this.handleMenuAction.bind(this));
+        });
+    },
 
     // הצגת תפריט לפריט ספציפי
     showContextMenuForItem(fileItem, x, y) {
@@ -1231,7 +1224,122 @@ bindEvents() {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 150);
         }, 3000);
+    },
+
+    // ------
+
+    // הוסף את הפונקציות האלה ל-FileManager object:
+
+// עדכון פונקציית updateStatus
+updateStatus() {
+    const fileCount = document.getElementById('fileCount');
+    const selectedCount = document.getElementById('selectedCount');
+    const totalSize = document.getElementById('totalSize');
+
+    if (fileCount) {
+        const folderCount = this.config.files.filter(f => f.is_folder).length;
+        const filesCount = this.config.files.filter(f => !f.is_folder).length;
+        fileCount.textContent = `${folderCount} תיקיות, ${filesCount} קבצים`;
     }
+
+    if (selectedCount) {
+        selectedCount.textContent = `${this.config.selectedFiles.size} נבחרו`;
+    }
+
+    if (totalSize) {
+        const size = this.config.files
+            .filter(f => !f.is_folder)
+            .reduce((sum, file) => sum + (file.size || 0), 0);
+        totalSize.textContent = this.formatFileSize(size);
+    }
+    
+    // עדכון כפתורי בחירה
+    this.updateSelectionButtons();
+},
+
+// פונקציה חדשה לעדכון כפתורי בחירה
+updateSelectionButtons() {
+    const selectedCount = this.config.selectedFiles.size;
+    const totalCount = this.config.files.length;
+    
+    // כפתורים לדסקטופ
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+    
+    // פריטים בתפריט נייד
+    const mobileSelectAll = document.getElementById('mobileSelectAll');
+    const mobileClearSelection = document.getElementById('mobileClearSelection');
+    
+    if (selectedCount === 0) {
+        // אין בחירה - הסתר את שני הכפתורים
+        if (selectAllBtn) selectAllBtn.style.display = 'none';
+        if (clearSelectionBtn) clearSelectionBtn.style.display = 'none';
+        if (mobileSelectAll) mobileSelectAll.style.display = 'none';
+        if (mobileClearSelection) mobileClearSelection.style.display = 'none';
+    } else if (selectedCount < totalCount) {
+        // יש בחירה חלקית - הצג את שניהם
+        if (selectAllBtn) selectAllBtn.style.display = 'inline-block';
+        if (clearSelectionBtn) clearSelectionBtn.style.display = 'inline-block';
+        if (mobileSelectAll) mobileSelectAll.style.display = 'block';
+        if (mobileClearSelection) mobileClearSelection.style.display = 'block';
+    } else {
+        // הכל נבחר - הצג רק נקה בחירה
+        if (selectAllBtn) selectAllBtn.style.display = 'none';
+        if (clearSelectionBtn) clearSelectionBtn.style.display = 'inline-block';
+        if (mobileSelectAll) mobileSelectAll.style.display = 'none';
+        if (mobileClearSelection) mobileClearSelection.style.display = 'block';
+    }
+},
+
+// עדכון פונקציית setView
+setView(view) {
+    this.config.currentView = view;
+    localStorage.setItem('fileManagerView', view);
+    
+    // עדכון כפתורים - גם בדסקטופ וגם במובייל
+    document.querySelectorAll('.view-buttons button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    const activeBtn = document.querySelector(`.view-buttons button[data-view="${view}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // עדכון dropdown במובייל
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+        if (item.onclick && item.onclick.toString().includes(`setView('${view}')`)) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+    
+    this.renderFiles();
+},
+
+// הוסף פונקציה לבדיקת גודל מסך
+checkScreenSize() {
+    const width = window.innerWidth;
+    
+    // התאם תצוגה אוטומטית במסכים קטנים
+    if (width < 576 && this.config.currentView === 'large') {
+        this.setView('small');
+    }
+},
+
+// הוסף ל-init
+init(formUuid) {
+    this.config.formUuid = formUuid;
+    this.loadFiles();
+    this.bindEvents();
+    this.setView(localStorage.getItem('fileManagerView') || 'medium');
+    this.initExtended();
+    
+    // בדוק גודל מסך
+    this.checkScreenSize();
+    window.addEventListener('resize', () => this.checkScreenSize());
+}
 };
 
 // אישור שהאובייקט נטען
