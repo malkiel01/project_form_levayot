@@ -597,3 +597,252 @@ body.context-menu-open {
     }
 }
     
+/* עיצוב כפתורי הפעולה - להוסיף ל-form-styles.css */
+
+/* אזור כפתורי הפעולה */
+.form-actions {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 20px 0;
+    margin: 30px -30px -30px -30px;
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+}
+
+.action-buttons-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* קבוצות כפתורים */
+.btn-group-custom {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.mobile-primary-group {
+    display: flex;
+    gap: 10px;
+}
+
+/* עיצוב אחיד לכפתורים */
+.action-btn {
+    min-width: 140px;
+    height: 45px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none !important;
+}
+
+/* כפתור ראשי */
+.action-btn.primary {
+    background-color: #007bff;
+    color: white !important;
+    border-color: #007bff;
+}
+
+.action-btn.primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* כפתור משני */
+.action-btn.secondary {
+    background-color: white;
+    color: #007bff !important;
+    border-color: #007bff;
+}
+
+.action-btn.secondary:hover {
+    background-color: #007bff;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+/* כפתור שיתוף */
+.action-btn.share {
+    background-color: #ffc107;
+    color: #212529 !important;
+    border-color: #ffc107;
+}
+
+.action-btn.share:hover {
+    background-color: #e0a800;
+    border-color: #e0a800;
+    color: #212529 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+/* כפתור רגיל */
+.action-btn.outline {
+    background-color: white;
+    color: #6c757d !important;
+    border-color: #dee2e6;
+}
+
+.action-btn.outline:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* טקסט בכפתורים */
+.btn-text {
+    display: inline-block;
+}
+
+/* מפריד בין קבוצות */
+.actions-divider {
+    width: 1px;
+    height: 30px;
+    background-color: #dee2e6;
+    margin: 0 10px;
+    align-self: center;
+}
+
+/* אנימציה לאיקונים */
+.action-btn i {
+    transition: transform 0.3s ease;
+}
+
+.action-btn:hover i {
+    transform: scale(1.1);
+}
+
+/* אפקט גלים בלחיצה */
+.action-btn::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    transform: scale(0);
+    opacity: 0;
+    transition: transform 0.5s, opacity 0.5s;
+}
+
+.action-btn:active::after {
+    transform: scale(1);
+    opacity: 1;
+    transition: transform 0s, opacity 0s;
+}
+
+/* מצב נטען */
+.action-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.action-btn.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* רספונסיביות - טאבלט */
+@media (max-width: 768px) {
+    .action-btn {
+        min-width: 120px;
+        height: 40px;
+        font-size: 14px;
+    }
+    
+    .actions-divider {
+        display: none;
+    }
+}
+
+/* רספונסיביות - מובייל */
+@media (max-width: 576px) {
+    .form-actions {
+        padding: 15px 0;
+        margin: 20px -15px -15px -15px;
+    }
+    
+    .action-buttons-container {
+        gap: 8px;
+        padding: 0 10px;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    /* כפתורים ראשיים נשארים עם טקסט */
+    .mobile-primary-group {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+    
+    .mobile-primary-group .action-btn {
+        width: auto;
+        flex: 1;
+        max-width: 160px;
+        border-radius: 25px;
+        height: 45px;
+    }
+    
+    .mobile-primary-group .btn-text {
+        display: inline-block;
+        font-size: 14px;
+    }
+    
+    /* שאר הכפתורים */
+    .btn-group-custom {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .btn-group-custom .action-btn,
+    .action-btn.outline {
+        min-width: auto;
+        width: 48px;
+        height: 48px;
+        padding: 0;
+        border-radius: 50%;
+        font-size: 18px;
+    }
+    
+    /* הסתר טקסט בכפתורים המשניים */
+    .btn-group-custom .btn-text,
+    .action-btn.outline .btn-text {
+        display: none;
+    }
+}
+
+/* תיקון למצב של טופס בלבד לצפייה */
+.form-actions.view-only {
+    background-color: #e9ecef;
+}
+
+.form-actions.view-only .action-buttons-container {
+    justify-content: space-between;
+    max-width: 600px;
+    margin: 0 auto;
+}

@@ -304,51 +304,96 @@ function renderSignatureSection($formData, $viewOnly = false) {
 
 function renderActionButtons($isNewForm, $formUuid, $viewOnly, $isLinkAccess) {
     ?>
-    <div class="row mt-4">
-        <div class="col-12 text-center">
+    <!-- כפתורי פעולה מעוצבים -->
+    <div class="form-actions">
+        <div class="action-buttons-container">
             <?php if (!$viewOnly): ?>
                 <?php if ($isNewForm): ?>
                     <!-- כפתורים לטופס חדש -->
-                    <button type="submit" name="save" class="btn btn-primary btn-lg">
-                        <i class="fas fa-save"></i> צור טופס
-                    </button>
-                    <button type="submit" name="save_and_view" value="1" class="btn btn-success btn-lg ms-2">
-                        <i class="fas fa-save"></i> צור וצפה בטופס
-                    </button>
+                    <div class="mobile-primary-group">
+                        <button type="submit" name="save" class="btn action-btn primary">
+                            <i class="fas fa-save"></i>
+                            <span class="btn-text">צור טופס</span>
+                        </button>
+                        <button type="submit" name="save_and_view" value="1" class="btn action-btn secondary">
+                            <i class="fas fa-eye"></i>
+                            <span class="btn-text">צור וצפה</span>
+                        </button>
+                    </div>
                 <?php else: ?>
                     <!-- כפתורים לטופס קיים -->
-                    <button type="submit" name="save" class="btn btn-primary btn-lg">
-                        <i class="fas fa-save"></i> שמור שינויים
-                    </button>
-                    <button type="submit" name="save_and_view" value="1" class="btn btn-success btn-lg ms-2">
-                        <i class="fas fa-save"></i> שמור וצפה בטופס
-                    </button>
+                    <div class="mobile-primary-group">
+                        <button type="submit" name="save" class="btn action-btn primary">
+                            <i class="fas fa-save"></i>
+                            <span class="btn-text">שמור שינויים</span>
+                        </button>
+                        <button type="submit" name="save_and_view" value="1" class="btn action-btn secondary">
+                            <i class="fas fa-eye"></i>
+                            <span class="btn-text">שמור וצפה</span>
+                        </button>
+                    </div>
                 <?php endif; ?>
+                
+                <div class="actions-divider"></div>
             <?php endif; ?>
             
             <?php if (!$isNewForm): ?>
-                <a href="../view_form.php?id=<?= $formUuid ?>" class="btn btn-info btn-lg ms-2">
-                    <i class="fas fa-eye"></i> צפייה בטופס
-                </a>
-                <button type="button" class="btn btn-warning btn-lg ms-2" onclick="shareForm()">
-                    <i class="fas fa-share"></i> שתף טופס
-                </button>
-                <button type="button" class="btn btn-warning btn-lg ms-2" onclick="quickShareForm()">
-                    <i class="fas fa-share-alt"></i> שיתוף מהיר
-                </button>
+                <!-- קבוצת שיתוף -->
+                <div class="btn-group-custom">
+                    <button type="button" class="btn action-btn share" 
+                            onclick="shareForm()"
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="top" 
+                            title="שתף טופס">
+                        <i class="fas fa-share-alt"></i>
+                        <span class="btn-text">שתף טופס</span>
+                    </button>
+                    <button type="button" class="btn action-btn share" 
+                            onclick="quickShareForm()"
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="top" 
+                            title="שיתוף מהיר">
+                        <i class="fas fa-link"></i>
+                        <span class="btn-text">שיתוף מהיר</span>
+                    </button>
+                </div>
+                
+                <div class="actions-divider"></div>
             <?php endif; ?>
             
+            <!-- כפתורי ניווט -->
             <?php if (isset($_SESSION['user_id'])): ?>
-                <a href="../forms_list.php" class="btn btn-secondary btn-lg ms-2">
-                    <i class="fas fa-list"></i> רשימת טפסים
+                <a href="../forms_list.php" class="btn action-btn outline"
+                   data-bs-toggle="tooltip" 
+                   data-bs-placement="top" 
+                   title="רשימת טפסים">
+                    <i class="fas fa-list"></i>
+                    <span class="btn-text">רשימת טפסים</span>
                 </a>
             <?php else: ?>
-                <a href="../<?= LOGIN_URL ?>" class="btn btn-outline-primary btn-lg ms-2">
-                    <i class="fas fa-sign-in-alt"></i> התחבר למערכת
+                <a href="../<?= LOGIN_URL ?>" class="btn action-btn outline"
+                   data-bs-toggle="tooltip" 
+                   data-bs-placement="top" 
+                   title="התחבר למערכת">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span class="btn-text">התחבר</span>
                 </a>
             <?php endif; ?>
         </div>
     </div>
+    
+    <!-- סקריפט לאתחול tooltips -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // אתחול tooltips רק במסכים קטנים
+            if (window.innerWidth < 768) {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+        });
+    </script>
     <?php
 }
 
