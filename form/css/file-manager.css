@@ -384,19 +384,6 @@
 .file-icon.icon-code { color: #17a2b8; }
 .file-icon.icon-text { color: #495057; }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* תפריט קונטקסט - תיקון מלא */
 #contextMenu {
     position: fixed !important;
@@ -485,5 +472,128 @@ body.context-menu-open {
 /* תיקון למיקום בתוך מודאל */
 .modal-open #contextMenu {
     z-index: 2147483647 !important;
+}
+
+/* הוספות */
+
+/* רספונסיביות לכלי העבודה */
+.file-manager-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.toolbar-left,
+.toolbar-right {
+    flex-wrap: wrap;
+}
+
+/* סוף הוספות */
+
+/* ברירת מחדל - הסתר תפריט נייד והצג דסקטופ */
+.toolbar-mobile {
+    display: none !important;
+}
+
+.toolbar-desktop {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* מסכים בינוניים - החל להסתיר טקסט בכפתורים */
+@media (max-width: 768px) {
+    .btn-text {
+        display: none;
+    }
+    
+    .file-manager-toolbar .btn {
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* מסכים קטנים - הצג תפריט נייד */
+@media (max-width: 576px) {
+    .toolbar-desktop {
+        display: none !important;
+    }
+    
+    .toolbar-mobile {
+        display: block !important;
+    }
+    
+    .file-manager-toolbar {
+        padding: 8px;
+    }
+    
+    /* הכפתור הראשי נשאר תמיד */
+    .toolbar-left > .btn-primary {
+        flex-shrink: 0;
+    }
+}
+
+/* תצוגת רשימה במסכים קטנים */
+@media (max-width: 576px) {
+    .files-grid.view-medium,
+    .files-grid.view-large {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    }
+    
+    .files-grid.view-list .file-info {
+        display: none;
+    }
+    
+    .files-grid.view-list .file-item {
+        padding: 6px 10px;
+    }
+}
+
+/* תפריט dropdown מותאם */
+.dropdown-menu {
+    font-size: 14px;
+}
+
+.dropdown-item i {
+    width: 20px;
+    text-align: center;
+    margin-left: 8px;
+}
+
+/* כפתורי תצוגה פעילים */
+.view-buttons .btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* אנימציות */
+.toolbar-mobile .dropdown-menu {
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* התאמות נוספות למסכים קטנים מאוד */
+@media (max-width: 380px) {
+    .file-manager-toolbar {
+        font-size: 12px;
+    }
+    
+    .toolbar-left > .btn-primary {
+        font-size: 12px;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .toolbar-left > .btn-primary i {
+        margin-left: 0;
+    }
 }
     

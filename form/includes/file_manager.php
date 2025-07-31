@@ -4,6 +4,7 @@
 <div class="section-title">מסמכים וקבצים</div>
 
 <!-- כלי עבודה עליונים מעודכנים -->
+ <!-- קטע החלפה -->
 <div class="file-manager-toolbar">
     <div class="toolbar-left">
         <button type="button" class="btn btn-sm btn-primary" onclick="FileManager.uploadFiles()">
