@@ -187,7 +187,7 @@
         </div>
     </div>
 
-    שורת מצב
+    <!-- שורת מצב -->
     <div class="file-manager-status">
         <span id="fileCount">0 קבצים</span>
         <span class="separator">|</span>
