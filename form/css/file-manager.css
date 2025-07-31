@@ -566,11 +566,11 @@ body.context-menu-open {
 }
 
 /* אנימציות */
-/* .toolbar-mobile .dropdown-menu {
+.toolbar-mobile .dropdown-menu {
     animation: slideDown 0.2s ease-out;
-} */
+}
 
-/* @keyframes slideDown {
+@keyframes slideDown {
     from {
         opacity: 0;
         transform: translateY(-10px);
@@ -579,10 +579,10 @@ body.context-menu-open {
         opacity: 1;
         transform: translateY(0);
     }
-} */
+}
 
 /* התאמות נוספות למסכים קטנים מאוד */
-/* @media (max-width: 380px) {
+@media (max-width: 380px) {
     .file-manager-toolbar {
         font-size: 12px;
     }
@@ -595,5 +595,5 @@ body.context-menu-open {
     .toolbar-left > .btn-primary i {
         margin-left: 0;
     }
-} */
+}
     
