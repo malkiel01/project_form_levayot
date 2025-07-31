@@ -105,6 +105,17 @@ if (isset($_SESSION['form_saved_message'])) {
         const formData = <?= json_encode($formData) ?>;
     </script>
     
+    <script>
+        // וודא שהתפריט נמצא ב-body ולא בתוך קונטיינר
+        document.addEventListener('DOMContentLoaded', function() {
+            const contextMenu = document.getElementById('contextMenu');
+            if (contextMenu && contextMenu.parentElement !== document.body) {
+                document.body.appendChild(contextMenu);
+            }
+        });
+    </script>
     <?php renderFormScripts(); ?>
+
+
 </body>
 </html>

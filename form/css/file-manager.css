@@ -383,3 +383,107 @@
 .file-icon.icon-archive { color: #6c757d; }
 .file-icon.icon-code { color: #17a2b8; }
 .file-icon.icon-text { color: #495057; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* תפריט קונטקסט - תיקון מלא */
+#contextMenu {
+    position: fixed !important;
+    background: white !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    z-index: 2147483647 !important; /* ערך מקסימלי של z-index */
+    min-width: 200px !important;
+    max-width: 250px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+}
+
+/* כשהתפריט מוצג */
+#contextMenu[style*="display: block"] {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+#contextMenu .context-menu-list {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 8px 0 !important;
+    background: white !important;
+    border-radius: 8px !important;
+}
+
+#contextMenu .context-menu-item {
+    padding: 10px 16px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    font-size: 14px !important;
+    transition: background-color 0.2s !important;
+    background: white !important;
+    border: none !important;
+    color: #333 !important;
+    text-decoration: none !important;
+}
+
+#contextMenu .context-menu-item:hover {
+    background-color: #f0f4f8 !important;
+}
+
+#contextMenu .context-menu-item i {
+    width: 20px !important;
+    text-align: center !important;
+    color: #6c757d !important;
+}
+
+#contextMenu .context-menu-divider {
+    height: 1px !important;
+    background-color: #e9ecef !important;
+    margin: 8px 0 !important;
+    padding: 0 !important;
+}
+
+/* וודא שהתפריט מעל כל אלמנט אחר */
+body.context-menu-open {
+    position: relative;
+}
+
+/* מניעת גלילה כשהתפריט פתוח במובייל */
+body.context-menu-open {
+    overflow: hidden;
+}
+
+/* וודא שהקונטיינר של מנהל הקבצים לא מסתיר את התפריט */
+.file-manager-container {
+    position: relative;
+    overflow: visible !important; /* חשוב! */
+}
+
+.file-manager-content {
+    position: relative;
+    overflow-y: auto;
+    overflow-x: visible !important; /* חשוב! */
+}
+
+/* תיקון למיקום בתוך מודאל */
+.modal-open #contextMenu {
+    z-index: 2147483647 !important;
+}
+    

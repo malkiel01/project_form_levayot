@@ -558,103 +558,152 @@ window.FileManager = {
         }
     },
 
-    // -----------
-    // תפריט קליק ימני
-    handleContextMenu(e) {
-        const fileItem = e.target.closest('.file-item');
-        if (!fileItem) return;
+    // ------------
+    // תיקון ל-file-manager.js - החלף את הפונקציות הבאות:
 
-        e.preventDefault();
+// תפריט קליק ימני
+// פונקציה לטיפול בקליק ימני
+handleContextMenu(e) {
+    const fileItem = e.target.closest('.file-item');
+    if (!fileItem) return;
 
-        const fileId = parseInt(fileItem.dataset.fileId);
-        if (!fileId) return;
+    e.preventDefault();
+    e.stopPropagation(); // חשוב למנוע התפשטות
 
-        // אם הקובץ לא נבחר, בחר רק אותו
-        if (!this.config.selectedFiles.has(fileId)) {
-            this.clearSelection();
-            this.toggleSelection(fileId);
-        }
+    const fileId = parseInt(fileItem.dataset.fileId);
+    if (!fileId) return;
 
-        this.showContextMenuForItem(fileItem, e.pageX, e.pageY);
-    },
+    // אם הקובץ לא נבחר, בחר רק אותו
+    if (!this.config.selectedFiles.has(fileId)) {
+        this.clearSelection();
+        this.toggleSelection(fileId);
+    }
 
-    // קישור אירועים
-    // וודא שהפונקציה hideContextMenu קשורה נכון:
-    bindEvents() {
-        // אזור גרירה
-        const dropzone = document.getElementById('uploadDropzone');
-        if (dropzone) {
-            dropzone.addEventListener('click', () => document.getElementById('fileInput').click());
-            dropzone.addEventListener('dragover', this.handleDragOver.bind(this));
-            dropzone.addEventListener('dragleave', this.handleDragLeave.bind(this));
-            dropzone.addEventListener('drop', this.handleDrop.bind(this));
-        }
+    // שמור את היעד
+    this.contextMenuTarget = this.config.files.find(f => f.id === fileId);
 
-        // בחירת קבצים
-        document.getElementById('fileInput')?.addEventListener('change', this.handleFileSelect.bind(this));
+    // הצג את התפריט עם המיקום הנכון
+    this.showContextMenu(e.clientX, e.clientY);
+},
 
-        // תפריט קליק ימני
-        document.addEventListener('contextmenu', this.handleContextMenu.bind(this));
-        document.addEventListener('click', this.hideContextMenu.bind(this)); // חשוב להוסיף bind כאן!
+// הצגת תפריט
+// פונקציה להצגת התפריט
+showContextMenu(x, y) {
+    const menu = document.getElementById('contextMenu');
+    if (!menu) {
+        console.error('Context menu element not found!');
+        return;
+    }
 
-        // פעולות תפריט
-        document.querySelectorAll('.context-menu-item').forEach(item => {
-            item.addEventListener('click', this.handleMenuAction.bind(this));
-        });
-    },
+    // הצג/הסתר פריטים לפי הקשר
+    const selectedCount = this.config.selectedFiles.size;
+    const hasSelection = selectedCount > 0;
+    
+    // התאם את הטקסט של "בחר"
+    const selectItem = menu.querySelector('[data-action="select"]');
+    if (selectItem) {
+        selectItem.innerHTML = hasSelection ? 
+            '<i class="fas fa-times-circle"></i> בטל בחירה' : 
+            '<i class="fas fa-check-square"></i> בחר';
+    }
 
-    // הסתרת תפריט
-    // וודא שהפונקציה hideContextMenu עובדת נכון:
-    hideContextMenu() {
-        const menu = document.getElementById('contextMenu');
-        if (menu) {
-            menu.style.display = 'none';
-        }
-        
-        // הסר class מהמסך
-        document.body.classList.remove('context-menu-open');
-    },
+    // הצג את התפריט
+    menu.style.display = 'block';
+    menu.style.visibility = 'visible';
+    menu.style.opacity = '1';
+    
+    // חשב מיקום ראשוני
+    let finalX = x;
+    let finalY = y;
 
-    // הצגת תפריט
-    // בדיקת דיבוג - הוסף זאת זמנית לפונקציה showContextMenu:
-    showContextMenu(x, y) {
-        const menu = document.getElementById('contextMenu');
-        if (!menu) {
-            console.error('Context menu element not found!');
-            return;
-        }
+    // מקם את התפריט
+    menu.style.left = finalX + 'px';
+    menu.style.top = finalY + 'px';
 
-        console.log('Showing context menu at:', x, y); // דיבוג
-
-        // הצג/הסתר פריטים לפי הקשר
-        const selectedCount = this.config.selectedFiles.size;
-        const hasSelection = selectedCount > 0;
-        
-        // התאם את הטקסט של "בחר"
-        const selectItem = menu.querySelector('[data-action="select"]');
-        if (selectItem) {
-            selectItem.innerHTML = hasSelection ? 
-                '<i class="fas fa-times-circle"></i> בטל בחירה' : 
-                '<i class="fas fa-check-square"></i> בחר';
-        }
-
-        // מיקום
-        menu.style.display = 'block';
-        menu.style.left = x + 'px';
-        menu.style.top = y + 'px';
-
-        // התאמה אם חורג מהמסך
+    // המתן frame אחד ואז בדוק אם חורג מהמסך
+    requestAnimationFrame(() => {
         const rect = menu.getBoundingClientRect();
+        
+        // התאם אם חורג מצד ימין
         if (rect.right > window.innerWidth) {
-            menu.style.left = (x - rect.width) + 'px';
+            finalX = window.innerWidth - rect.width - 10;
         }
+        
+        // התאם אם חורג מלמטה
         if (rect.bottom > window.innerHeight) {
-            menu.style.top = (y - rect.height) + 'px';
+            finalY = window.innerHeight - rect.height - 10;
         }
+        
+        // וודא שלא חורג משמאל או מלמעלה
+        if (finalX < 10) finalX = 10;
+        if (finalY < 10) finalY = 10;
+        
+        // עדכן מיקום סופי
+        menu.style.left = finalX + 'px';
+        menu.style.top = finalY + 'px';
+    });
 
-        // הוסף class למסך למניעת גלילה במובייל
-        document.body.classList.add('context-menu-open');
-    },
+    // הוסף מאזין לסגירה
+    setTimeout(() => {
+        document.addEventListener('click', this.handleClickOutside);
+        document.addEventListener('contextmenu', this.handleClickOutside);
+    }, 100);
+},
+
+// הסתרת תפריט
+// פונקציה להסתרת התפריט
+hideContextMenu() {
+    const menu = document.getElementById('contextMenu');
+    if (menu) {
+        menu.style.display = 'none';
+        menu.style.visibility = 'hidden';
+        menu.style.opacity = '0';
+    }
+    
+    // הסר מאזינים
+    document.removeEventListener('click', this.handleClickOutside);
+    document.removeEventListener('contextmenu', this.handleClickOutside);
+},
+
+// פונקציה לטיפול בקליק מחוץ לתפריט
+handleClickOutside(e) {
+    const menu = document.getElementById('contextMenu');
+    if (!menu || !menu.contains(e.target)) {
+        this.hideContextMenu();
+    }
+},
+
+// קישור אירועים
+// עדכון ל-bindEvents - וודא שהקישורים נכונים
+bindEvents() {
+    // אזור גרירה
+    const dropzone = document.getElementById('uploadDropzone');
+    if (dropzone) {
+        dropzone.addEventListener('click', () => document.getElementById('fileInput').click());
+        dropzone.addEventListener('dragover', this.handleDragOver.bind(this));
+        dropzone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+        dropzone.addEventListener('drop', this.handleDrop.bind(this));
+    }
+
+    // בחירת קבצים
+    document.getElementById('fileInput')?.addEventListener('change', this.handleFileSelect.bind(this));
+
+    // תפריט קליק ימני - חשוב לקשר לאזור הנכון
+    const fileContent = document.getElementById('fileContent');
+    if (fileContent) {
+        fileContent.addEventListener('contextmenu', this.handleContextMenu.bind(this));
+    }
+
+    // קשר את handleClickOutside עם bind
+    this.handleClickOutside = this.handleClickOutside.bind(this);
+
+    // פעולות תפריט
+    document.querySelectorAll('.context-menu-item').forEach(item => {
+        item.addEventListener('click', this.handleMenuAction.bind(this));
+    });
+},
+
+
     // -----------
 
     // הצגת תפריט לפריט ספציפי
