@@ -1,70 +1,70 @@
 <?php
-require_once '../config.php';
+// require_once '../config.php';
 
-$message = '';
+// $message = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'] ?? '';
-    $password = $_POST['password'] ?? '';
+// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+//     $username = $_POST['username'] ?? '';
+//     $password = $_POST['password'] ?? '';
     
-    $message .= "<h3>ניסיון התחברות:</h3>";
-    $message .= "<p>Username: $username</p>";
-    $message .= "<p>Password: $password</p>";
+//     $message .= "<h3>ניסיון התחברות:</h3>";
+//     $message .= "<p>Username: $username</p>";
+//     $message .= "<p>Password: $password</p>";
     
-    try {
-        $db = getDbConnection();
+//     try {
+//         $db = getDbConnection();
         
-        // חיפוש המשתמש
-        $stmt = $db->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
-        $stmt->execute([$username, $username]);
-        $user = $stmt->fetch();
+//         // חיפוש המשתמש
+//         $stmt = $db->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
+//         $stmt->execute([$username, $username]);
+//         $user = $stmt->fetch();
         
-        if ($user) {
-            $message .= "<p style='color: green;'>✓ משתמש נמצא</p>";
-            $message .= "<p>ID: {$user['id']}</p>";
-            $message .= "<p>Username: {$user['username']}</p>";
-            $message .= "<p>Email: {$user['email']}</p>";
-            $message .= "<p>Active: " . ($user['is_active'] ? 'Yes' : 'No') . "</p>";
-            $message .= "<p>Permission Level: {$user['permission_level']}</p>";
+//         if ($user) {
+//             $message .= "<p style='color: green;'>✓ משתמש נמצא</p>";
+//             $message .= "<p>ID: {$user['id']}</p>";
+//             $message .= "<p>Username: {$user['username']}</p>";
+//             $message .= "<p>Email: {$user['email']}</p>";
+//             $message .= "<p>Active: " . ($user['is_active'] ? 'Yes' : 'No') . "</p>";
+//             $message .= "<p>Permission Level: {$user['permission_level']}</p>";
             
-            // בדיקת סיסמה
-            if (password_verify($password, $user['password'])) {
-                $message .= "<p style='color: green;'>✓ סיסמה נכונה!</p>";
+//             // בדיקת סיסמה
+//             if (password_verify($password, $user['password'])) {
+//                 $message .= "<p style='color: green;'>✓ סיסמה נכונה!</p>";
                 
-                // הגדרת סשן
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['full_name'] = $user['full_name'];
-                $_SESSION['permission_level'] = $user['permission_level'];
+//                 // הגדרת סשן
+//                 $_SESSION['user_id'] = $user['id'];
+//                 $_SESSION['username'] = $user['username'];
+//                 $_SESSION['full_name'] = $user['full_name'];
+//                 $_SESSION['permission_level'] = $user['permission_level'];
                 
-                $message .= "<p style='color: green;'>✓ סשן הוגדר בהצלחה</p>";
-                $message .= "<p><a href='" . DASHBOARD_URL . "'>לחץ כאן למעבר לדשבורד</a></p>";
+//                 $message .= "<p style='color: green;'>✓ סשן הוגדר בהצלחה</p>";
+//                 $message .= "<p><a href='" . DASHBOARD_URL . "'>לחץ כאן למעבר לדשבורד</a></p>";
                 
-            } else {
-                $message .= "<p style='color: red;'>✗ סיסמה שגויה</p>";
+//             } else {
+//                 $message .= "<p style='color: red;'>✗ סיסמה שגויה</p>";
                 
-                // ננסה להשוות לסיסמה ישירות (לצורך דיבוג)
-                if ($user['password'] === $password) {
-                    $message .= "<p style='color: orange;'>⚠ הסיסמה תואמת בהשוואה ישירה - נראה שהיא לא מוצפנת!</p>";
+//                 // ננסה להשוות לסיסמה ישירות (לצורך דיבוג)
+//                 if ($user['password'] === $password) {
+//                     $message .= "<p style='color: orange;'>⚠ הסיסמה תואמת בהשוואה ישירה - נראה שהיא לא מוצפנת!</p>";
                     
-                    // ניצור הצפנה חדשה
-                    $newHash = password_hash($password, PASSWORD_DEFAULT);
-                    $updateStmt = $db->prepare("UPDATE users SET password = ? WHERE id = ?");
-                    $updateStmt->execute([$newHash, $user['id']]);
-                    $message .= "<p style='color: blue;'>✓ הסיסמה הוצפנה ועודכנה במסד</p>";
-                    $message .= "<p>נסה להתחבר שוב</p>";
-                }
-            }
-        } else {
-            $message .= "<p style='color: red;'>✗ משתמש לא נמצא</p>";
-        }
+//                     // ניצור הצפנה חדשה
+//                     $newHash = password_hash($password, PASSWORD_DEFAULT);
+//                     $updateStmt = $db->prepare("UPDATE users SET password = ? WHERE id = ?");
+//                     $updateStmt->execute([$newHash, $user['id']]);
+//                     $message .= "<p style='color: blue;'>✓ הסיסמה הוצפנה ועודכנה במסד</p>";
+//                     $message .= "<p>נסה להתחבר שוב</p>";
+//                 }
+//             }
+//         } else {
+//             $message .= "<p style='color: red;'>✗ משתמש לא נמצא</p>";
+//         }
         
-    } catch (Exception $e) {
-        $message .= "<p style='color: red;'>✗ שגיאה: " . $e->getMessage() . "</p>";
-    }
-}
+//     } catch (Exception $e) {
+//         $message .= "<p style='color: red;'>✗ שגיאה: " . $e->getMessage() . "</p>";
+//     }
+// }
 ?>
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -148,4 +148,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </p>
     </div>
 </body>
-</html>
+</html> -->

@@ -1,65 +1,65 @@
 <?php
-require_once '../config.php';
+// require_once '../config.php';
 
-$error = '';
-$debug = [];
+// $error = '';
+// $debug = [];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+//     $username = trim($_POST['username'] ?? '');
+//     $password = $_POST['password'] ?? '';
 
-    $debug[] = "Username entered: $username";
-    $debug[] = "Password entered: $password";
+//     $debug[] = "Username entered: $username";
+//     $debug[] = "Password entered: $password";
 
-    try {
-        $db = getDbConnection();
-        $stmt = $db->prepare("SELECT id, username, password FROM users WHERE username = ?");
-        $stmt->execute([$username]);
-        $user = $stmt->fetch();
+//     try {
+//         $db = getDbConnection();
+//         $stmt = $db->prepare("SELECT id, username, password FROM users WHERE username = ?");
+//         $stmt->execute([$username]);
+//         $user = $stmt->fetch();
 
-        if ($user) {
-            $hashInDb = $user['password'];
-            $debug[] = "Hash from DB: $hashInDb";
+//         if ($user) {
+//             $hashInDb = $user['password'];
+//             $debug[] = "Hash from DB: $hashInDb";
             
-            // הדפסת hash חדש שיווצר מהסיסמה הנוכחית (לא אמור להיות תואם, אבל להראות פורמט)
-            $hashGenerated = password_hash($password, PASSWORD_DEFAULT);
-            $debug[] = "Hash generated from entered password: $hashGenerated";
-            $debug[] = "Length of DB hash: " . strlen($hashInDb) . ", Length of generated hash: " . strlen($hashGenerated);
+//             // הדפסת hash חדש שיווצר מהסיסמה הנוכחית (לא אמור להיות תואם, אבל להראות פורמט)
+//             $hashGenerated = password_hash($password, PASSWORD_DEFAULT);
+//             $debug[] = "Hash generated from entered password: $hashGenerated";
+//             $debug[] = "Length of DB hash: " . strlen($hashInDb) . ", Length of generated hash: " . strlen($hashGenerated);
 
-            // בדיקת התאמה
-            if (password_verify($password, $hashInDb)) {
-                $debug[] = "<b>SUCCESS: password_verify returned TRUE!</b>";
-            } else {
-                $debug[] = "<b>FAIL: password_verify returned FALSE.</b>";
-            }
+//             // בדיקת התאמה
+//             if (password_verify($password, $hashInDb)) {
+//                 $debug[] = "<b>SUCCESS: password_verify returned TRUE!</b>";
+//             } else {
+//                 $debug[] = "<b>FAIL: password_verify returned FALSE.</b>";
+//             }
 
-            // השוואה תו לתו
-            $diff = [];
-            $len = max(strlen($hashInDb), strlen($hashGenerated));
-            for ($i = 0; $i < $len; $i++) {
-                $dbChar = $hashInDb[$i] ?? '';
-                $genChar = $hashGenerated[$i] ?? '';
-                if ($dbChar !== $genChar) {
-                    $diff[] = "Pos $i: DB='" . addslashes($dbChar) . "' / NEW='" . addslashes($genChar) . "'";
-                }
-            }
-            if ($diff) {
-                $debug[] = "<b>Diff between DB hash and generated hash (should be different):</b><br>" . implode("<br>", $diff);
-            } else {
-                $debug[] = "<b>No char differences found (unexpected!)</b>";
-            }
+//             // השוואה תו לתו
+//             $diff = [];
+//             $len = max(strlen($hashInDb), strlen($hashGenerated));
+//             for ($i = 0; $i < $len; $i++) {
+//                 $dbChar = $hashInDb[$i] ?? '';
+//                 $genChar = $hashGenerated[$i] ?? '';
+//                 if ($dbChar !== $genChar) {
+//                     $diff[] = "Pos $i: DB='" . addslashes($dbChar) . "' / NEW='" . addslashes($genChar) . "'";
+//                 }
+//             }
+//             if ($diff) {
+//                 $debug[] = "<b>Diff between DB hash and generated hash (should be different):</b><br>" . implode("<br>", $diff);
+//             } else {
+//                 $debug[] = "<b>No char differences found (unexpected!)</b>";
+//             }
 
-        } else {
-            $debug[] = "No user found for username: $username";
-        }
+//         } else {
+//             $debug[] = "No user found for username: $username";
+//         }
 
-    } catch (Exception $e) {
-        $debug[] = "DB ERROR: " . $e->getMessage();
-    }
-}
+//     } catch (Exception $e) {
+//         $debug[] = "DB ERROR: " . $e->getMessage();
+//     }
+// }
 ?>
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
+<!-- <!DOCTYPE html> -->
+<!-- <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <title>Login Debug</title>
@@ -89,4 +89,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     <?php endif; ?>
 </body>
-</html>
+</html> -->
