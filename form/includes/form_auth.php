@@ -346,7 +346,7 @@ function handleFormSubmit($form, $formUuid, $isNewForm, $userPermissionLevel) {
                 $_SESSION['form_saved_message'] = "הטופס נוצר בהצלחה";
                 
                 if ($saveAndView) {
-                    return ['success' => true, 'redirect' => "../view_form.php?id=" . $formUuid];
+                    return ['success' => true, 'redirect' => "view_form.php?id=" . $formUuid];
                 } else {
                     return ['success' => true, 'redirect' => "index.php?id=" . $formUuid . "&saved=1"];
                 }

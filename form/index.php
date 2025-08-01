@@ -113,9 +113,7 @@ if (isset($_SESSION['form_saved_message'])) {
         // הודעה בקונסול לדיבוג
         console.log('User permission level:', formConfig.userPermissionLevel);
         console.log('Can share forms:', userCanShare);
-    </script>
-    
-    <script>
+
         // וודא שהתפריט נמצא ב-body ולא בתוך קונטיינר
         document.addEventListener('DOMContentLoaded', function() {
             const contextMenu = document.getElementById('contextMenu');
@@ -124,9 +122,6 @@ if (isset($_SESSION['form_saved_message'])) {
             }
         });
     </script>
-
-    // להחליף את הסקריפט הקיים ב-index.php
-
 
     <?php renderFormScripts(); ?>
 
