@@ -411,7 +411,7 @@ function renderActionButtonsNew($isNewForm, $formUuid, $viewOnly, $isLinkAccess)
     <?php
 }
 
-function renderActionButtons($isNewForm, $formUuid, $viewOnly, $isLinkAccess) {
+function renderActionButtonsOld($isNewForm, $formUuid, $viewOnly, $isLinkAccess) {
     ?>
     <!-- כפתורי פעולה מעוצבים -->
     <div class="form-actions">
@@ -503,6 +503,106 @@ function renderActionButtons($isNewForm, $formUuid, $viewOnly, $isLinkAccess) {
             }
         });
     </script>
+    <?php
+}
+
+function renderActionButtons($isNewForm, $formUuid, $viewOnly, $isLinkAccess) {
+    // בדיקת הרשאות לשיתוף
+    $canShare = false;
+    if (isset($_SESSION['user_id']) && isset($_SESSION['permission_level'])) {
+        // רק משתמשים רשומים עם הרשאת מנהל (4) או עורך (3) יכולים לשתף
+        $canShare = $_SESSION['permission_level'] >= 3;
+    }
+    
+    ?>
+    <!-- כפתורי פעולה מעוצבים -->
+    <div class="form-actions">
+        <div class="action-buttons-container">
+            <?php if (!$viewOnly): ?>
+                <?php if ($isNewForm): ?>
+                    <!-- כפתורים לטופס חדש -->
+                    <div class="mobile-primary-group">
+                        <button type="submit" name="save" class="btn action-btn primary">
+                            <i class="fas fa-save"></i>
+                            <span class="btn-text">צור טופס</span>
+                        </button>
+                        <button type="submit" name="save_and_view" value="1" class="btn action-btn secondary">
+                            <i class="fas fa-eye"></i>
+                            <span class="btn-text">צור וצפה</span>
+                        </button>
+                    </div>
+                <?php else: ?>
+                    <!-- כפתורים לטופס קיים -->
+                    <div class="mobile-primary-group">
+                        <button type="submit" name="save" class="btn action-btn primary">
+                            <i class="fas fa-save"></i>
+                            <span class="btn-text">שמור שינויים</span>
+                        </button>
+                        <button type="submit" name="save_and_view" value="1" class="btn action-btn secondary">
+                            <i class="fas fa-eye"></i>
+                            <span class="btn-text">שמור וצפה</span>
+                        </button>
+                    </div>
+                <?php endif; ?>
+                
+                <?php if (!$isNewForm && $canShare): ?>
+                    <div class="actions-divider"></div>
+                <?php endif; ?>
+            <?php endif; ?>
+            
+            <?php if (!$isNewForm && $canShare): ?>
+                <!-- קבוצת שיתוף - רק למשתמשים מורשים -->
+                <div class="btn-group-custom">
+                    <button type="button" class="btn action-btn share" 
+                            onclick="shareForm()"
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="top" 
+                            title="שתף טופס">
+                        <i class="fas fa-share-alt"></i>
+                        <span class="btn-text">שתף טופס</span>
+                    </button>
+                    <button type="button" class="btn action-btn share" 
+                            onclick="quickShareForm()"
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="top" 
+                            title="שיתוף מהיר">
+                        <i class="fas fa-link"></i>
+                        <span class="btn-text">שיתוף מהיר</span>
+                    </button>
+                </div>
+                
+                <div class="actions-divider"></div>
+            <?php endif; ?>
+            
+            <!-- כפתורי ניווט -->
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <a href="../forms_list.php" class="btn action-btn outline"
+                   data-bs-toggle="tooltip" 
+                   data-bs-placement="top" 
+                   title="רשימת טפסים">
+                    <i class="fas fa-list"></i>
+                    <span class="btn-text">רשימת טפסים</span>
+                </a>
+            <?php else: ?>
+                <a href="../<?= LOGIN_URL ?>" class="btn action-btn outline"
+                   data-bs-toggle="tooltip" 
+                   data-bs-placement="top" 
+                   title="התחבר למערכת">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span class="btn-text">התחבר</span>
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+    
+    <?php if (!$canShare && !$isNewForm && isset($_SESSION['user_id'])): ?>
+    <!-- הודעה למשתמש על חוסר הרשאה -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('שיתוף טפסים מוגבל למשתמשים עם הרשאות עורך ומעלה');
+        });
+    </script>
+    <?php endif; ?>
     <?php
 }
 

@@ -91,7 +91,27 @@ if (isset($_SESSION['form_saved_message'])) {
     <?php renderShareModals(); ?>
     
     <script>
-        // משתנים גלובליים לשימוש בסקריפטים
+        // todo 3 - תחילת מחיקה
+        // // משתנים גלובליים לשימוש בסקריפטים
+        // const formConfig = {
+        //     isNewForm: <?= $isNewForm ? 'true' : 'false' ?>,
+        //     isViewOnly: <?= $viewOnly ? 'true' : 'false' ?>,
+        //     isUserLoggedIn: <?= isset($_SESSION['user_id']) ? 'true' : 'false' ?>,
+        //     isLinkAccess: <?= $isLinkAccess ? 'true' : 'false' ?>,
+        //     formUuid: '<?= $formUuid ?>',
+        //     requiredFields: <?= json_encode($requiredFields) ?>,
+        //     csrfToken: '<?= $_SESSION['csrf_token'] ?>',
+
+        //     // todo 2 - תחילת למחוק
+        //     // // הוספת רמת הרשאה
+        //     // userPermissionLevel: <?= isset($_SESSION['permission_level']) ? $_SESSION['permission_level'] : 0 ?>,
+        //     // userId: <?= isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null' ?>
+        //     // todo 2 - סוף למחוק
+        // };
+        // todo 3 - סוף מחיקה
+
+
+        // todo 3 - תחילת הוספה
         const formConfig = {
             isNewForm: <?= $isNewForm ? 'true' : 'false' ?>,
             isViewOnly: <?= $viewOnly ? 'true' : 'false' ?>,
@@ -100,13 +120,11 @@ if (isset($_SESSION['form_saved_message'])) {
             formUuid: '<?= $formUuid ?>',
             requiredFields: <?= json_encode($requiredFields) ?>,
             csrfToken: '<?= $_SESSION['csrf_token'] ?>',
-
-            // todo 2 - תחילת למחוק
-            // // הוספת רמת הרשאה
-            // userPermissionLevel: <?= isset($_SESSION['permission_level']) ? $_SESSION['permission_level'] : 0 ?>,
-            // userId: <?= isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null' ?>
-            // todo 2 - סוף למחוק
+            // הוספת נתוני הרשאות
+            userPermissionLevel: <?= isset($_SESSION['permission_level']) ? $_SESSION['permission_level'] : 0 ?>,
+            canShare: <?= (isset($_SESSION['user_id']) && isset($_SESSION['permission_level']) && $_SESSION['permission_level'] >= 3) ? 'true' : 'false' ?>
         };
+        // todo 3 - סוף הוספה
         
         const formData = <?= json_encode($formData) ?>;
         

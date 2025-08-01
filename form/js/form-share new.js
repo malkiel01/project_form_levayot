@@ -2,12 +2,6 @@
 
 // פונקציה לשיתוף טופס
 function shareForm() {
-    // בדיקת הרשאות
-    if (!formConfig.canShare) {
-        showShareError();
-        return;
-    }
-    
     if (formConfig.isNewForm) {
         alert('יש לשמור את הטופס לפני השיתוף');
         return;
@@ -20,30 +14,47 @@ function shareForm() {
     $('#shareFormModal').modal('show');
 }
 
-// שיתוף מהיר
-function quickShareForm() {
-    // בדיקת הרשאות
-    if (!formConfig.canShare) {
-        showShareError();
+function shareFormNew() {
+    // בדיקה האם המשתמש מחובר
+    if (!formConfig.isUserLoggedIn) {
+        showAlert('danger', 'עליך להתחבר למערכת כדי לשתף טפסים');
+        setTimeout(() => {
+            window.location.href = '../' + 'auth/login.php';
+        }, 2000);
         return;
     }
     
+    // בדיקת הרשאות (נניח שנוסיף את זה ל-formConfig)
+    if (formConfig.userPermissionLevel && formConfig.userPermissionLevel < 3) {
+        showAlert('warning', 'אין לך הרשאה לשתף טפסים. פעולה זו מוגבלת לעורכים ומנהלים בלבד.');
+        return;
+    }
+    
+    // אם יש הרשאה, המשך עם תהליך השיתוף
+    loadUsersForShare();
+    $('#shareFormModal').modal('show');
+}
+
+// שיתוף מהיר
+function quickShareForm() {
     if (formConfig.isNewForm) {
         alert('יש לשמור את הטופס לפני השיתוף');
         return;
     }
 
+    const formUuid = formConfig.formUuid;
+    
+    // יצירת קישור מהיר עם הגדרות ברירת מחדל
     const formData = new FormData();
-    formData.append('form_uuid', formConfig.formUuid);
-    formData.append('csrf_token', formConfig.csrfToken);
-    formData.append('access_type', 'public');
-    formData.append('permission_mode', 'view');
-    formData.append('permission_level', '1');
-    formData.append('expiry_type', 'never');
+    formData.append('form_uuid', formUuid);
+    formData.append('allowed_users', 'null'); // פתוח לכולם
+    formData.append('can_edit', '0'); // צפייה בלבד
+    formData.append('permission_level', '4'); // רמת הרשאה 4
+    formData.append('expires_at', 'null'); // ללא תפוגה
     formData.append('description', 'קישור מהיר');
     
     $.ajax({
-        url: 'ajax/share_link.php',
+        url: '../ajax/create_share_link.php',
         method: 'POST',
         data: formData,
         processData: false,
@@ -51,7 +62,7 @@ function quickShareForm() {
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                const formUrl = response.share_url;
+                const formUrl = response.link;
                 
                 if (navigator.share) {
                     navigator.share({
@@ -75,15 +86,24 @@ function quickShareForm() {
     });
 }
 
-// הצגת הודעת שגיאת הרשאות
-function showShareError() {
+function quickShareFormNew() {
+    // בדיקה האם המשתמש מחובר
     if (!formConfig.isUserLoggedIn) {
-        if (confirm('עליך להתחבר למערכת כדי לשתף טפסים. האם ברצונך להתחבר כעת?')) {
-            window.location.href = '../' + LOGIN_URL;
-        }
-    } else {
-        alert('אין לך הרשאה לשתף טפסים. פעולה זו מוגבלת למשתמשים עם הרשאות עורך (רמה 3) ומעלה.');
+        showAlert('danger', 'עליך להתחבר למערכת כדי לשתף טפסים');
+        setTimeout(() => {
+            window.location.href = '../' + 'auth/login.php';
+        }, 2000);
+        return;
     }
+    
+    // בדיקת הרשאות
+    if (formConfig.userPermissionLevel && formConfig.userPermissionLevel < 3) {
+        showAlert('warning', 'אין לך הרשאה לשתף טפסים. פעולה זו מוגבלת לעורכים ומנהלים בלבד.');
+        return;
+    }
+    
+    // אם יש הרשאה, צור שיתוף מהיר
+    createQuickShareLink();
 }
 
 // טעינת רשימת משתמשים
@@ -125,20 +145,11 @@ function setExpiryDays(days) {
 
 // יצירת קישור השיתוף
 function createShareLink() {
-    // בדיקת הרשאות נוספת
-    if (!formConfig.canShare) {
-        showShareError();
-        return;
-    }
-    
     const formData = new FormData();
     formData.append('form_uuid', formConfig.formUuid);
-    formData.append('csrf_token', formConfig.csrfToken);
     
     // סוג גישה
     const accessType = $('input[name="access_type"]:checked').val();
-    formData.append('access_type', accessType);
-    
     if (accessType === 'users') {
         const selectedUsers = $('#allowed_users').val();
         if (!selectedUsers || selectedUsers.length === 0) {
@@ -146,19 +157,19 @@ function createShareLink() {
             return;
         }
         formData.append('allowed_users', JSON.stringify(selectedUsers));
+    } else {
+        formData.append('allowed_users', 'null');
     }
     
     // הרשאות
     const permissionMode = $('input[name="permission_mode"]:checked').val();
-    formData.append('permission_mode', permissionMode);
+    formData.append('can_edit', permissionMode === 'edit' ? '1' : '0');
     
     // רמת הרשאה
     formData.append('permission_level', $('#permission_level').val());
     
     // תוקף
     const expiryType = $('input[name="expiry_type"]:checked').val();
-    formData.append('expiry_type', expiryType);
-    
     if (expiryType === 'custom') {
         const expiryDate = $('#expiry_date').val();
         const expiryTime = $('#expiry_time').val();
@@ -166,8 +177,9 @@ function createShareLink() {
             showAlert('shareLinkAlert', 'danger', 'יש לבחור תאריך תפוגה');
             return;
         }
-        formData.append('expiry_date', expiryDate);
-        formData.append('expiry_time', expiryTime);
+        formData.append('expires_at', expiryDate + ' ' + expiryTime + ':00');
+    } else {
+        formData.append('expires_at', 'null');
     }
     
     // תיאור
@@ -177,7 +189,7 @@ function createShareLink() {
     showAlert('shareLinkAlert', 'info', 'יוצר קישור...');
     
     $.ajax({
-        url: 'ajax/share_link.php',
+        url: '../ajax/create_share_link.php',
         method: 'POST',
         data: formData,
         processData: false,
@@ -200,11 +212,11 @@ function createShareLink() {
 
 // הצגת הקישור שנוצר
 function showGeneratedLink(data) {
-    $('#generatedLink').val(data.share_url);
+    $('#generatedLink').val(data.link);
     
     // הצג פרטי קישור
     let details = '<strong>פרטי הקישור:</strong><br>';
-    details += '• סוג גישה: ' + (data.access_type === 'restricted' ? 'משתמשים ספציפיים' : 'פתוח לכולם') + '<br>';
+    details += '• סוג גישה: ' + (data.access_type === 'public' ? 'פתוח לכולם' : 'משתמשים ספציפיים') + '<br>';
     details += '• הרשאות: ' + (data.can_edit ? 'צפייה ועריכה' : 'צפייה בלבד') + '<br>';
     if (data.expires_at) {
         details += '• תוקף עד: ' + new Date(data.expires_at).toLocaleDateString('he-IL') + '<br>';
@@ -217,7 +229,7 @@ function showGeneratedLink(data) {
     $('#qrcode').empty();
     if (typeof QRCode !== 'undefined') {
         new QRCode(document.getElementById("qrcode"), {
-            text: data.share_url,
+            text: data.link,
             width: 200,
             height: 200
         });
@@ -272,6 +284,26 @@ function showAlert(elementId, type, message) {
     alert.show();
 }
 
+function showAlertNew(type, message) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" 
+             style="z-index: 9999; min-width: 300px;" role="alert">
+            <i class="fas fa-${type === 'danger' ? 'exclamation-circle' : 'info-circle'}"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('body').append(alertHtml);
+    
+    // הסרה אוטומטית אחרי 5 שניות
+    setTimeout(() => {
+        $('.alert').fadeOut(() => {
+            $('.alert').remove();
+        });
+    }, 5000);
+}
+
 // פונקציה להעתקה ללוח
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -303,4 +335,39 @@ function fallbackCopyToClipboard(text) {
     }
     
     document.body.removeChild(textArea);
+}
+
+// יצירת שיתוף מהיר עם בדיקת הרשאות בצד השרת
+function createQuickShareLink() {
+    $.ajax({
+        url: 'ajax/quick_share.php',
+        method: 'POST',
+        data: {
+            form_uuid: formConfig.formUuid,
+            csrf_token: formConfig.csrfToken
+        },
+        success: function(response) {
+            if (response.success) {
+                // הצג את הקישור שנוצר
+                $('#generatedLink').val(response.share_url);
+                
+                // יצירת QR code
+                $('#qrcode').empty();
+                new QRCode(document.getElementById("qrcode"), {
+                    text: response.share_url,
+                    width: 200,
+                    height: 200
+                });
+                
+                // הצג את המודל
+                $('#shareFormModal').modal('hide');
+                $('#showLinkModal').modal('show');
+            } else {
+                showAlert('danger', response.message || 'שגיאה ביצירת קישור השיתוף');
+            }
+        },
+        error: function() {
+            showAlert('danger', 'שגיאה בתקשורת עם השרת');
+        }
+    });
 }
