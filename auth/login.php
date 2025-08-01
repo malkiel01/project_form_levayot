@@ -315,7 +315,7 @@ if (isset($_SESSION['registration_success'])) {
         
         .g_id_signin {
             width: 100%;
-            /* max-width: 400px; */
+            max-width: 400px;
             display: flex;
             justify-content: center;
         }
