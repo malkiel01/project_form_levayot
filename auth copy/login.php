@@ -283,9 +283,9 @@ if (isset($_SESSION['registration_success'])) {
             color: #666;
         }
         
-        /* .google-signin {
+        .google-signin {
             margin: 20px 0;
-        } */
+        }
         
         .register-link {
             text-align: center;
@@ -301,29 +301,6 @@ if (isset($_SESSION['registration_success'])) {
             padding: 12px;
             margin-bottom: 20px;
             color: #1976d2;
-        }
-
-        /* <!-- הוסף CSS לשיפור התצוגה --> */
-
-        .google-signin {
-            margin: 20px 0;
-            display: flex;
-            justify-content: center;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .g_id_signin {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            justify-content: center;
-        }
-        
-        /* וודא שהכפתור ממורכז */
-        .g_id_signin iframe {
-            margin: 0 auto;
-            display: block;
         }
     </style>
 </head>
@@ -359,7 +336,7 @@ if (isset($_SESSION['registration_success'])) {
             <?php endif; ?>
 
             <!-- Google Sign-In Button -->
-            <!-- <div class="google-signin">
+            <div class="google-signin">
                 <div id="g_id_onload"
                      data-client_id="453102975463-3fhe60iqfqh7bgprufpkddv4v29cobfb.apps.googleusercontent.com"
                      data-callback="handleGoogleSignIn"
@@ -373,25 +350,6 @@ if (isset($_SESSION['registration_success'])) {
                      data-shape="rectangular"
                      data-logo_alignment="left"
                      data-width="100%">
-                </div>
-            </div> -->
-
-            <!-- todo 1 -->
-            <!-- Google Sign-In Button -->
-            <div class="google-signin">
-                <div id="g_id_onload"
-                    data-client_id="453102975463-3fhe60iqfqh7bgprufpkddv4v29cobfb.apps.googleusercontent.com"
-                    data-callback="handleGoogleSignIn"
-                    data-auto_prompt="false"
-                    data-cancel_on_tap_outside="false">
-                </div>
-                <div class="g_id_signin"
-                    data-type="standard"
-                    data-size="large"
-                    data-theme="outline"
-                    data-text="sign_in_with"
-                    data-shape="rectangular"
-                    data-logo_alignment="left">
                 </div>
             </div>
 
@@ -465,50 +423,6 @@ if (isset($_SESSION['registration_success'])) {
         //         icon.classList.add('fa-eye');
         //     }
         // });
-
-        // // Form submission loading
-        // document.getElementById('loginForm').addEventListener('submit', function() {
-        //     const btn = document.getElementById('loginBtn');
-        //     const originalHTML = btn.innerHTML;
-        //     btn.disabled = true;
-        //     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מתחבר...';
-            
-        //     // Safety timeout
-        //     setTimeout(function() {
-        //         btn.disabled = false;
-        //         btn.innerHTML = originalHTML;
-        //     }, 5000);
-        // });
-
-        // // Google Sign-In callback
-        // function handleGoogleSignIn(response) {
-        //     // שלח את הטוקן לשרת
-        //     fetch('google_auth.php', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //         body: JSON.stringify({
-        //             credential: response.credential,
-        //             redirect: '<?= htmlspecialchars($redirect) ?>'
-        //         })
-        //     })
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         if (data.success) {
-        //             window.location.href = data.redirect;
-        //         } else {
-        //             alert(data.message || 'שגיאה בהתחברות עם Google');
-        //         }
-        //     })
-        //     .catch(error => {
-        //         console.error('Error:', error);
-        //         alert('שגיאה בהתחברות עם Google');
-        //     });
-        // }
-    </script>
-    <!-- בתחתית הדף, החלף את הסקריפט -->
-    <script>
         // Toggle password visibility
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordField = document.getElementById('password');
@@ -538,92 +452,32 @@ if (isset($_SESSION['registration_success'])) {
             }, 5000);
         });
 
-        // Google Sign-In callback - גרסה מתוקנת
-        async function handleGoogleSignIn(response) {
-            console.log('Google Sign-In response received');
-            
-            // הצג אינדיקטור טעינה
-            const loadingDiv = document.createElement('div');
-            loadingDiv.innerHTML = '<div class="text-center my-3"><i class="fas fa-spinner fa-spin"></i> מתחבר עם Google...</div>';
-            document.querySelector('.google-signin').appendChild(loadingDiv);
-            
-            try {
-                const result = await fetch('google_auth.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({
-                        credential: response.credential,
-                        redirect: '<?= htmlspecialchars($redirect) ?>',
-                        action: 'login'
-                    })
-                });
-                
-                console.log('Response status:', result.status);
-                
-                // בדוק אם התגובה היא JSON
-                const contentType = result.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const data = await result.json();
-                    console.log('Response data:', data);
-                    
-                    if (data.success) {
-                        // הצלחה - הפנה למיקום המבוקש
-                        window.location.href = data.redirect || '<?= DASHBOARD_URL ?>';
-                    } else {
-                        // הצג הודעת שגיאה
-                        showGoogleError(data.message || 'שגיאה בהתחברות עם Google');
-                        loadingDiv.remove();
-                    }
+        // Google Sign-In callback
+        function handleGoogleSignIn(response) {
+            // שלח את הטוקן לשרת
+            fetch('google_auth.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    credential: response.credential,
+                    redirect: '<?= htmlspecialchars($redirect) ?>'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect;
                 } else {
-                    // אם התגובה אינה JSON, נסה לקרוא כטקסט
-                    const text = await result.text();
-                    console.error('Non-JSON response:', text);
-                    showGoogleError('שגיאה בתקשורת עם השרת');
-                    loadingDiv.remove();
+                    alert(data.message || 'שגיאה בהתחברות עם Google');
                 }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                showGoogleError('שגיאה בהתחברות. אנא נסה שוב.');
-                loadingDiv.remove();
-            }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('שגיאה בהתחברות עם Google');
+            });
         }
-        
-        // פונקציה להצגת שגיאות Google
-        function showGoogleError(message) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
-            alertDiv.innerHTML = `
-                <i class="fas fa-exclamation-circle"></i> ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            document.querySelector('.auth-header').after(alertDiv);
-            
-            // הסר אחרי 5 שניות
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 5000);
-        }
-        
-        // התאמת גודל כפתור Google לרוחב המיכל
-        window.addEventListener('load', function() {
-            // חכה שהכפתור ייטען
-            setTimeout(() => {
-                const googleButton = document.querySelector('.g_id_signin iframe');
-                if (googleButton) {
-                    const container = document.querySelector('.google-signin');
-                    const containerWidth = container.offsetWidth;
-                    
-                    // הגדר רוחב מקסימלי של 400px או רוחב המיכל
-                    const maxWidth = Math.min(containerWidth, 400);
-                    googleButton.style.width = maxWidth + 'px';
-                    googleButton.style.maxWidth = '100%';
-                }
-            }, 1000);
-        });
     </script>
 </body>
 </html>

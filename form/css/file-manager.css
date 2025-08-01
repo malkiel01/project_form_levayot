@@ -447,6 +447,58 @@
     padding: 0 !important;
 }
 
+
+/* עיצוב התפריט */
+#contextMenu {
+    border: 1px solid #dee2e6 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    z-index: 999999 !important;
+    min-width: 200px !important;
+    padding: 0 !important;
+}
+
+#contextMenu .context-menu-list {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 5px 0 !important;
+}
+
+#contextMenu .context-menu-item {
+    padding: 10px 15px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-size: 14px !important;
+    transition: background-color 0.2s !important;
+}
+
+#contextMenu .context-menu-item:hover {
+    background-color: #f8f9fa !important;
+}
+
+#contextMenu .context-menu-item i {
+    width: 18px !important;
+    text-align: center !important;
+    color: #6c757d !important;
+}
+
+#contextMenu .context-menu-divider {
+    height: 1px !important;
+    background-color: #e9ecef !important;
+    margin: 5px 0 !important;
+}
+
+
+
+
+
+
+
+
+
+
 /* וודא שהתפריט מעל כל אלמנט אחר */
 body.context-menu-open {
     position: relative;
@@ -846,3 +898,4 @@ body.context-menu-open {
     max-width: 600px;
     margin: 0 auto;
 }
+

@@ -296,7 +296,7 @@
 
 <style>
 /* עיצוב התפריט */
-#contextMenu {
+/* #contextMenu {
     position: fixed !important;
     background: white !important;
     border: 1px solid #dee2e6 !important;
@@ -337,7 +337,7 @@
     height: 1px !important;
     background-color: #e9ecef !important;
     margin: 5px 0 !important;
-}
+} */
 </style>
 
 <script>

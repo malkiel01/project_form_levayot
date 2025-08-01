@@ -1,48 +1,48 @@
 <?php
-// login.php - דף התחברות למערכת
+// // login.php - דף התחברות למערכת
 
-require_once 'config.php';
+// require_once 'config.php';
 
-// אם המשתמש כבר מחובר
-if (isset($_SESSION['user_id'])) {
-    header('Location: dashboard.php');
-    exit;
-}
+// // אם המשתמש כבר מחובר
+// if (isset($_SESSION['user_id'])) {
+//     header('Location: dashboard.php');
+//     exit;
+// }
 
-$error = '';
+// $error = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // בדיקת CSRF token
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        die('Invalid CSRF token');
-    }
+// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+//     // בדיקת CSRF token
+//     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+//         die('Invalid CSRF token');
+//     }
     
-    $username = sanitizeInput($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+//     $username = sanitizeInput($_POST['username'] ?? '');
+//     $password = $_POST['password'] ?? '';
     
-    // כאן תוסיף את הלוגיקה לבדיקת משתמש מול הדטהבייס
-    // לצורך הדגמה:
-    if ($username === 'admin' && $password === 'admin123') {
-        $_SESSION['user_id'] = 1;
-        $_SESSION['username'] = $username;
-        $_SESSION['permission_level'] = 4; // מנהל
+//     // כאן תוסיף את הלוגיקה לבדיקת משתמש מול הדטהבייס
+//     // לצורך הדגמה:
+//     if ($username === 'admin' && $password === 'admin123') {
+//         $_SESSION['user_id'] = 1;
+//         $_SESSION['username'] = $username;
+//         $_SESSION['permission_level'] = 4; // מנהל
         
-        header('Location: dashboard.php');
-        exit;
-    } elseif ($username === 'editor' && $password === 'editor123') {
-        $_SESSION['user_id'] = 2;
-        $_SESSION['username'] = $username;
-        $_SESSION['permission_level'] = 2; // עורך
+//         header('Location: dashboard.php');
+//         exit;
+//     } elseif ($username === 'editor' && $password === 'editor123') {
+//         $_SESSION['user_id'] = 2;
+//         $_SESSION['username'] = $username;
+//         $_SESSION['permission_level'] = 2; // עורך
         
-        header('Location: ' . FORM_URL );
-        exit;
-    } else {
-        $error = 'שם משתמש או סיסמה שגויים';
-    }
-}
+//         header('Location: ' . FORM_URL );
+//         exit;
+//     } else {
+//         $error = 'שם משתמש או סיסמה שגויים';
+//     }
+// }
 ?>
-<!DOCTYPE html>
-<html dir="rtl" lang="he">
+<!-- <!DOCTYPE html> -->
+<!-- <html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -135,4 +135,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html>
+</html> -->
