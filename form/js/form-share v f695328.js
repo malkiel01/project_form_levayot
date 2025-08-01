@@ -14,27 +14,6 @@ function shareForm() {
     $('#shareFormModal').modal('show');
 }
 
-function shareFormNew() {
-    // בדיקה האם המשתמש מחובר
-    if (!formConfig.isUserLoggedIn) {
-        showAlert('danger', 'עליך להתחבר למערכת כדי לשתף טפסים');
-        setTimeout(() => {
-            window.location.href = '../' + 'auth/login.php';
-        }, 2000);
-        return;
-    }
-    
-    // בדיקת הרשאות (נניח שנוסיף את זה ל-formConfig)
-    if (formConfig.userPermissionLevel && formConfig.userPermissionLevel < 3) {
-        showAlert('warning', 'אין לך הרשאה לשתף טפסים. פעולה זו מוגבלת לעורכים ומנהלים בלבד.');
-        return;
-    }
-    
-    // אם יש הרשאה, המשך עם תהליך השיתוף
-    loadUsersForShare();
-    $('#shareFormModal').modal('show');
-}
-
 // שיתוף מהיר
 function quickShareForm() {
     if (formConfig.isNewForm) {
@@ -84,26 +63,6 @@ function quickShareForm() {
             alert('שגיאה ביצירת הקישור');
         }
     });
-}
-
-function quickShareFormNew() {
-    // בדיקה האם המשתמש מחובר
-    if (!formConfig.isUserLoggedIn) {
-        showAlert('danger', 'עליך להתחבר למערכת כדי לשתף טפסים');
-        setTimeout(() => {
-            window.location.href = '../' + 'auth/login.php';
-        }, 2000);
-        return;
-    }
-    
-    // בדיקת הרשאות
-    if (formConfig.userPermissionLevel && formConfig.userPermissionLevel < 3) {
-        showAlert('warning', 'אין לך הרשאה לשתף טפסים. פעולה זו מוגבלת לעורכים ומנהלים בלבד.');
-        return;
-    }
-    
-    // אם יש הרשאה, צור שיתוף מהיר
-    createQuickShareLink();
 }
 
 // טעינת רשימת משתמשים
@@ -284,26 +243,6 @@ function showAlert(elementId, type, message) {
     alert.show();
 }
 
-function showAlertNew(type, message) {
-    const alertHtml = `
-        <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" 
-             style="z-index: 9999; min-width: 300px;" role="alert">
-            <i class="fas fa-${type === 'danger' ? 'exclamation-circle' : 'info-circle'}"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    
-    $('body').append(alertHtml);
-    
-    // הסרה אוטומטית אחרי 5 שניות
-    setTimeout(() => {
-        $('.alert').fadeOut(() => {
-            $('.alert').remove();
-        });
-    }, 5000);
-}
-
 // פונקציה להעתקה ללוח
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -335,39 +274,4 @@ function fallbackCopyToClipboard(text) {
     }
     
     document.body.removeChild(textArea);
-}
-
-// יצירת שיתוף מהיר עם בדיקת הרשאות בצד השרת
-function createQuickShareLink() {
-    $.ajax({
-        url: 'ajax/quick_share.php',
-        method: 'POST',
-        data: {
-            form_uuid: formConfig.formUuid,
-            csrf_token: formConfig.csrfToken
-        },
-        success: function(response) {
-            if (response.success) {
-                // הצג את הקישור שנוצר
-                $('#generatedLink').val(response.share_url);
-                
-                // יצירת QR code
-                $('#qrcode').empty();
-                new QRCode(document.getElementById("qrcode"), {
-                    text: response.share_url,
-                    width: 200,
-                    height: 200
-                });
-                
-                // הצג את המודל
-                $('#shareFormModal').modal('hide');
-                $('#showLinkModal').modal('show');
-            } else {
-                showAlert('danger', response.message || 'שגיאה ביצירת קישור השיתוף');
-            }
-        },
-        error: function() {
-            showAlert('danger', 'שגיאה בתקשורת עם השרת');
-        }
-    });
 }

@@ -99,27 +99,13 @@ if (isset($_SESSION['form_saved_message'])) {
             isLinkAccess: <?= $isLinkAccess ? 'true' : 'false' ?>,
             formUuid: '<?= $formUuid ?>',
             requiredFields: <?= json_encode($requiredFields) ?>,
-            csrfToken: '<?= $_SESSION['csrf_token'] ?>',
-
-            // todo 2 - תחילת למחוק
-            // // הוספת רמת הרשאה
-            // userPermissionLevel: <?= isset($_SESSION['permission_level']) ? $_SESSION['permission_level'] : 0 ?>,
-            // userId: <?= isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null' ?>
-            // todo 2 - סוף למחוק
+            csrfToken: '<?= $_SESSION['csrf_token'] ?>'
         };
         
         const formData = <?= json_encode($formData) ?>;
-        
-        // todo 2 - תחילת למחוק
-        // // בדיקת הרשאות גלובלית
-        // const userCanShare = formConfig.isUserLoggedIn && formConfig.userPermissionLevel >= 3;
-        
-        
-        // // הודעה בקונסול לדיבוג
-        // console.log('User permission level:', formConfig.userPermissionLevel);
-        // console.log('Can share forms:', userCanShare);
-        // todo 2 - סוף למחוק
-
+    </script>
+    
+    <script>
         // וודא שהתפריט נמצא ב-body ולא בתוך קונטיינר
         document.addEventListener('DOMContentLoaded', function() {
             const contextMenu = document.getElementById('contextMenu');
@@ -128,7 +114,6 @@ if (isset($_SESSION['form_saved_message'])) {
             }
         });
     </script>
-
     <?php renderFormScripts(); ?>
 
 
