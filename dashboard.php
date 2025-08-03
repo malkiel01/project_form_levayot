@@ -236,7 +236,7 @@ Permission Level: <?= $_SESSION['permission_level'] ?? 'לא קיים' ?>
                                 <th>פעולות</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <!-- <tbody>
                             <?php foreach ($recentForms as $form): ?>
                             <tr>
                                 <td><?= htmlspecialchars($form['form_number'] ?? $form['id']) ?></td>
@@ -269,7 +269,36 @@ Permission Level: <?= $_SESSION['permission_level'] ?? 'לא קיים' ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
-                        </tbody>
+                        </tbody> -->
+                                                        <tbody>
+                                    <?php foreach ($recentForms as $form): ?>
+                                    <tr>
+                                        <td><?= substr($form['form_uuid'], 0, 8) ?>...</td>
+                                        <td><?= htmlspecialchars($form['deceased_name']) ?></td>
+                                        <td><?= date('d/m/Y', strtotime($form['death_date'])) ?></td>
+                                        <td>
+                                            <?php
+                                            $statusLabels = [
+                                                'draft' => '<span class="badge bg-secondary">טיוטה</span>',
+                                                'in_progress' => '<span class="badge bg-warning">בתהליך</span>',
+                                                'completed' => '<span class="badge bg-success">הושלם</span>',
+                                                'archived' => '<span class="badge bg-dark">ארכיון</span>'
+                                            ];
+                                            echo $statusLabels[$form['status']] ?? $form['status'];
+                                            ?>
+                                        </td>
+                                        <td><?= date('d/m/Y H:i', strtotime($form['created_at'])) ?></td>
+                                        <td>
+                                            <a href="<?= FORM_URL ?>?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="view_form.php?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
                     </table>
                 </div>
                 <?php else: ?>
