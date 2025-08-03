@@ -1,12 +1,12 @@
 const CACHE_NAME = 'cemetery-forms-v1';
 const urlsToCache = [
   '/',
-  '/form/',
-  '/forms_list.php',
-  '/css/style.css',
-  '/css/rtl.css',
-  '/js/main.js',
-  '/offline.html'
+  'form/',
+  'forms_list.php',
+  'css/style.css',
+  'css/rtl.css',
+  'js/main.js',
+  'offline.html'
 ];
 
 // Installation
