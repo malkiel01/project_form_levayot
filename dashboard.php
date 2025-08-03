@@ -1,4 +1,50 @@
 <?php
+// debug_session.php - שים את זה זמנית בתחילת dashboard.php כדי לראות מה יש ב-session
+
+echo "<pre style='background:#f8f9fa;padding:10px;margin:10px;'>";
+echo "=== נתוני Session ===\n";
+echo "מחובר? " . (isset($_SESSION['user_id']) ? 'כן' : 'לא') . "\n";
+echo "User ID: " . ($_SESSION['user_id'] ?? 'לא קיים') . "\n";
+echo "Username: " . ($_SESSION['username'] ?? 'לא קיים') . "\n";
+echo "Full Name: " . ($_SESSION['full_name'] ?? 'לא קיים') . "\n";
+echo "Permission Level: " . ($_SESSION['permission_level'] ?? 'לא קיים') . "\n";
+echo "\nכל נתוני Session:\n";
+print_r($_SESSION);
+echo "</pre>";
+
+// אם אין username, בדוק במסד הנתונים
+if (!isset($_SESSION['username']) && isset($_SESSION['user_id'])) {
+    echo "<div style='background:#fff3cd;padding:10px;margin:10px;'>";
+    echo "<strong>מנסה לשלוף username מהמסד...</strong><br>";
+    
+    try {
+        $db = getDbConnection();
+        $stmt = $db->prepare("SELECT username, full_name FROM users WHERE id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($user) {
+            echo "נמצא במסד הנתונים:<br>";
+            echo "Username: " . ($user['username'] ?? 'לא קיים') . "<br>";
+            echo "Full Name: " . ($user['full_name'] ?? 'לא קיים') . "<br>";
+            
+            // תקן את ה-session
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['full_name'] = $user['full_name'];
+            echo "<strong>Session תוקן!</strong>";
+        } else {
+            echo "משתמש לא נמצא במסד הנתונים!";
+        }
+    } catch (Exception $e) {
+        echo "שגיאה: " . $e->getMessage();
+    }
+    
+    echo "</div>";
+}
+?>
+
+
+<?php
 // dashboard.php - דשבורד ראשי
 require_once 'config.php';
 
