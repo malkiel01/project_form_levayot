@@ -83,7 +83,6 @@ function renderFormHeader($isNewForm, $formUuid, $isLinkAccess, $viewOnly) {
     </h2>
     
     <div class="form-uuid-display text-center">
-        <small>מספר טופס: <strong><?= $formUuid ?></strong></small>
         <small>גירסה: <strong>7.2</strong></small>
     </div>
     <?php
