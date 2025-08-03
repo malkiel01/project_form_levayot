@@ -32,7 +32,7 @@ self.addEventListener('activate', event => {
 
 // Fetch - Network First Strategy for API calls, Cache First for assets
 self.addEventListener('fetch', event => {
-  if (event.request.url.includes('/ajax/') || event.request.url.includes('/api/')) {
+  if (event.request.url.includes('ajax/') || event.request.url.includes('/api/')) {
     // Network First for API calls
     event.respondWith(
       fetch(event.request)
@@ -54,7 +54,7 @@ self.addEventListener('fetch', event => {
         .then(response => response || fetch(event.request))
         .catch(() => {
           if (event.request.mode === 'navigate') {
-            return caches.match('/offline.html');
+            return caches.match('offline.html');
           }
         })
     );
