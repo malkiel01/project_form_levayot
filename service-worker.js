@@ -3,6 +3,7 @@ const urlsToCache = [
   '/',
   'form/',
   'forms_list.php',
+  'js/pwa-init.js',
   // 'css/style.css',
   // 'css/rtl.css',
   // 'js/main.js',
