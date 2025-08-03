@@ -1,9 +1,8 @@
 const CACHE_NAME = 'cemetery-forms-v1';
 const urlsToCache = [
-  '/',
+  '',
   'form/',
   'forms_list.php',
-  'js/pwa-init.js',
   // 'css/style.css',
   // 'css/rtl.css',
   // 'js/main.js',
@@ -33,7 +32,7 @@ self.addEventListener('activate', event => {
 
 // Fetch - Network First Strategy for API calls, Cache First for assets
 self.addEventListener('fetch', event => {
-  if (event.request.url.includes('ajax/') || event.request.url.includes('/api/')) {
+  if (event.request.url.includes('/ajax/') || event.request.url.includes('/api/')) {
     // Network First for API calls
     event.respondWith(
       fetch(event.request)
