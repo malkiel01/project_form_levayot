@@ -73,8 +73,8 @@ if (isset($_SESSION['form_saved_message'])) {
                 <?php renderDeceasedSection($formData, $form, $requiredFields, $errors ?? [], $viewOnly); ?>
                 <?php renderDeathSection($formData, $form, $requiredFields, $errors ?? [], $viewOnly); ?>
                 <?php renderCemeterySection($formData, $form, $cemeteries, $blocks, $sections, $rows, $graves, $plots, $viewOnly); ?>
-                <!-- <?php renderInformantSection($formData, $form, $requiredFields, $errors ?? [], $viewOnly); ?> -->
-                <?php renderSignatureSection($formData, $viewOnly); ?>
+                <?php renderInformantSection($formData, $form, $requiredFields, $errors ?? [], $viewOnly); ?>
+                <?php renderSignatureSection1($formData, $viewOnly); ?>
 
                 <?php 
                 // הוסף את מנהל הקבצים רק אם לא טופס חדש
