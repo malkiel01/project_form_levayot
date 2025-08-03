@@ -74,15 +74,13 @@ if (isset($_SESSION['form_saved_message'])) {
                 <?php renderDeathSection($formData, $form, $requiredFields, $errors ?? [], $viewOnly); ?>
                 <?php renderCemeterySection($formData, $form, $cemeteries, $blocks, $sections, $rows, $graves, $plots, $viewOnly); ?>
                 <?php renderInformantSection($formData, $form, $requiredFields, $errors ?? [], $viewOnly); ?>
-                <?php renderSignatureSection1($formData, $viewOnly); ?>
-
+                <!-- הוסף את מנהל הקבצים רק אם לא טופס חדש -->
                 <?php 
-                // הוסף את מנהל הקבצים רק אם לא טופס חדש
                 if (!$isNewForm): 
                     include 'includes/file_manager.php';
                 endif; 
                 ?>
-                
+                <?php renderSignatureSection($formData, $viewOnly); ?>
                 <?php renderActionButtons($isNewForm, $formUuid, $viewOnly, $isLinkAccess); ?>
             </form>
         </div>

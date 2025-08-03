@@ -81,10 +81,6 @@ function renderFormHeader($isNewForm, $formUuid, $isLinkAccess, $viewOnly) {
             <span class="badge bg-info">עריכה</span>
         <?php endif; ?>
     </h2>
-    
-    <div class="form-uuid-display text-center">
-        <small>גירסה: <strong>7.2</strong></small>
-    </div>
     <?php
 }
 
