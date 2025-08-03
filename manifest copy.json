@@ -65,6 +65,13 @@
       "description": "יצירת טופס חדש",
       "url": "/project_form_levayot/form/",
       "icons": [{ "src": "/project_form_levayot/icons/new-form.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "רשימת טפסים",
+      "short_name": "רשימה",
+      "description": "צפייה ברשימת הטפסים",
+      "url": "/project_form_levayot/forms_list.php",
+      "icons": [{ "src": "/icons/list.png", "sizes": "96x96" }]
     }
   ],
   "categories": ["business", "productivity"],
