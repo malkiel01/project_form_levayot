@@ -35,6 +35,59 @@ define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'doc', 
 // הגדרות זמן
 date_default_timezone_set('Asia/Jerusalem');
 
+
+// -----------
+// עדכן את הפונקציה הזאת ב-config.php במקום הישנה
+
+// פונקציה חדשה להעניק הרשאה ספציפית למשתמש
+function grantUserPermission($fieldName, $userId, $action = 'view') {
+    $db = getDbConnection();
+    $column = $action === 'view' ? 'user_specific_view' : 'user_specific_edit';
+    
+    // קבלת ההרשאות הנוכחיות
+    $stmt = $db->prepare("SELECT {$column} FROM field_permissions WHERE field_name = ?");
+    $stmt->execute([$fieldName]);
+    $current = $stmt->fetchColumn();
+    
+    $permissions = $current ? json_decode($current, true) : [];
+    $permissions[$userId] = true;
+    
+    $updateStmt = $db->prepare("
+        UPDATE field_permissions 
+        SET {$column} = ?, updated_at = CURRENT_TIMESTAMP 
+        WHERE field_name = ?
+    ");
+    return $updateStmt->execute([json_encode($permissions), $fieldName]);
+}
+
+// פונקציה חדשה להסרת הרשאה ספציפית
+function revokeUserPermission($fieldName, $userId, $action = 'view') {
+    $db = getDbConnection();
+    $column = $action === 'view' ? 'user_specific_view' : 'user_specific_edit';
+    
+    $stmt = $db->prepare("SELECT {$column} FROM field_permissions WHERE field_name = ?");
+    $stmt->execute([$fieldName]);
+    $current = $stmt->fetchColumn();
+    
+    if ($current) {
+        $permissions = json_decode($current, true);
+        unset($permissions[$userId]);
+        $newValue = empty($permissions) ? null : json_encode($permissions);
+        
+        $updateStmt = $db->prepare("
+            UPDATE field_permissions 
+            SET {$column} = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE field_name = ?
+        ");
+        return $updateStmt->execute([$newValue, $fieldName]);
+    }
+    
+    return true;
+}
+// -----------
+
+
+
 // פונקציה ליצירת חיבור לדטהבייס
 function getDbConnection() {
     try {
@@ -89,7 +142,7 @@ function generateUUID() {
 }
 
 // פונקציה לבדיקת הרשאות
-function hasPermission($fieldName, $permissionLevel, $action = 'view') {
+function hasPermissionOld($fieldName, $permissionLevel, $action = 'view') {
     static $permissionsCache = [];
     
     // יצירת מפתח למטמון
@@ -117,6 +170,69 @@ function hasPermission($fieldName, $permissionLevel, $action = 'view') {
     $permissionsCache[$cacheKey] = $hasPermission;
     
     return $hasPermission;
+}
+function hasPermission($fieldName, $permissionLevel, $action = 'view') {
+    static $cache = [];
+    
+    $userId = $_SESSION['user_id'] ?? null;
+    $cacheKey = "{$fieldName}_{$userId}_{$permissionLevel}_{$action}";
+    
+    if (isset($cache[$cacheKey])) {
+        return $cache[$cacheKey];
+    }
+    
+    try {
+        $db = getDbConnection();
+        
+        $stmt = $db->prepare("
+            SELECT 
+                view_permission_levels,
+                edit_permission_levels,
+                user_specific_view,
+                user_specific_edit
+            FROM field_permissions 
+            WHERE field_name = ?
+        ");
+        $stmt->execute([$fieldName]);
+        $permissions = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$permissions) {
+            // אם השדה לא קיים, ברירת מחדל - רק מנהלים
+            $cache[$cacheKey] = ($permissionLevel >= 4);
+            return $cache[$cacheKey];
+        }
+        
+        // בחירת העמודה הנכונה
+        $levelColumn = $action === 'view' ? 'view_permission_levels' : 'edit_permission_levels';
+        $userColumn = $action === 'view' ? 'user_specific_view' : 'user_specific_edit';
+        
+        // בדיקת הרשאה ספציפית למשתמש (קדימות עליונה)
+        if ($permissions[$userColumn] && $userId) {
+            $userPermissions = json_decode($permissions[$userColumn], true);
+            if (isset($userPermissions[$userId]) && $userPermissions[$userId] === true) {
+                $cache[$cacheKey] = true;
+                return true;
+            }
+        }
+        
+        // בדיקת הרשאה כללית לפי רמה
+        if ($permissions[$levelColumn]) {
+            $allowedLevels = json_decode($permissions[$levelColumn], true);
+            if (in_array($permissionLevel, $allowedLevels)) {
+                $cache[$cacheKey] = true;
+                return true;
+            }
+        }
+        
+        $cache[$cacheKey] = false;
+        return false;
+        
+    } catch (Exception $e) {
+        error_log("Permission check error: " . $e->getMessage());
+        // במקרה של שגיאה, ברירת מחדל - רק מנהלים
+        $cache[$cacheKey] = ($permissionLevel >= 4);
+        return $cache[$cacheKey];
+    }
 }
 
 // פונקציה לסניטציה של קלט
