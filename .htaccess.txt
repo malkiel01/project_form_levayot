@@ -35,6 +35,19 @@ AddDefaultCharset UTF-8
     Header set X-XSS-Protection "1; mode=block"
 </IfModule>
 
+# בתיקייה /project_form_levayot/.htaccess
+<IfModule mod_mime.c>
+    AddType application/manifest+json .json
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Allow manifest.json to be accessed
+    <FilesMatch "manifest\.json$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
+
+
 # דחיסת תוכן
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript

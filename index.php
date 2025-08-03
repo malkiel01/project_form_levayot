@@ -15,10 +15,10 @@ if (isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מערכת ניהול טפסי נפטרים</title>
     
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/manifest.json">
+    <!-- PWA Meta Tags - עדכון הנתיבים! -->
+    <link rel="manifest" href="/project_form_levayot/manifest.json">
     <meta name="theme-color" content="#0d6efd">
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/project_form_levayot/icons/icon-192x192.png">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -287,7 +287,7 @@ if (isset($_SESSION['user_id'])) {
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/service-worker.js')
+                navigator.serviceWorker.register('/project_form_levayot/service-worker.js')
                     .then(function(registration) {
                         console.log('ServiceWorker registration successful');
                     })
