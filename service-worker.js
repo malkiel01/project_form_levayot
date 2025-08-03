@@ -6,7 +6,7 @@ const urlsToCache = [
   'css/style.css',
   'css/rtl.css',
   'js/main.js',
-  './offline.html'
+  'offline.html'
 ];
 
 // Installation
@@ -54,7 +54,7 @@ self.addEventListener('fetch', event => {
         .then(response => response || fetch(event.request))
         .catch(() => {
           if (event.request.mode === 'navigate') {
-            return caches.match('./offline.html');
+            return caches.match('/offline.html');
           }
         })
     );
