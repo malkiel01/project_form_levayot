@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אין חיבור לאינטרנט</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+        
+        .offline-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .offline-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .offline-icon svg {
+            width: 60px;
+            height: 60px;
+            fill: #999;
+        }
+        
+        .offline-icon::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: #ff5252;
+            border-radius: 50%;
+            border: 4px solid white;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .features {
+            text-align: right;
+            margin-bottom: 30px;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: #666;
+        }
+        
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            margin-left: 10px;
+            fill: #4CAF50;
+        }
+        
+        .retry-button {
+            background: #0d6efd;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .retry-button:hover {
+            background: #0b5ed7;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+            </svg>
+        </div>
+        
+        <h1>אין חיבור לאינטרנט</h1>
+        <p>האפליקציה זקוקה לחיבור אינטרנט כדי לפעול. בדוק את החיבור שלך ונסה שוב.</p>
+        
+        <div class="features">
+            <div class="feature">
+                <svg class="feature-icon" viewBox="0 0 24 24">
+                    <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                </svg>
+                <span>הטפסים שלך נשמרים</span>
+            </div>
+            <div class="feature">
+                <svg class="feature-icon" viewBox="0 0 24 24">
+                    <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                </svg>
+                <span>נסנכרן אוטומטית כשתתחבר</span>
+            </div>
+            <div class="feature">
+                <svg class="feature-icon" viewBox="0 0 24 24">
+                    <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                </svg>
+                <span>המידע שלך מאובטח</span>
+            </div>
+        </div>
+        
+        <button class="retry-button" onclick="retry()">
+            נסה שוב
+        </button>
+    </div>
+    
+    <script>
+        function retry() {
+            const button = document.querySelector('.retry-button');
+            button.classList.add('loading');
+            button.textContent = 'בודק חיבור...';
+            
+            // בדוק אם יש חיבור
+            fetch('/api/ping')
+                .then(() => {
+                    // אם יש חיבור, טען מחדש
+                    location.reload();
+                })
+                .catch(() => {
+                    // אם אין חיבור
+                    button.classList.remove('loading');
+                    button.textContent = 'נסה שוב';
+                    alert('עדיין אין חיבור לאינטרנט');
+                });
+        }
+        
+        // בדוק חיבור כל 30 שניות
+        setInterval(() => {
+            if (navigator.onLine) {
+                fetch('/api/ping')
+                    .then(() => location.reload())
+                    .catch(() => {});
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

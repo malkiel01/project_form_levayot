@@ -11,6 +11,7 @@ function renderFormScripts() {
     <script src="js/form-autosave.js?v=<?= time() ?>"></script>
     <script src="js/form-login-check.js?v=<?= time() ?>"></script>
     <script src="js/file-manager.js?v=<?= time() ?>"></script>
+    <script src="../js/pwa-init.js?v=<?= time() ?>"></script>
     <script>
         // בדיקה שכל הסקריפטים נטענו
         document.addEventListener('DOMContentLoaded', function() {

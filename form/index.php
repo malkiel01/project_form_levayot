@@ -91,27 +91,6 @@ if (isset($_SESSION['form_saved_message'])) {
     <?php renderShareModals(); ?>
     
     <script>
-        // todo 3 - תחילת מחיקה
-        // // משתנים גלובליים לשימוש בסקריפטים
-        // const formConfig = {
-        //     isNewForm: <?= $isNewForm ? 'true' : 'false' ?>,
-        //     isViewOnly: <?= $viewOnly ? 'true' : 'false' ?>,
-        //     isUserLoggedIn: <?= isset($_SESSION['user_id']) ? 'true' : 'false' ?>,
-        //     isLinkAccess: <?= $isLinkAccess ? 'true' : 'false' ?>,
-        //     formUuid: '<?= $formUuid ?>',
-        //     requiredFields: <?= json_encode($requiredFields) ?>,
-        //     csrfToken: '<?= $_SESSION['csrf_token'] ?>',
-
-        //     // todo 2 - תחילת למחוק
-        //     // // הוספת רמת הרשאה
-        //     // userPermissionLevel: <?= isset($_SESSION['permission_level']) ? $_SESSION['permission_level'] : 0 ?>,
-        //     // userId: <?= isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null' ?>
-        //     // todo 2 - סוף למחוק
-        // };
-        // todo 3 - סוף מחיקה
-
-
-        // todo 3 - תחילת הוספה
         const formConfig = {
             isNewForm: <?= $isNewForm ? 'true' : 'false' ?>,
             isViewOnly: <?= $viewOnly ? 'true' : 'false' ?>,
@@ -124,20 +103,9 @@ if (isset($_SESSION['form_saved_message'])) {
             userPermissionLevel: <?= isset($_SESSION['permission_level']) ? $_SESSION['permission_level'] : 0 ?>,
             canShare: <?= (isset($_SESSION['user_id']) && isset($_SESSION['permission_level']) && $_SESSION['permission_level'] >= 3) ? 'true' : 'false' ?>
         };
-        // todo 3 - סוף הוספה
         
         const formData = <?= json_encode($formData) ?>;
-        
-        // todo 2 - תחילת למחוק
-        // // בדיקת הרשאות גלובלית
-        // const userCanShare = formConfig.isUserLoggedIn && formConfig.userPermissionLevel >= 3;
-        
-        
-        // // הודעה בקונסול לדיבוג
-        // console.log('User permission level:', formConfig.userPermissionLevel);
-        // console.log('Can share forms:', userCanShare);
-        // todo 2 - סוף למחוק
-
+   
         // וודא שהתפריט נמצא ב-body ולא בתוך קונטיינר
         document.addEventListener('DOMContentLoaded', function() {
             const contextMenu = document.getElementById('contextMenu');
