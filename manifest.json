@@ -63,14 +63,14 @@
       "name": "טופס חדש",
       "short_name": "חדש",
       "description": "יצירת טופס חדש",
-      "url": "/form/",
-      "icons": [{ "src": "/icons/new-form.png", "sizes": "96x96" }]
+      "url": "/project_form_levayot/form/",
+      "icons": [{ "src": "/project_form_levayot/icons/new-form.png", "sizes": "96x96" }]
     },
     {
       "name": "רשימת טפסים",
       "short_name": "רשימה",
       "description": "צפייה ברשימת הטפסים",
-      "url": "/forms_list.php",
+      "url": "/project_form_levayot/forms_list.php",
       "icons": [{ "src": "/icons/list.png", "sizes": "96x96" }]
     }
   ],
