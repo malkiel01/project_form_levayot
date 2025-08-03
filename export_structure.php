@@ -2,9 +2,9 @@
 // export_structure.php - הכנס את הקוד הזה לקובץ PHP והרץ אותו
 
 // הגדרות מסד נתונים - עדכן לפי הפרטים שלך
-$host = 'localhost';
-$username = 'cpses_mbyr8n1ykl'; // שם המשתמש שלך
-$password = 'הסיסמה_שלך'; // הכנס את הסיסמה
+$host = 'mbe-plus.com';
+$username = 'mbeplusc_test'; // שם המשתמש שלך
+$password = 'Gxfv16be'; // הכנס את הסיסמה
 $database = 'mbeplusc_kadisha_v7';
 
 try {
