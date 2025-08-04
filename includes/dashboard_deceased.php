@@ -153,10 +153,7 @@ $recentDeceased = $stmt->fetchAll();
         <div class="row mb-4">
             <div class="col-12">
                 <div class="d-flex flex-wrap gap-2 justify-content-center">
-                    <a href="../form/form.php" class="btn btn-success action-btn flex-fill flex-sm-grow-0">
-                        <i class="fas fa-plus-circle"></i> הוספת נפטר חדש
-                    </a>
-                    <a href="../form/<?= FORM_DECEASED_URL ?>" class="btn btn-primary action-btn flex-fill flex-sm-grow-0">
+                    <a href="../<?= FORM_DECEASED_URL ?>" class="btn btn-primary action-btn flex-fill flex-sm-grow-0">
                         <i class="fas fa-calendar-plus"></i> הוספת לוויה
                     </a>
                     <a href="../search.php?type=deceased" class="btn btn-outline-primary action-btn flex-fill flex-sm-grow-0">
