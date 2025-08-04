@@ -217,7 +217,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                     <span class="counter-label">היום</span>
                                 </div>
                             </div>
-                            <a href="../form/index.php" class="btn btn-primary action-btn mt-3 w-100" onclick="event.stopPropagation();">
+                            <a href="../form/index copy.php" class="btn btn-primary action-btn mt-3 w-100" onclick="event.stopPropagation();">
                                 <i class="fas fa-plus"></i> טופס חדש
                             </a>
                         </div>
