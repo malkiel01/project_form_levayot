@@ -2,11 +2,15 @@
 // dashboard.php - דשבורד ראשי
 require_once 'config.php';
 
-// בדיקת התחברות
+// בדיקת התחברות - חייב להיות לפני כל פלט!
 if (!isset($_SESSION['user_id'])) {
     header('Location: ' . LOGIN_URL);
     exit;
 }
+
+// אם רוצים לבדוק את ה-session, אפשר להשתמש בזה רק בדף נפרד או אחרי ה-HTML
+// או להסיר את הקוד הזה לגמרי אחרי שסיימת את הדיבוג
+$debug_mode = false; // שנה ל-true רק כשצריך דיבוג
 
 $db = getDbConnection();
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
@@ -32,102 +36,53 @@ if ($userPermissionLevel < 4) {
 $recentFormsQuery .= "ORDER BY created_at DESC LIMIT 10";
 $recentForms = $db->query($recentFormsQuery)->fetchAll();
 
-// סטטיסטיקות למנהלים בלבד
-if ($userPermissionLevel >= 4) {
-    // כמות משתמשים פעילים
-    $stats['active_users'] = $db->query("SELECT COUNT(*) FROM users WHERE is_active = 1")->fetchColumn();
-    
-    // התפלגות לפי בתי עלמין
-    $cemeteryStats = $db->query("
-        SELECT c.name, COUNT(df.id) as count 
-        FROM cemeteries c
-        LEFT JOIN deceased_forms df ON c.id = df.cemetery_id
-        GROUP BY c.id
-        ORDER BY count DESC
-        LIMIT 5
-    ")->fetchAll();
-    
-    // פעילות לפי חודש
-    $monthlyStats = $db->query("
-        SELECT 
-            MONTH(created_at) as month,
-            YEAR(created_at) as year,
-            COUNT(*) as count
-        FROM deceased_forms
-        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-        GROUP BY YEAR(created_at), MONTH(created_at)
-        ORDER BY year DESC, month DESC
-    ")->fetchAll();
-}
-
-// קבלת התראות למשתמש
-$notifications = $db->prepare("
+// התראות למשתמש
+$notificationsQuery = "
     SELECT * FROM notifications 
     WHERE user_id = ? AND is_read = 0 
     ORDER BY created_at DESC 
     LIMIT 5
-");
-$notifications->execute([$_SESSION['user_id']]);
-$userNotifications = $notifications->fetchAll();
+";
+$notificationsStmt = $db->prepare($notificationsQuery);
+$notificationsStmt->execute([$_SESSION['user_id']]);
+$userNotifications = $notificationsStmt->fetchAll();
 
 ?>
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>דשבורד - מערכת ניהול נפטרים</title>
-    <!-- הוסף את השורות האלה לPWA -->
-    <link rel="manifest" href="/project_form_levayot/manifest.json">
-    <meta name="theme-color" content="#0d6efd">
-    <link rel="apple-touch-icon" href="/project_form_levayot/icons/icon-192x192.png">
-    <!-- סוף הוספות PWA -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/pwa-init.js?v=<?= time() ?>"></script>
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .stat-card {
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-            height: 100%;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        .stat-icon {
-            font-size: 3rem;
-            opacity: 0.3;
-            position: absolute;
-            right: 20px;
-            top: 20px;
-        }
-        .navbar {
-            box-shadow: 0 2px 4px rgba(0,0,0,.1);
-        }
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: red;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 0.7rem;
-        }
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
 </head>
 <body>
-    <!-- Navbar -->
+    <!-- Debug Info - יוצג רק אם debug_mode = true -->
+    <?php if ($debug_mode): ?>
+    <div class="alert alert-info m-3">
+        <h5>מידע דיבוג:</h5>
+        <pre style='background:#f8f9fa;padding:10px;'>
+=== נתוני Session ===
+מחובר? <?= isset($_SESSION['user_id']) ? 'כן' : 'לא' ?>
+
+User ID: <?= $_SESSION['user_id'] ?? 'לא קיים' ?>
+
+Username: <?= $_SESSION['username'] ?? 'לא קיים' ?>
+
+Full Name: <?= $_SESSION['full_name'] ?? 'לא קיים' ?>
+
+Permission Level: <?= $_SESSION['permission_level'] ?? 'לא קיים' ?>
+
+
+כל נתוני Session:
+<?php print_r($_SESSION); ?>
+        </pre>
+    </div>
+    <?php endif; ?>
+
+    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="dashboard.php">
@@ -145,7 +100,7 @@ $userNotifications = $notifications->fetchAll();
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<?= FORM_URL ?>">
-                            <i class="fas fa-plus"></i> טופס חדש
+                            <i class="fas fa-plus-circle"></i> טופס חדש
                         </a>
                     </li>
                     <li class="nav-item">
@@ -153,14 +108,18 @@ $userNotifications = $notifications->fetchAll();
                             <i class="fas fa-list"></i> רשימת טפסים
                         </a>
                     </li>
-                    <?php if ($userPermissionLevel >= 4): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="search.php">
+                            <i class="fas fa-search"></i> חיפוש
+                        </a>
+                    </li>
+                    <?php if ($userPermissionLevel >= 3): ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-cog"></i> ניהול
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="adminDropdown">
                             <li><a class="dropdown-item" href="admin/users.php">משתמשים</a></li>
-                            <li><a class="dropdown-item" href="admin/cemeteries.php">בתי עלמין</a></li>
                             <li><a class="dropdown-item" href="admin/permissions.php">הרשאות</a></li>
                             <li><a class="dropdown-item" href="admin/reports.php">דוחות</a></li>
                         </ul>
@@ -178,7 +137,7 @@ $userNotifications = $notifications->fetchAll();
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> <?= htmlspecialchars($_SESSION['username']) ?>
+                            <i class="fas fa-user"></i> <?= htmlspecialchars($_SESSION['username'] ?? 'משתמש') ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item" href="profile.php">הפרופיל שלי</a></li>
@@ -194,42 +153,65 @@ $userNotifications = $notifications->fetchAll();
 
     <div class="container-fluid mt-4">
         <h2 class="mb-4">דשבורד</h2>
+        
+        <?php if (!isset($_SESSION['username']) || empty($_SESSION['username'])): ?>
+        <div class="alert alert-warning">
+            <strong>שים לב:</strong> נראה שחסרים נתונים בסשן שלך. 
+            <a href="<?= LOGOUT_URL ?>" class="alert-link">נסה להתחבר מחדש</a>
+        </div>
+        <?php endif; ?>
 
         <!-- כרטיסי סטטיסטיקה -->
         <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="card stat-card text-white bg-primary">
-                    <div class="card-body position-relative">
-                        <i class="fas fa-file-alt stat-icon"></i>
-                        <h5 class="card-title">סה"כ טפסים</h5>
-                        <h2 class="mb-0"><?= number_format($stats['total_forms']) ?></h2>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title">סה"כ טפסים</h6>
+                                <h3 class="mb-0"><?= number_format($stats['total_forms']) ?></h3>
+                            </div>
+                            <i class="fas fa-file-alt fa-2x opacity-50"></i>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card stat-card text-white bg-success">
-                    <div class="card-body position-relative">
-                        <i class="fas fa-check-circle stat-icon"></i>
-                        <h5 class="card-title">טפסים שהושלמו</h5>
-                        <h2 class="mb-0"><?= number_format($stats['completed_forms']) ?></h2>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title">הושלמו</h6>
+                                <h3 class="mb-0"><?= number_format($stats['completed_forms']) ?></h3>
+                            </div>
+                            <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card stat-card text-white bg-warning">
-                    <div class="card-body position-relative">
-                        <i class="fas fa-hourglass-half stat-icon"></i>
-                        <h5 class="card-title">בתהליך</h5>
-                        <h2 class="mb-0"><?= number_format($stats['in_progress_forms']) ?></h2>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title">בתהליך</h6>
+                                <h3 class="mb-0"><?= number_format($stats['in_progress_forms']) ?></h3>
+                            </div>
+                            <i class="fas fa-spinner fa-2x opacity-50"></i>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card stat-card text-white bg-info">
-                    <div class="card-body position-relative">
-                        <i class="fas fa-calendar-day stat-icon"></i>
-                        <h5 class="card-title">טפסים היום</h5>
-                        <h2 class="mb-0"><?= number_format($stats['today_forms']) ?></h2>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title">לוויות היום</h6>
+                                <h3 class="mb-0"><?= number_format($stats['today_burials']) ?></h3>
+                            </div>
+                            <i class="fas fa-calendar-day fa-2x opacity-50"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -335,7 +317,7 @@ $userNotifications = $notifications->fetchAll();
             </div>
         </div>
 
-        <?php if ($userPermissionLevel >= 4): ?>
+                <?php if ($userPermissionLevel >= 4): ?>
         <!-- גרף קווים - פעילות חודשית -->
         <div class="row mt-4">
             <div class="col-12">
@@ -352,9 +334,9 @@ $userNotifications = $notifications->fetchAll();
             </div>
         </div>
         <?php endif; ?>
-    </div>
 
-    <!-- מודל התראות -->
+
+            <!-- מודל התראות -->
     <div class="modal fade" id="notificationsModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -446,7 +428,105 @@ $userNotifications = $notifications->fetchAll();
     </script>
     <?php endif; ?>
 
-    <script>
+        ------------------------------------------------------------------------------------------------------------------
+
+
+        <!-- טבלת טפסים אחרונים -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">טפסים אחרונים</h5>
+            </div>
+            <div class="card-body">
+                <?php if (count($recentForms) > 0): ?>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>מס' טופס</th>
+                                <th>שם הנפטר/ת</th>
+                                <th>תאריך פטירה</th>
+                                <th>תאריך קבורה</th>
+                                <th>סטטוס</th>
+                                <th>פעולות</th>
+                            </tr>
+                        </thead>
+                        <!-- <tbody>
+                            <?php foreach ($recentForms as $form): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($form['form_number'] ?? $form['id']) ?></td>
+                                <td><?= htmlspecialchars($form['first_name'] . ' ' . $form['last_name']) ?></td>
+                                <td><?= date('d/m/Y', strtotime($form['death_date'])) ?></td>
+                                <td><?= $form['burial_date'] ? date('d/m/Y', strtotime($form['burial_date'])) : '-' ?></td>
+                                <td>
+                                    <?php
+                                    $statusClass = [
+                                        'draft' => 'bg-secondary',
+                                        'in_progress' => 'bg-warning',
+                                        'completed' => 'bg-success'
+                                    ][$form['status']] ?? 'bg-secondary';
+                                    
+                                    $statusText = [
+                                        'draft' => 'טיוטה',
+                                        'in_progress' => 'בתהליך',
+                                        'completed' => 'הושלם'
+                                    ][$form['status']] ?? $form['status'];
+                                    ?>
+                                    <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
+                                </td>
+                                <td>
+                                    <a href="view_form.php?id=<?= $form['uuid'] ?>" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="edit_form.php?id=<?= $form['uuid'] ?>" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody> -->
+                                                        <tbody>
+                                    <?php foreach ($recentForms as $form): ?>
+                                    <tr>
+                                        <td><?= substr($form['form_uuid'], 0, 8) ?>...</td>
+                                        <td><?= htmlspecialchars($form['deceased_name']) ?></td>
+                                        <td><?= date('d/m/Y', strtotime($form['death_date'])) ?></td>
+                                        <td>
+                                            <?php
+                                            $statusLabels = [
+                                                'draft' => '<span class="badge bg-secondary">טיוטה</span>',
+                                                'in_progress' => '<span class="badge bg-warning">בתהליך</span>',
+                                                'completed' => '<span class="badge bg-success">הושלם</span>',
+                                                'archived' => '<span class="badge bg-dark">ארכיון</span>'
+                                            ];
+                                            echo $statusLabels[$form['status']] ?? $form['status'];
+                                            ?>
+                                        </td>
+                                        <td><?= date('d/m/Y H:i', strtotime($form['created_at'])) ?></td>
+                                        <td>
+                                            <a href="<?= FORM_URL ?>?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="view_form.php?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                    </table>
+                </div>
+                <?php else: ?>
+                <!-- <p class="text-center text-muted">אין טפסים להצגה</p> -->
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/dashboard.js"></script>
+
+        <script>
         // סימון התראה כנקראה
         function markAsRead(notificationId) {
             $.post('ajax/mark_notification_read.php', {
