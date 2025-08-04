@@ -217,6 +217,106 @@ Permission Level: <?= $_SESSION['permission_level'] ?? 'לא קיים' ?>
             </div>
         </div>
 
+        <div class="row">
+            <!-- טפסים אחרונים -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-clock"></i> טפסים אחרונים</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>מס' טופס</th>
+                                        <th>שם הנפטר</th>
+                                        <th>תאריך פטירה</th>
+                                        <th>סטטוס</th>
+                                        <th>נוצר ב</th>
+                                        <th>פעולות</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($recentForms as $form): ?>
+                                    <tr>
+                                        <td><?= substr($form['form_uuid'], 0, 8) ?>...</td>
+                                        <td><?= htmlspecialchars($form['deceased_name']) ?></td>
+                                        <td><?= date('d/m/Y', strtotime($form['death_date'])) ?></td>
+                                        <td>
+                                            <?php
+                                            $statusLabels = [
+                                                'draft' => '<span class="badge bg-secondary">טיוטה</span>',
+                                                'in_progress' => '<span class="badge bg-warning">בתהליך</span>',
+                                                'completed' => '<span class="badge bg-success">הושלם</span>',
+                                                'archived' => '<span class="badge bg-dark">ארכיון</span>'
+                                            ];
+                                            echo $statusLabels[$form['status']] ?? $form['status'];
+                                            ?>
+                                        </td>
+                                        <td><?= date('d/m/Y H:i', strtotime($form['created_at'])) ?></td>
+                                        <td>
+                                            <a href="<?= FORM_URL ?>?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="view_form.php?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="forms_list.php" class="btn btn-primary">
+                                ראה את כל הטפסים <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- פאנל צדדי -->
+            <div class="col-lg-4">
+                <!-- קיצורי דרך -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-rocket"></i> קיצורי דרך</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="<?= FORM_URL ?>" class="btn btn-success">
+                                <i class="fas fa-plus"></i> יצירת טופס חדש
+                            </a>
+                            <a href="search.php" class="btn btn-primary">
+                                <i class="fas fa-search"></i> חיפוש מתקדם
+                            </a>
+                            <?php if ($userPermissionLevel >= 4): ?>
+                            <a href="export.php" class="btn btn-info">
+                                <i class="fas fa-download"></i> ייצוא נתונים
+                            </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ($userPermissionLevel >= 4): ?>
+                <!-- גרף עוגה - התפלגות לפי בתי עלמין -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie"></i> התפלגות לפי בתי עלמין</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="cemeteryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <!-- טבלת טפסים אחרונים -->
         <div class="card">
             <div class="card-header bg-primary text-white">
