@@ -61,9 +61,14 @@ $stats = [];
 $stats['total_forms'] = $db->query("SELECT COUNT(*) FROM deceased_forms")->fetchColumn();
 $stats['completed_forms'] = $db->query("SELECT COUNT(*) FROM deceased_forms WHERE status = 'completed'")->fetchColumn();
 $stats['in_progress_forms'] = $db->query("SELECT COUNT(*) FROM deceased_forms WHERE status = 'in_progress'")->fetchColumn();
-$stats['draft_forms'] = $db->query("SELECT COUNT(*) FROM deceased_forms WHERE status = 'draft'")->fetchColumn();
+
+// סטטיסטיקות של היום
 $stats['today_forms'] = $db->query("SELECT COUNT(*) FROM deceased_forms WHERE DATE(created_at) = CURDATE()")->fetchColumn();
 $stats['today_burials'] = $db->query("SELECT COUNT(*) FROM deceased_forms WHERE DATE(burial_date) = CURDATE()")->fetchColumn();
+
+// $stats['draft_forms'] = $db->query("SELECT COUNT(*) FROM deceased_forms WHERE status = 'draft'")->fetchColumn();
+// $stats['today_forms'] = $db->query("SELECT COUNT(*) FROM deceased_forms WHERE DATE(created_at) = CURDATE()")->fetchColumn();
+// $stats['today_burials'] = $db->query("SELECT COUNT(*) FROM deceased_forms WHERE DATE(burial_date) = CURDATE()")->fetchColumn();
 
 // טפסים אחרונים
 $recentFormsQuery = "SELECT * FROM deceased_forms ";
