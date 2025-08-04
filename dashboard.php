@@ -1,7 +1,6 @@
 <?php
 // dashboard.php - דשבורד ראשי משופר
 require_once 'config.php';
-session_start();
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
