@@ -1,0 +1,348 @@
+/* dashboard-styles-optimized.css - עיצוב מאופטם עם אנימציות מופחתות */
+
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-gradient: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    --danger-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+}
+
+/* רקע כללי */
+body {
+    background: #f6f7fb;
+    min-height: 100vh;
+}
+
+/* כותרת הדשבורד - ללא אנימציה בהתחלה */
+.dashboard-header {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* כרטיסי סטטיסטיקה - ללא אנימציות בהתחלה */
+.stat-card {
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* עיצוב כרטיסים לפי סוג */
+.stat-card.primary-card {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.stat-card.success-card {
+    background: var(--success-gradient);
+    color: white;
+}
+
+.stat-card.warning-card {
+    background: var(--warning-gradient);
+    color: white;
+}
+
+.stat-card.info-card {
+    background: var(--info-gradient);
+    color: #333;
+}
+
+/* תוכן הכרטיס */
+.stat-card .card-body {
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.stat-card .stat-icon {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    font-size: 3rem;
+    opacity: 0.3;
+}
+
+.stat-card .stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1;
+}
+
+.stat-card .stat-label {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+/* כרטיסי סוג טופס */
+.form-type-card {
+    background: white;
+    border: none;
+    border-radius: 20px;
+    padding: 2rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.form-type-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.form-type-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+/* מונים */
+.counter-section {
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 1rem;
+}
+
+.counter-item {
+    text-align: center;
+    flex: 1;
+}
+
+.counter-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: block;
+}
+
+.counter-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-top: 0.3rem;
+}
+
+/* גרפים */
+.chart-container {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.chart-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.chart-options {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chart-option {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    background: #f0f0f0;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.chart-option:hover,
+.chart-option.active {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+/* טבלת נתונים אחרונים */
+.recent-table {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.recent-table .table {
+    margin: 0;
+}
+
+.recent-table thead {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.recent-table th {
+    border: none;
+    padding: 1rem;
+    font-weight: 600;
+}
+
+.recent-table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.recent-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.recent-table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* תגי סטטוס */
+.status-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-completed {
+    background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    color: white;
+}
+
+.status-in-progress {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: white;
+}
+
+.status-draft {
+    background: linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%);
+    color: #666;
+}
+
+/* כפתורי פעולה */
+.action-btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: 25px;
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary-gradient {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.btn-success-gradient {
+    background: var(--success-gradient);
+    color: white;
+}
+
+/* אנימציות - יופעלו רק אחרי טעינת הדף */
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* החל אנימציות רק כשהדף מוכן */
+body.animations-ready .dashboard-header,
+body.animations-ready .stat-card,
+body.animations-ready .form-type-card,
+body.animations-ready .chart-container,
+body.animations-ready .recent-table {
+    animation: fadeInUp 0.5s ease-out;
+    animation-fill-mode: both;
+}
+
+body.animations-ready .stat-card:nth-child(1) { animation-delay: 0.1s; }
+body.animations-ready .stat-card:nth-child(2) { animation-delay: 0.15s; }
+body.animations-ready .stat-card:nth-child(3) { animation-delay: 0.2s; }
+body.animations-ready .stat-card:nth-child(4) { animation-delay: 0.25s; }
+
+/* placeholder לגרפים */
+.chart-placeholder {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+/* תפריט צד למובייל */
+@media (max-width: 768px) {
+    .stat-card .stat-value {
+        font-size: 1.8rem;
+    }
+    
+    .stat-card .stat-icon {
+        font-size: 2.5rem;
+    }
+    
+    .form-type-card {
+        margin-bottom: 1rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .counter-value {
+        font-size: 1.2rem;
+    }
+    
+    .recent-table {
+        font-size: 0.9rem;
+    }
+}
