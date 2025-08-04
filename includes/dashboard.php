@@ -8,6 +8,9 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+// כלול פונקציות עזר
+require_once 'dashboard_functions.php';
+
 $db = getDbConnection();
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 
@@ -163,7 +166,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <?php require_once 'includes/nav.php'; ?>
+    <?php require_once 'nav.php'; ?>
 
     <div class="container-fluid py-4">
         <!-- כותרת הדשבורד -->
@@ -215,7 +218,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                     <span class="counter-label">היום</span>
                                 </div>
                             </div>
-                            <a href="form/form.php" class="btn btn-primary action-btn mt-3">
+                            <a href="../form/form.php" class="btn btn-primary action-btn mt-3">
                                 <i class="fas fa-plus"></i> טופס חדש
                             </a>
                         </div>
@@ -249,7 +252,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                     <span class="counter-label">היום</span>
                                 </div>
                             </div>
-                            <a href="form/purchase_form.php" class="btn btn-success action-btn mt-3">
+                            <a href="../form/purchase_form.php" class="btn btn-success action-btn mt-3">
                                 <i class="fas fa-plus"></i> רכישה חדשה
                             </a>
                         </div>
@@ -387,12 +390,12 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                             </td>
                             <td>
                                 <?php if ($activity['type'] === 'deceased'): ?>
-                                    <a href="form/form.php?id=<?= $activity['form_uuid'] ?>" 
+                                    <a href="../form/form.php?id=<?= $activity['form_uuid'] ?>" 
                                        class="btn btn-sm action-btn btn-primary-gradient">
                                         <i class="fas fa-eye"></i> צפייה
                                     </a>
                                 <?php else: ?>
-                                    <a href="form/purchase_form.php?id=<?= $activity['form_uuid'] ?>" 
+                                    <a href="../form/purchase_form.php?id=<?= $activity['form_uuid'] ?>" 
                                        class="btn btn-sm action-btn btn-success-gradient">
                                         <i class="fas fa-eye"></i> צפייה
                                     </a>
@@ -555,17 +558,6 @@ $recentActivity = array_slice($recentActivity, 0, 10);
             yearlyChart = new Chart(yearlyCtx, config);
         });
     });
-
-    // פונקציית תרגום סטטוס
-    function translateStatus(status) {
-        const translations = {
-            'draft': 'טיוטה',
-            'in_progress': 'בתהליך',
-            'completed': 'הושלם',
-            'archived': 'בארכיון'
-        };
-        return translations[status] || status;
-    }
     </script>
 </body>
 </html>
