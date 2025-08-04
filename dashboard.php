@@ -438,9 +438,6 @@ $userNotifications = $notifications->fetchAll();
                                                     <a href="form.php?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-warning">
                                                         <i class="fas fa-edit"></i>4
                                                     </a>
-                                                    <a href="<?= FORM_URL ?>?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-warning">
-                                                        <i class="fas fa-edit"></i>4
-                                                    </a>
                                                 </td>
                                             </tr>
                                             <?php endforeach; ?>
