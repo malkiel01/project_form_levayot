@@ -4,7 +4,7 @@ require_once 'config.php';
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
-    header("Location: " . SITE_URL . "/auth/login.php");
+    header("Location: " . SITE_URL . "auth/login.php");
     exit;
 }
 
