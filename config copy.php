@@ -1,50 +1,15 @@
 <?php
-
 // config.php - קובץ הגדרות משופר
-
-// תיקון לבעיות Session במובייל
-ini_set('session.use_cookies', '1');
-ini_set('session.use_only_cookies', '1');
-ini_set('session.use_trans_sid', '0');
-ini_set('session.cookie_httponly', '1');
-ini_set('session.cookie_samesite', 'Lax'); // חשוב! Lax ולא Strict למובייל
-
-// אם האתר ב-HTTPS (מומלץ מאוד!)
-if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
-    ini_set('session.cookie_secure', '1');
-}
-
-// הגדרת זמן חיים ארוך יותר ל-session
-ini_set('session.gc_maxlifetime', '7200'); // 2 שעות
-ini_set('session.cookie_lifetime', '7200'); // 2 שעות
 
 // הגדרות אבטחה
 define('SESSION_NAME', 'deceased_forms_session');
 define('CSRF_TOKEN_NAME', 'csrf_token');
 
-// הגדר שם מותאם אישית ל-session
 session_name(SESSION_NAME);
 
-// התחל session רק אם לא פעיל
 if (session_status() === PHP_SESSION_NONE) {
-    // הגדרות נוספות לפני התחלת ה-session
-    session_set_cookie_params([
-        'lifetime' => 7200,
-        'path' => '/',
-        'domain' => '', // ריק = הדומיין הנוכחי
-        'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
-        'httponly' => true,
-        'samesite' => 'Lax' // חשוב למובייל!
-    ]);
-    
     session_start();
 }
-
-// יצירת CSRF token אם לא קיים
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-
 
 // הגדרות חיבור לדטהבייס
 define('DB_HOST', 'mbe-plus.com');
