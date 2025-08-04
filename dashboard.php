@@ -305,7 +305,7 @@ $userNotifications = $notifications->fetchAll();
                                 </div>
                             </div>
                             <div>
-                                <a href="form.php?type=<?= $type['type_key'] ?>" class="btn btn-sm btn-success" onclick="event.stopPropagation()">
+                                <a href="forms_list.php?type=<?= $type['type_key'] ?>" class="btn btn-sm btn-success" onclick="event.stopPropagation()">
                                     <i class="fas fa-plus"></i> חדש
                                 </a>
                             </div>
