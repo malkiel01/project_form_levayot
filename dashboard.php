@@ -153,7 +153,8 @@ $userNotifications = $notifications->fetchAll();
             margin-top: 20px;
         }
     </style>
-        <style>
+    
+    <style>
         body {
             background-color: #f8f9fa;
         }
