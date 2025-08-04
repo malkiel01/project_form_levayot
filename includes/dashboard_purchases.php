@@ -1,5 +1,5 @@
 <?php
-// dashboard_purchases.php - דשבורד רכישות בלבד
+// dashboard_purchases.php - דשבורד רכישות בעיצוב קליל
 require_once '../config.php';
 
 // בדיקת התחברות
@@ -157,53 +157,389 @@ $recentPurchases = $stmt->fetchAll();
     <title>דשבורד רכישות - מערכת קדישא</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link href="../css/dashboard-styles.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        /* כותרת הדשבורד */
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .dashboard-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        /* כפתורי פעולה עליונים */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-search {
+            background: white;
+            color: #667eea;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-search:hover {
+            background: #f8f9ff;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .btn-export {
+            background: white;
+            color: #48bb78;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-export:hover {
+            background: #f0fff4;
+            border-color: #48bb78;
+            color: #48bb78;
+        }
+
+        /* כרטיסי סטטיסטיקה */
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-left: 1rem;
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        /* צבעי כרטיסים */
+        .stat-card.purple .stat-icon {
+            background: #f3f4ff;
+            color: #667eea;
+        }
+
+        .stat-card.green .stat-icon {
+            background: #f0fff4;
+            color: #48bb78;
+        }
+
+        .stat-card.blue .stat-icon {
+            background: #ebf8ff;
+            color: #4299e1;
+        }
+
+        .stat-card.orange .stat-icon {
+            background: #fffaf0;
+            color: #ed8936;
+        }
+
+        .stat-card.red .stat-icon {
+            background: #fff5f5;
+            color: #f56565;
+        }
+
+        .stat-card.yellow .stat-icon {
+            background: #fffff0;
+            color: #ecc94b;
+        }
+
+        .stat-card.teal .stat-icon {
+            background: #e6fffa;
+            color: #38b2ac;
+        }
+
+        .stat-card.pink .stat-icon {
+            background: #fff5f7;
+            color: #ed64a6;
+        }
+
+        /* גרפים */
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .chart-options {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chart-option {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #718096;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chart-option:hover {
+            background: #f7fafc;
+        }
+
+        .chart-option.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* טבלה */
+        .recent-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .recent-table .table-header {
+            background: #f8f9fa;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .recent-table h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #e2e8f0;
+            color: #718096;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1rem 1.5rem;
+        }
+
+        .table td {
+            padding: 1rem 1.5rem;
+            vertical-align: middle;
+            font-size: 0.95rem;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        /* תגיות סטטוס */
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-draft {
+            background: #fff5f5;
+            color: #e53e3e;
+        }
+
+        .status-in_progress {
+            background: #fffaf0;
+            color: #dd6b20;
+        }
+
+        .status-completed {
+            background: #f0fff4;
+            color: #38a169;
+        }
+
+        .status-archived {
+            background: #f7fafc;
+            color: #718096;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-header {
+                padding: 1.5rem;
+            }
+
+            .dashboard-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .action-buttons {
+                justify-content: stretch;
+            }
+
+            .action-btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <?php require_once 'nav.php'; ?>
 
     <div class="container-fluid py-4">
         <!-- כותרת הדשבורד -->
-        <div class="dashboard-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+        <div class="dashboard-header">
             <h1><i class="fas fa-shopping-cart"></i> דשבורד רכישות</h1>
             <p>ניהול וסטטיסטיקות רכישות חלקות ושירותים</p>
+        </div>
+
+        <!-- כפתורי פעולה -->
+        <div class="action-buttons">
+            <a href="form/purchase_form.php" class="action-btn btn-primary-gradient">
+                <i class="fas fa-plus"></i> רכישה חדשה
+            </a>
+            <button class="action-btn btn-search" onclick="showSearchModal()">
+                <i class="fas fa-search"></i> חיפוש רכישות
+            </button>
+            <button class="action-btn btn-export" onclick="exportData()">
+                <i class="fas fa-file-excel"></i> ייצוא לאקסל
+            </button>
         </div>
 
         <!-- סטטיסטיקות כספיות -->
         <div class="row mb-4">
             <div class="col-lg-4 mb-3">
-                <div class="stat-card success-card">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-shekel-sign"></i>
-                        </div>
-                        <h2 class="stat-value">₪<?= number_format($stats['total_amount']) ?></h2>
+                <div class="stat-card green">
+                    <div class="stat-content">
+                        <div class="stat-value">₪<?= number_format($stats['total_amount']) ?></div>
                         <p class="stat-label">סך כל העסקאות</p>
                     </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-4 mb-3">
-                <div class="stat-card primary-card">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-money-check-alt"></i>
-                        </div>
-                        <h2 class="stat-value">₪<?= number_format($stats['paid_amount']) ?></h2>
-                        <p class="stat-label">סה"כ שולם</p>
+                    <div class="stat-icon">
+                        <i class="fas fa-shekel-sign"></i>
                     </div>
                 </div>
             </div>
             
             <div class="col-lg-4 mb-3">
-                <div class="stat-card warning-card">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-hand-holding-usd"></i>
-                        </div>
-                        <h2 class="stat-value">₪<?= number_format($stats['pending_amount']) ?></h2>
+                <div class="stat-card blue">
+                    <div class="stat-content">
+                        <div class="stat-value">₪<?= number_format($stats['paid_amount']) ?></div>
+                        <p class="stat-label">סה"כ שולם</p>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-money-check-alt"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 mb-3">
+                <div class="stat-card orange">
+                    <div class="stat-content">
+                        <div class="stat-value">₪<?= number_format($stats['pending_amount']) ?></div>
                         <p class="stat-label">יתרה לתשלום</p>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-hand-holding-usd"></i>
                     </div>
                 </div>
             </div>
@@ -212,49 +548,76 @@ $recentPurchases = $stmt->fetchAll();
         <!-- סטטיסטיקות כמותיות -->
         <div class="row mb-4">
             <div class="col-lg-3 col-md-6 mb-3">
-                <div class="stat-card info-card">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-file-invoice"></i>
-                        </div>
-                        <h2 class="stat-value"><?= number_format($stats['total']) ?></h2>
+                <div class="stat-card purple">
+                    <div class="stat-content">
+                        <div class="stat-value"><?= number_format($stats['total']) ?></div>
                         <p class="stat-label">סה"כ רכישות</p>
                     </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6 mb-3">
-                <div class="stat-card success-card">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <h2 class="stat-value"><?= number_format($stats['completed']) ?></h2>
+                <div class="stat-card green">
+                    <div class="stat-content">
+                        <div class="stat-value"><?= number_format($stats['completed']) ?></div>
                         <p class="stat-label">עסקאות הושלמו</p>
                     </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="stat-card purple-card">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-calendar-day"></i>
-                        </div>
-                        <h2 class="stat-value"><?= number_format($stats['today']) ?></h2>
-                        <p class="stat-label">רכישות היום</p>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
                     </div>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6 mb-3">
-                <div class="stat-card danger-card">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-calendar-week"></i>
-                        </div>
-                        <h2 class="stat-value"><?= number_format($stats['this_week']) ?></h2>
+                <div class="stat-card yellow">
+                    <div class="stat-content">
+                        <div class="stat-value"><?= number_format($stats['today']) ?></div>
+                        <p class="stat-label">רכישות היום</p>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card red">
+                    <div class="stat-content">
+                        <div class="stat-value"><?= number_format($stats['draft']) ?></div>
+                        <p class="stat-label">טיוטות</p>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- שורה נוספת של סטטיסטיקות -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-3">
+                <div class="stat-card teal">
+                    <div class="stat-content">
+                        <div class="stat-value"><?= number_format($stats['this_week']) ?></div>
                         <p class="stat-label">רכישות השבוע</p>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 mb-3">
+                <div class="stat-card pink">
+                    <div class="stat-content">
+                        <div class="stat-value"><?= number_format($stats['this_month']) ?></div>
+                        <p class="stat-label">רכישות החודש</p>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-alt"></i>
                     </div>
                 </div>
             </div>
@@ -279,31 +642,25 @@ $recentPurchases = $stmt->fetchAll();
             
             <!-- התפלגות לפי סוג רכישה -->
             <div class="col-lg-4 mb-3">
-                <div class="row">
-                    <div class="col-12 mb-3">
-                        <div class="chart-container">
-                            <div class="chart-header">
-                                <h3 class="chart-title">התפלגות לפי סוג</h3>
-                            </div>
-                            <canvas id="typeChart" height="200"></canvas>
-                        </div>
+                <div class="chart-container mb-3">
+                    <div class="chart-header">
+                        <h3 class="chart-title">התפלגות לפי סוג</h3>
                     </div>
-                    <div class="col-12">
-                        <div class="chart-container">
-                            <div class="chart-header">
-                                <h3 class="chart-title">אמצעי תשלום</h3>
-                            </div>
-                            <canvas id="paymentChart" height="200"></canvas>
-                        </div>
+                    <canvas id="typeChart" height="200"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">אמצעי תשלום</h3>
                     </div>
+                    <canvas id="paymentChart" height="200"></canvas>
                 </div>
             </div>
         </div>
 
         <!-- רכישות אחרונות -->
         <div class="recent-table">
-            <div class="p-3">
-                <h3 class="mb-0">רכישות אחרונות</h3>
+            <div class="table-header">
+                <h3>רכישות אחרונות</h3>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
@@ -345,12 +702,63 @@ $recentPurchases = $stmt->fetchAll();
                 </table>
             </div>
         </div>
+    </div>
 
-        <!-- כפתור הוספת רכישה -->
-        <div class="text-center mt-4">
-            <a href="form/purchase_form.php" class="btn btn-lg action-btn btn-success-gradient">
-                <i class="fas fa-plus-circle"></i> רכישה חדשה
-            </a>
+    <!-- מודל חיפוש -->
+    <div class="modal fade" id="searchModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">חיפוש רכישות</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="searchForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">שם הרוכש</label>
+                                <input type="text" class="form-control" name="buyer_name" placeholder="הכנס שם...">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">מספר טופס</label>
+                                <input type="text" class="form-control" name="form_id" placeholder="הכנס מספר...">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">סוג רכישה</label>
+                                <select class="form-select" name="purchase_type">
+                                    <option value="">כל הסוגים</option>
+                                    <option value="grave">קבר</option>
+                                    <option value="plot">חלקה</option>
+                                    <option value="structure">מבנה</option>
+                                    <option value="service">שירות</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">סטטוס</label>
+                                <select class="form-select" name="status">
+                                    <option value="">כל הסטטוסים</option>
+                                    <option value="draft">טיוטה</option>
+                                    <option value="in_progress">בתהליך</option>
+                                    <option value="completed">הושלם</option>
+                                    <option value="archived">בארכיון</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">תאריך מ-</label>
+                                <input type="date" class="form-control" name="date_from">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">תאריך עד</label>
+                                <input type="date" class="form-control" name="date_to">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ביטול</button>
+                    <button type="button" class="btn btn-primary" onclick="performSearch()">חיפוש</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -378,8 +786,8 @@ $recentPurchases = $stmt->fetchAll();
             }, {
                 label: 'הכנסות (₪)',
                 data: monthlyRevenue,
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderColor: '#48bb78',
+                backgroundColor: 'rgba(72, 187, 120, 0.1)',
                 borderWidth: 3,
                 tension: 0.3,
                 yAxisID: 'y-revenue'
@@ -392,6 +800,18 @@ $recentPurchases = $stmt->fetchAll();
                 mode: 'index',
                 intersect: false,
             },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            },
             scales: {
                 'y-count': {
                     type: 'linear',
@@ -400,6 +820,9 @@ $recentPurchases = $stmt->fetchAll();
                     beginAtZero: true,
                     ticks: {
                         stepSize: 1
+                    },
+                    grid: {
+                        borderDash: [5, 5]
                     }
                 },
                 'y-revenue': {
@@ -423,19 +846,18 @@ $recentPurchases = $stmt->fetchAll();
     // גרף סוגי רכישה
     const typeCtx = document.getElementById('typeChart').getContext('2d');
     new Chart(typeCtx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             labels: <?= json_encode(array_column($purchaseTypeStats, 'type')) ?>,
             datasets: [{
                 data: <?= json_encode(array_column($purchaseTypeStats, 'count')) ?>,
                 backgroundColor: [
                     '#667eea',
-                    '#764ba2',
-                    '#84fab0',
-                    '#8fd3f4'
+                    '#48bb78',
+                    '#ed8936',
+                    '#38b2ac'
                 ],
-                borderWidth: 2,
-                borderColor: '#fff'
+                borderWidth: 0
             }]
         },
         options: {
@@ -458,20 +880,19 @@ $recentPurchases = $stmt->fetchAll();
     // גרף אמצעי תשלום
     const paymentCtx = document.getElementById('paymentChart').getContext('2d');
     new Chart(paymentCtx, {
-        type: 'doughnut',
+        type: 'pie',
         data: {
             labels: <?= json_encode(array_column($paymentMethodStats, 'method')) ?>,
             datasets: [{
                 data: <?= json_encode(array_column($paymentMethodStats, 'count')) ?>,
                 backgroundColor: [
-                    '#fa709a',
-                    '#fee140',
-                    '#667eea',
-                    '#84fab0',
-                    '#8fd3f4'
+                    '#f56565',
+                    '#ecc94b',
+                    '#4299e1',
+                    '#48bb78',
+                    '#ed64a6'
                 ],
-                borderWidth: 2,
-                borderColor: '#fff'
+                borderWidth: 0
             }]
         },
         options: {
@@ -509,17 +930,25 @@ $recentPurchases = $stmt->fetchAll();
                             label: 'מספר רכישות',
                             data: monthlyCount,
                             backgroundColor: '#667eea',
-                            borderWidth: 0
+                            borderRadius: 8
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
                         scales: {
                             y: {
                                 beginAtZero: true,
                                 ticks: {
                                     stepSize: 1
+                                },
+                                grid: {
+                                    borderDash: [5, 5]
                                 }
                             }
                         }
@@ -533,13 +962,18 @@ $recentPurchases = $stmt->fetchAll();
                         datasets: [{
                             label: 'הכנסות (₪)',
                             data: monthlyRevenue,
-                            backgroundColor: '#28a745',
-                            borderWidth: 0
+                            backgroundColor: '#48bb78',
+                            borderRadius: 8
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
                         scales: {
                             y: {
                                 beginAtZero: true,
@@ -547,6 +981,9 @@ $recentPurchases = $stmt->fetchAll();
                                     callback: function(value) {
                                         return '₪' + value.toLocaleString();
                                     }
+                                },
+                                grid: {
+                                    borderDash: [5, 5]
                                 }
                             }
                         }
@@ -559,26 +996,47 @@ $recentPurchases = $stmt->fetchAll();
         });
     });
 
-    // פונקציות תרגום
-    function translateStatus(status) {
-        const translations = {
-            'draft': 'טיוטה',
-            'in_progress': 'בתהליך',
-            'completed': 'הושלם',
-            'archived': 'בארכיון'
-        };
-        return translations[status] || status;
+    // פונקציות
+    function showSearchModal() {
+        const modal = new bootstrap.Modal(document.getElementById('searchModal'));
+        modal.show();
     }
 
-    function translatePurchaseType(type) {
-        const translations = {
-            'grave': 'קבר',
-            'plot': 'חלקה',
-            'structure': 'מבנה',
-            'service': 'שירות'
-        };
-        return translations[type] || type;
+    function performSearch() {
+        const form = document.getElementById('searchForm');
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        window.location.href = 'purchases_list.php?' + params.toString();
     }
+
+    function exportData() {
+        if (confirm('האם לייצא את כל הרכישות לקובץ אקסל?')) {
+            window.location.href = 'export_purchases.php';
+        }
+    }
+
+    // פונקציות תרגום
+    <?php
+    function translateStatus($status) {
+        $translations = [
+            'draft' => 'טיוטה',
+            'in_progress' => 'בתהליך',
+            'completed' => 'הושלם',
+            'archived' => 'בארכיון'
+        ];
+        return $translations[$status] ?? $status;
+    }
+
+    function translatePurchaseType($type) {
+        $translations = [
+            'grave' => 'קבר',
+            'plot' => 'חלקה',
+            'structure' => 'מבנה',
+            'service' => 'שירות'
+        ];
+        return $translations[$type] ?? $type;
+    }
+    ?>
     </script>
 </body>
 </html>
