@@ -1,0 +1,464 @@
+/* dashboard-styles.css - עיצוב מתקדם לדשבורדים */
+
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-gradient: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    --danger-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    --dark-gradient: linear-gradient(135deg, #434343 0%, #000000 100%);
+    --purple-gradient: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%);
+    --orange-gradient: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+}
+
+/* אנימציות */
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+    }
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+    }
+}
+
+@keyframes slideInRight {
+    0% {
+        opacity: 0;
+        transform: translateX(-100px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes countUp {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* רקע כללי */
+body {
+    background: linear-gradient(120deg, #f6f7fb 0%, #e9ecef 100%);
+    min-height: 100vh;
+}
+
+/* כותרת הדשבורד */
+.dashboard-header {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-header p {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+/* כרטיסי סטטיסטיקה מתקדמים */
+.stat-card {
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: fadeInUp 0.8s ease-out;
+    animation-fill-mode: both;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+.stat-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.8s;
+}
+
+.stat-card:hover::before {
+    left: 100%;
+}
+
+/* עיצוב כרטיסים לפי סוג */
+.stat-card.primary-card {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.stat-card.success-card {
+    background: var(--success-gradient);
+    color: white;
+}
+
+.stat-card.warning-card {
+    background: var(--warning-gradient);
+    color: white;
+}
+
+.stat-card.info-card {
+    background: var(--info-gradient);
+    color: #333;
+}
+
+.stat-card.danger-card {
+    background: var(--danger-gradient);
+    color: white;
+}
+
+.stat-card.purple-card {
+    background: var(--purple-gradient);
+    color: white;
+}
+
+/* תוכן הכרטיס */
+.stat-card .card-body {
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.stat-card .stat-icon {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    font-size: 4rem;
+    opacity: 0.3;
+    animation: pulse 2s infinite;
+}
+
+.stat-card .stat-value {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1;
+    animation: countUp 1s ease-out;
+}
+
+.stat-card .stat-label {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+.stat-card .stat-change {
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.stat-card .stat-change.positive {
+    color: #4caf50;
+}
+
+.stat-card .stat-change.negative {
+    color: #f44336;
+}
+
+/* כרטיסי סוג טופס */
+.form-type-card {
+    background: white;
+    border: none;
+    border-radius: 20px;
+    padding: 2rem;
+    transition: all 0.4s ease;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    animation: slideInRight 0.8s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.form-type-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: var(--primary-gradient);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.form-type-card:hover::after {
+    transform: scaleX(1);
+}
+
+.form-type-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.form-type-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.form-type-icon::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.5s ease;
+}
+
+.form-type-card:hover .form-type-icon::before {
+    transform: translate(-50%, -50%) scale(2);
+}
+
+/* מונים מונפשים */
+.counter-section {
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-top: 1rem;
+}
+
+.counter-item {
+    text-align: center;
+    flex: 1;
+}
+
+.counter-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    display: block;
+    animation: countUp 1.5s ease-out;
+}
+
+.counter-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-top: 0.3rem;
+}
+
+/* גרפים */
+.chart-container {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    animation: fadeInUp 1s ease-out;
+    margin-bottom: 2rem;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.chart-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.chart-options {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chart-option {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    background: #f0f0f0;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.chart-option:hover,
+.chart-option.active {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+/* טבלת נתונים אחרונים */
+.recent-table {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    animation: fadeInUp 1.2s ease-out;
+}
+
+.recent-table .table {
+    margin: 0;
+}
+
+.recent-table thead {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.recent-table th {
+    border: none;
+    padding: 1rem;
+    font-weight: 600;
+}
+
+.recent-table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.recent-table tbody tr:hover {
+    background: #f8f9fa;
+    transform: scale(1.01);
+}
+
+.recent-table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* תגי סטטוס */
+.status-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-completed {
+    background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    color: white;
+}
+
+.status-in-progress {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: white;
+}
+
+.status-draft {
+    background: linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%);
+    color: #666;
+}
+
+/* כפתורי פעולה */
+.action-btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: 25px;
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.action-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-primary-gradient {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.btn-success-gradient {
+    background: var(--success-gradient);
+    color: white;
+}
+
+/* תפריט צד למובייל */
+@media (max-width: 768px) {
+    .stat-card .stat-value {
+        font-size: 2rem;
+    }
+    
+    .stat-card .stat-icon {
+        font-size: 3rem;
+    }
+    
+    .form-type-card {
+        margin-bottom: 1rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.8rem;
+    }
+}
