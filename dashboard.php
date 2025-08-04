@@ -278,7 +278,6 @@ $userNotifications = $notifications->fetchAll();
             </h1>
             
             <!-- כרטיסי סוגי טפסים -->
-            <!-- <a href="<?= FORM_URL ?>?id=<?= $form['form_uuid'] ?>"  -->
              <!-- מסכם ראשי -->
             <div class="row mb-4">
                 <?php foreach ($formTypes as $type): ?>
@@ -437,6 +436,9 @@ $userNotifications = $notifications->fetchAll();
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                     <a href="form.php?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-warning">
+                                                        <i class="fas fa-edit"></i>4
+                                                    </a>
+                                                    <a href="<?= FORM_URL ?>?id=<?= $form['form_uuid'] ?>" class="btn btn-sm btn-warning">
                                                         <i class="fas fa-edit"></i>4
                                                     </a>
                                                 </td>
