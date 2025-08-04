@@ -123,7 +123,7 @@ $recentDeceased = $stmt->fetchAll();
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <?php require_once 'includes/nav.php'; ?>
+    <?php require_once 'nav.php'; ?>
 
     <div class="container-fluid py-4">
         <!-- כותרת הדשבורד -->
