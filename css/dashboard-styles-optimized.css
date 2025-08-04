@@ -1,4 +1,28 @@
-/* dashboard-styles-optimized.css - עיצוב מאופטם עם אנימציות מופחתות */
+/* סידור כרטיסי סטטיסטיקה במובייל */
+@media (max-width: 576px) {
+    /* כרטיסי סטטיסטיקה - 2 בשורה */
+    .col-6.col-md-3 {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .stat-card .card-body {
+        padding: 1rem 0.5rem;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .stat-card .stat-label {
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+}/* dashboard-styles-optimized.css - עיצוב מאופטם עם אנימציות מופחתות */
 
 :root {
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -149,6 +173,25 @@ body {
     font-size: 0.9rem;
     opacity: 0.8;
     margin-top: 0.3rem;
+}
+
+/* במובייל - סידור אופקי של המונים */
+@media (max-width: 576px) {
+    .counter-section {
+        padding: 0.5rem 0;
+    }
+    
+    .counter-item {
+        padding: 0 0.5rem;
+    }
+    
+    .counter-value {
+        font-size: 1.1rem;
+    }
+    
+    .counter-label {
+        font-size: 0.75rem;
+    }
 }
 
 /* גרפים */
@@ -312,7 +355,8 @@ body.animations-ready .stat-card:nth-child(4) { animation-delay: 0.25s; }
 
 /* placeholder לגרפים */
 .chart-placeholder {
-    min-height: 200px;
+    min-height: 180px;
+    max-height: 250px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -320,29 +364,154 @@ body.animations-ready .stat-card:nth-child(4) { animation-delay: 0.25s; }
     border-radius: 10px;
 }
 
+/* הגבלת גובה לגרפים */
+.chart-container canvas {
+    max-height: 250px !important;
+}
+
+/* גובה מיוחד לגרף הסיכום */
+#summaryChart {
+    max-height: 180px !important;
+}
+
 /* תפריט צד למובייל */
 @media (max-width: 768px) {
-    .stat-card .stat-value {
-        font-size: 1.8rem;
-    }
-    
-    .stat-card .stat-icon {
-        font-size: 2.5rem;
-    }
-    
-    .form-type-card {
+    .dashboard-header {
+        padding: 1.5rem;
         margin-bottom: 1rem;
     }
     
     .dashboard-header h1 {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-header p {
+        font-size: 0.9rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-card .card-body {
+        padding: 1rem;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .stat-card .stat-label {
+        font-size: 0.8rem;
+    }
+    
+    .form-type-card {
+        margin-bottom: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .form-type-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
     }
     
     .counter-value {
         font-size: 1.2rem;
     }
     
+    .counter-label {
+        font-size: 0.8rem;
+    }
+    
+    .chart-container {
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .chart-title {
+        font-size: 1.1rem;
+    }
+    
+    .chart-options {
+        flex-wrap: wrap;
+        gap: 0.3rem;
+    }
+    
+    .chart-option {
+        padding: 0.2rem 0.6rem;
+        font-size: 0.75rem;
+    }
+    
     .recent-table {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+    }
+    
+    .recent-table th,
+    .recent-table td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .status-badge {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
+    
+    .action-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    .btn-group .btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    /* הסתרת עמודות בטבלה במובייל */
+    .table thead th:nth-child(1),
+    .table tbody td:nth-child(1) {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    /* כרטיסי סטטיסטיקה - 2 בשורה */
+    .col-6.col-md-3 {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .stat-card .card-body {
+        padding: 1rem 0.5rem;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .stat-card .stat-label {
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+    
+    /* גרפים במובייל */
+    #yearlyChart,
+    #summaryChart {
+        max-height: 200px !important;
+    }
+    
+    /* כותרות קטנות יותר במובייל */
+    h3 {
+        font-size: 1.2rem;
+    }
+    
+    /* כפתורים מלאים במובייל */
+    .action-btn {
+        width: 100%;
     }
 }

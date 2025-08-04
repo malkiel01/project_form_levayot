@@ -176,15 +176,15 @@ $recentActivity = array_slice($recentActivity, 0, 10);
 
         <!-- בחירת תצוגה -->
         <div class="text-center mb-4">
-            <div class="btn-group" role="group">
+            <div class="btn-group btn-group-sm" role="group">
                 <a href="dashboard.php" class="btn btn-primary active">
-                    <i class="fas fa-th"></i> תצוגה משולבת
+                    <i class="fas fa-th"></i> <span class="d-none d-sm-inline">תצוגה</span> משולבת
                 </a>
                 <a href="dashboard_deceased.php" class="btn btn-outline-primary">
-                    <i class="fas fa-cross"></i> נפטרים בלבד
+                    <i class="fas fa-cross"></i> נפטרים<span class="d-none d-sm-inline"> בלבד</span>
                 </a>
                 <a href="dashboard_purchases.php" class="btn btn-outline-primary">
-                    <i class="fas fa-shopping-cart"></i> רכישות בלבד
+                    <i class="fas fa-shopping-cart"></i> רכישות<span class="d-none d-sm-inline"> בלבד</span>
                 </a>
             </div>
         </div>
@@ -192,17 +192,17 @@ $recentActivity = array_slice($recentActivity, 0, 10);
         <!-- כרטיסי סוגי טפסים -->
         <div class="row mb-4">
             <!-- כרטיס נפטרים -->
-            <div class="col-lg-6 mb-3">
+            <div class="col-12 col-lg-6 mb-3">
                 <div class="form-type-card" onclick="location.href='../forms_list.php?type=deceased'">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <div class="form-type-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between">
+                        <div class="text-center text-md-start mb-3 mb-md-0">
+                            <div class="form-type-icon mx-auto mx-md-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                 <i class="fas fa-cross text-white"></i>
                             </div>
                             <h3 class="mt-3">טפסי נפטרים</h3>
-                            <p class="text-muted mb-0">ניהול רישום נפטרים וקבורה</p>
+                            <p class="text-muted mb-0 d-none d-md-block">ניהול רישום נפטרים וקבורה</p>
                         </div>
-                        <div class="text-end">
+                        <div class="text-center text-md-end w-100 w-md-auto">
                             <div class="counter-section">
                                 <div class="counter-item">
                                     <span class="counter-value text-primary"><?= number_format($stats['deceased']['total']) ?></span>
@@ -217,7 +217,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                     <span class="counter-label">היום</span>
                                 </div>
                             </div>
-                            <a href="../form/form.php" class="btn btn-primary action-btn mt-3">
+                            <a href="../form/form.php" class="btn btn-primary action-btn mt-3 w-100" onclick="event.stopPropagation();">
                                 <i class="fas fa-plus"></i> טופס חדש
                             </a>
                         </div>
@@ -226,17 +226,17 @@ $recentActivity = array_slice($recentActivity, 0, 10);
             </div>
 
             <!-- כרטיס רכישות -->
-            <div class="col-lg-6 mb-3">
+            <div class="col-12 col-lg-6 mb-3">
                 <div class="form-type-card" onclick="location.href='../forms_list.php?type=purchase'">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <div class="form-type-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between">
+                        <div class="text-center text-md-start mb-3 mb-md-0">
+                            <div class="form-type-icon mx-auto mx-md-0" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
                                 <i class="fas fa-shopping-cart text-white"></i>
                             </div>
                             <h3 class="mt-3">טפסי רכישות</h3>
-                            <p class="text-muted mb-0">רכישת חלקות ושירותים</p>
+                            <p class="text-muted mb-0 d-none d-md-block">רכישת חלקות ושירותים</p>
                         </div>
-                        <div class="text-end">
+                        <div class="text-center text-md-end w-100 w-md-auto">
                             <div class="counter-section">
                                 <div class="counter-item">
                                     <span class="counter-value text-primary"><?= number_format($stats['purchase']['total']) ?></span>
@@ -251,7 +251,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                     <span class="counter-label">היום</span>
                                 </div>
                             </div>
-                            <a href="../form/purchase_form.php" class="btn btn-success action-btn mt-3">
+                            <a href="../form/purchase_form.php" class="btn btn-success action-btn mt-3 w-100" onclick="event.stopPropagation();">
                                 <i class="fas fa-plus"></i> רכישה חדשה
                             </a>
                         </div>
@@ -262,34 +262,34 @@ $recentActivity = array_slice($recentActivity, 0, 10);
 
         <!-- סטטיסטיקות ראשיות -->
         <div class="row mb-4">
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card primary-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-file-alt"></i>
                         </div>
                         <h2 class="stat-value"><?= number_format($stats['combined']['total_forms']) ?></h2>
-                        <p class="stat-label">סה"כ טפסים במערכת</p>
+                        <p class="stat-label">סה"כ טפסים</p>
                     </div>
                 </div>
             </div>
             
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card success-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-shekel-sign"></i>
                         </div>
                         <h2 class="stat-value">₪<?= number_format($stats['purchase']['total_amount']) ?></h2>
-                        <p class="stat-label">סך כל העסקאות</p>
+                        <p class="stat-label">סך העסקאות</p>
                     </div>
                 </div>
             </div>
             
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card warning-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-praying-hands"></i>
                         </div>
                         <h2 class="stat-value"><?= number_format($stats['deceased']['today_burials']) ?></h2>
@@ -298,10 +298,10 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                 </div>
             </div>
             
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card info-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-calendar-day"></i>
                         </div>
                         <h2 class="stat-value"><?= number_format($stats['combined']['total_today']) ?></h2>
@@ -314,34 +314,34 @@ $recentActivity = array_slice($recentActivity, 0, 10);
         <!-- גרפים -->
         <div class="row mb-4">
             <!-- גרף פעילות שנתית -->
-            <div class="col-lg-8 mb-3">
-                <div class="chart-container">
+            <div class="col-lg-8 col-12 mb-3">
+                <div class="chart-container" style="max-height: 400px;">
                     <div class="chart-header">
                         <h3 class="chart-title">פעילות שנתית - 12 חודשים אחרונים</h3>
                         <div class="chart-options">
                             <button class="chart-option active" data-view="all">הכל</button>
-                            <button class="chart-option" data-view="deceased">נפטרים</button>
-                            <button class="chart-option" data-view="purchases">רכישות</button>
-                            <button class="chart-option" data-view="revenue">הכנסות</button>
+                            <button class="chart-option d-none d-sm-inline-block" data-view="deceased">נפטרים</button>
+                            <button class="chart-option d-none d-sm-inline-block" data-view="purchases">רכישות</button>
+                            <button class="chart-option d-none d-sm-inline-block" data-view="revenue">הכנסות</button>
                         </div>
                     </div>
-                    <div class="chart-placeholder" id="yearlyChartPlaceholder">
+                    <div class="chart-placeholder" id="yearlyChartPlaceholder" style="height: 250px;">
                         <p class="text-muted text-center py-5">הגרף יטען בעוד רגע...</p>
                     </div>
-                    <canvas id="yearlyChart" height="100" style="display: none;"></canvas>
+                    <canvas id="yearlyChart" style="display: none; max-height: 250px;"></canvas>
                 </div>
             </div>
             
             <!-- סיכום סטטיסטי -->
-            <div class="col-lg-4 mb-3">
-                <div class="chart-container">
+            <div class="col-lg-4 col-12 mb-3">
+                <div class="chart-container" style="max-height: 400px;">
                     <div class="chart-header">
                         <h3 class="chart-title">סיכום פעילות</h3>
                     </div>
-                    <div class="chart-placeholder" id="summaryChartPlaceholder">
-                        <p class="text-muted text-center py-5">הגרף יטען בעוד רגע...</p>
+                    <div class="chart-placeholder" id="summaryChartPlaceholder" style="height: 180px;">
+                        <p class="text-muted text-center py-3">הגרף יטען בעוד רגע...</p>
                     </div>
-                    <canvas id="summaryChart" height="200" style="display: none;"></canvas>
+                    <canvas id="summaryChart" style="display: none; max-height: 180px;"></canvas>
                     
                     <div class="mt-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -367,10 +367,10 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th>סוג</th>
+                            <th class="d-none d-md-table-cell">סוג</th>
                             <th>מספר טופס</th>
                             <th>שם</th>
-                            <th>תאריך אירוע</th>
+                            <th class="d-none d-sm-table-cell">תאריך</th>
                             <th>סטטוס</th>
                             <th>פעולות</th>
                         </tr>
@@ -378,16 +378,16 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                     <tbody>
                         <?php foreach ($recentActivity as $activity): ?>
                         <tr>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 <?php if ($activity['type'] === 'deceased'): ?>
                                     <i class="fas fa-cross text-primary"></i> נפטר
                                 <?php else: ?>
                                     <i class="fas fa-shopping-cart text-success"></i> רכישה
                                 <?php endif; ?>
                             </td>
-                            <td><?= htmlspecialchars($activity['form_uuid']) ?></td>
-                            <td><?= htmlspecialchars($activity['name']) ?></td>
-                            <td><?= date('d/m/Y', strtotime($activity['event_date'])) ?></td>
+                            <td class="text-truncate" style="max-width: 100px;"><?= htmlspecialchars($activity['form_uuid']) ?></td>
+                            <td class="text-truncate" style="max-width: 150px;"><?= htmlspecialchars($activity['name']) ?></td>
+                            <td class="d-none d-sm-table-cell"><?= date('d/m/Y', strtotime($activity['event_date'])) ?></td>
                             <td>
                                 <span class="status-badge status-<?= $activity['status'] ?>">
                                     <?= translateStatus($activity['status']) ?>
@@ -397,12 +397,12 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                 <?php if ($activity['type'] === 'deceased'): ?>
                                     <a href="../form/form.php?id=<?= $activity['form_uuid'] ?>" 
                                        class="btn btn-sm action-btn btn-primary-gradient">
-                                        <i class="fas fa-eye"></i> צפייה
+                                        <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">צפייה</span>
                                     </a>
                                 <?php else: ?>
                                     <a href="../form/purchase_form.php?id=<?= $activity['form_uuid'] ?>" 
                                        class="btn btn-sm action-btn btn-success-gradient">
-                                        <i class="fas fa-eye"></i> צפייה
+                                        <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">צפייה</span>
                                     </a>
                                 <?php endif; ?>
                             </td>
@@ -481,6 +481,12 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                         ticks: {
                             stepSize: 1
                         }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: window.innerWidth > 768,
+                        position: 'top'
                     }
                 }
             }
