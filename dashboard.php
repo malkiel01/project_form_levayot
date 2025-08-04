@@ -153,6 +153,45 @@ $userNotifications = $notifications->fetchAll();
             margin-top: 20px;
         }
     </style>
+        <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .stat-card {
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            height: 100%;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-icon {
+            font-size: 3rem;
+            opacity: 0.3;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
