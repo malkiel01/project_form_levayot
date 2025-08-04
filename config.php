@@ -60,8 +60,7 @@ define('MAX_FILE_SIZE', 10 * 1024 * 1024); // 10MB
 define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']);
 
 // לינקים וקישורים
-define('FORM_URL', 'form/index.php');
-// define('FORM_URL', 'form.php');
+define('FORM_URL', 'form/index_copy.php');
 define('LOGIN_URL', 'auth/login.php');
 define('LOGOUT_URL', 'auth/logout.php');
 
