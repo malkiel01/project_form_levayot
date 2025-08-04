@@ -1,0 +1,94 @@
+-- הוספת עמודת form_type
+ALTER TABLE `field_permissions` 
+ADD COLUMN `form_type` VARCHAR(50) NOT NULL DEFAULT 'deceased' AFTER `id`;
+
+-- הוספת הרשאות לשדות טפסי רכישות
+INSERT INTO `field_permissions` (`form_type`, `field_name`, `permission_level`, `can_view`, `can_edit`, `is_required`) VALUES
+-- הרשאות לעורך (רמה 2) - טפסי רכישות
+('purchase', 'buyer_type', 2, TRUE, TRUE, TRUE),
+('purchase', 'buyer_id_type', 2, TRUE, TRUE, TRUE),
+('purchase', 'buyer_id_number', 2, TRUE, TRUE, TRUE),
+('purchase', 'buyer_name', 2, TRUE, TRUE, TRUE),
+('purchase', 'buyer_phone', 2, TRUE, TRUE, FALSE),
+('purchase', 'buyer_email', 2, TRUE, TRUE, FALSE),
+('purchase', 'buyer_address', 2, TRUE, TRUE, TRUE),
+('purchase', 'purchase_date', 2, TRUE, TRUE, TRUE),
+('purchase', 'payment_method', 2, TRUE, TRUE, TRUE),
+('purchase', 'total_amount', 2, TRUE, TRUE, TRUE),
+('purchase', 'paid_amount', 2, TRUE, TRUE, TRUE),
+('purchase', 'installments_count', 2, TRUE, TRUE, TRUE),
+('purchase', 'cemetery_id', 2, TRUE, TRUE, TRUE),
+('purchase', 'block_id', 2, TRUE, TRUE, TRUE),
+('purchase', 'section_id', 2, TRUE, TRUE, TRUE),
+('purchase', 'row_id', 2, TRUE, TRUE, TRUE),
+('purchase', 'grave_id', 2, TRUE, TRUE, TRUE),
+('purchase', 'plot_id', 2, TRUE, TRUE, TRUE),
+('purchase', 'grave_id', 2, TRUE, TRUE, TRUE),
+('purchase', 'grave_id', 2, TRUE, TRUE, TRUE),
+
+CREATE TABLE IF NOT EXISTS `purchase_forms` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `form_uuid` VARCHAR(36) NOT NULL UNIQUE,
+  `status` ENUM('draft', 'in_progress', 'completed', 'archived') DEFAULT 'draft',
+  `progress_percentage` INT(3) DEFAULT 0,
+  
+  -- פרטי הרוכש
+  `buyer_type` ENUM('individual', 'company') NOT NULL,
+  `buyer_id_type` ENUM('tz', 'passport', 'company_id') NOT NULL,
+  `buyer_id_number` VARCHAR(20) NOT NULL,
+  `buyer_name` VARCHAR(255) NOT NULL,
+  `buyer_phone` VARCHAR(20),
+  `buyer_email` VARCHAR(100),
+  `buyer_address` TEXT,
+  
+  -- פרטי הרכישה
+  `purchase_type` ENUM('grave', 'plot', 'structure', 'service') NOT NULL,
+  `purchase_date` DATE NOT NULL,
+  `payment_method` ENUM('cash', 'check', 'credit', 'transfer', 'installments'),
+  `total_amount` DECIMAL(10,2),
+  `paid_amount` DECIMAL(10,2),
+  `installments_count` INT(3),
+  
+  -- מיקום הקבר/חלקה
+  `cemetery_id` INT(11),
+  `block_id` INT(11),
+  `section_id` INT(11),
+  `row_id` INT(11),
+  `grave_id` INT(11),
+  `plot_id` INT(11),
+  
+  -- פרטים נוספים
+  `contract_number` VARCHAR(100),
+  `notes` TEXT,
+  `special_conditions` TEXT,
+  
+  -- חתימות
+  `buyer_signature` TEXT,
+  `seller_signature` TEXT,
+  
+  -- מטה-דטה
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` INT(11),
+  `updated_by` INT(11),
+  
+  PRIMARY KEY (`id`),
+  INDEX `idx_form_uuid` (`form_uuid`),
+  INDEX `idx_buyer_id` (`buyer_id_number`),
+  INDEX `idx_purchase_date` (`purchase_date`),
+  FOREIGN KEY (`cemetery_id`) REFERENCES `cemeteries`(`id`),
+  FOREIGN KEY (`created_by`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+
+INSERT INTO `field_permissions`
+(`form_type`, `field_name`, `view_permission_levels`, `edit_permission_levels`, `is_required`)
+VALUES
+('purchase', 'cemetery_id',     '[2]', '[2]', TRUE),
+('purchase', 'block_id',        '[2]', '[2]', TRUE),
+('purchase', 'section_id',      '[2]', '[2]', TRUE),
+('purchase', 'row_id',          '[2]', '[2]', TRUE),
+('purchase', 'grave_id',        '[2]', '[2]', TRUE),
+('purchase', 'plot_id',         '[2]', '[2]', TRUE)
+;
