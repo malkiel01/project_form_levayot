@@ -1,4 +1,3 @@
-6666
 <?php
 // dashboard.php - דשבורד משולב משופר
 require_once 'config.php';
