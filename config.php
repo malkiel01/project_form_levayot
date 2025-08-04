@@ -66,7 +66,7 @@ define('LOGIN_URL', 'auth/login.php');
 define('LOGOUT_URL', 'auth/logout.php');
 
     // define('DASHBOARD_URL', SITE_URL . '/includes/dashboard.php');
-    define('DASHBOARD_URL', SITE_URL . '/includes/simple_dashboard.php');
+   define('DASHBOARD_URL', SITE_URL . '/includes/dashboard_light.php');
    define('DASHBOARD_FULL_URL', SITE_URL . '/includes/dashboard.php');
    define('DASHBOARD_DECEASED_URL', SITE_URL . '/includes/dashboard_deceased.php');
    define('DASHBOARD_PURCHASES_URL', SITE_URL . '/includes/dashboard_purchases.php');
