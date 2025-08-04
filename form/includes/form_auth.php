@@ -108,7 +108,7 @@ function handleFormData($formUuid, $userPermissionLevel) {
         
         $formUuid = generateUUID();
         $isNewForm = true;
-        header("Location: index.php?id=" . $formUuid);
+        header("Location: index_copy.php?id=" . $formUuid);
         exit;
     } else {
         // טעינת טופס קיים
