@@ -63,9 +63,9 @@ define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']);
 define('LOGIN_URL', 'auth/login.php');
 define('LOGOUT_URL', 'auth/logout.php');
 
-define('FORM_URL', 'form/index_copy.php');
-define('FORM_DECEASED_URL', 'form/index_copy.php');
-define('FORM_PURCHASE_URL', 'form/index_copy.php');
+define('FORM_URL', 'form/index.php');
+define('FORM_DECEASED_URL', 'form/index_deceased.php');
+define('FORM_PURCHASE_URL', 'form/index_purchase.php');
 
     define('DASHBOARD_URL', SITE_URL . '/includes/dashboard.php');
 //    define('DASHBOARD_URL', SITE_URL . '/includes/dashboard_light.php');
