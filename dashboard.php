@@ -525,5 +525,20 @@ Permission Level: <?= $_SESSION['permission_level'] ?? 'לא קיים' ?>
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/dashboard.js"></script>
+
+        <script>
+        // סימון התראה כנקראה
+        function markAsRead(notificationId) {
+            $.post('ajax/mark_notification_read.php', {
+                notification_id: notificationId,
+                csrf_token: '<?= $_SESSION['csrf_token'] ?>'
+            });
+        }
+
+        // רענון אוטומטי של הדשבורד כל 60 שניות
+        setTimeout(function() {
+            location.reload();
+        }, 60000);
+    </script>
 </body>
 </html>
