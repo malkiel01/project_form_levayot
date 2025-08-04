@@ -1,0 +1,156 @@
+/* dashboard-light.css - עיצוב קל וממוטב */
+
+/* משתנים בסיסיים */
+:root {
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #0dcaf0;
+    --dark-color: #212529;
+    --light-bg: #f8f9fa;
+    --border-radius: 8px;
+    --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* רקע כללי */
+body {
+    background-color: var(--light-bg);
+}
+
+/* כרטיסי סטטיסטיקה - ללא אנימציות */
+.stat-card {
+    background: white;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--box-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.stat-card .stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+/* כרטיסים צבעוניים */
+.stat-card.bg-primary { background-color: var(--primary-color) !important; }
+.stat-card.bg-success { background-color: var(--success-color) !important; }
+.stat-card.bg-warning { background-color: var(--warning-color) !important; }
+.stat-card.bg-info { background-color: var(--info-color) !important; }
+.stat-card.bg-danger { background-color: var(--danger-color) !important; }
+
+/* כותרת הדשבורד */
+.dashboard-header {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+    box-shadow: var(--box-shadow);
+}
+
+.dashboard-header h1 {
+    font-size: 1.75rem;
+    margin: 0;
+    color: var(--dark-color);
+}
+
+/* טבלאות */
+.table-responsive {
+    border-radius: var(--border-radius);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+    background-color: #f8f9fa;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* כפתורים */
+.btn {
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* כרטיסים */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.25rem;
+}
+
+/* תגי סטטוס */
+.badge {
+    padding: 0.35rem 0.65rem;
+    font-weight: 500;
+}
+
+/* תפריט */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* הסרת כל האנימציות המורכבות */
+@keyframes none {}
+
+/* מדיה קוורי למובייל */
+@media (max-width: 768px) {
+    .stat-card .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .table {
+        font-size: 0.875rem;
+    }
+}
+
+/* הדפסה */
+@media print {
+    .navbar, .btn, .quick-actions {
+        display: none !important;
+    }
+    
+    .stat-card {
+        break-inside: avoid;
+    }
+}
