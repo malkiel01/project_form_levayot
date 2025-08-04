@@ -1,6 +1,6 @@
 <?php
 // dashboard.php - דשבורד משולב משופר
-require_once 'config.php';
+require_once '../config.php';
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {

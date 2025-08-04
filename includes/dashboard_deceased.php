@@ -1,6 +1,6 @@
 <?php
 // dashboard_deceased.php - דשבורד נפטרים בלבד
-require_once 'config.php';
+require_once '../config.php';
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
