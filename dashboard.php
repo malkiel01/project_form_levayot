@@ -335,7 +335,100 @@ Permission Level: <?= $_SESSION['permission_level'] ?? 'לא קיים' ?>
         </div>
         <?php endif; ?>
 
-        ------------------
+
+            <!-- מודל התראות -->
+    <div class="modal fade" id="notificationsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">התראות</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <?php if (count($userNotifications) > 0): ?>
+                        <?php foreach ($userNotifications as $notification): ?>
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <?= htmlspecialchars($notification['message']) ?>
+                            <small class="d-block text-muted mt-1">
+                                <?= date('d/m/Y H:i', strtotime($notification['created_at'])) ?>
+                            </small>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" onclick="markAsRead(<?= $notification['id'] ?>)"></button>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="text-muted text-center">אין התראות חדשות</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <?php if ($userPermissionLevel >= 4 && isset($cemeteryStats)): ?>
+    <script>
+        // גרף עוגה - בתי עלמין
+        const cemeteryCtx = document.getElementById('cemeteryChart').getContext('2d');
+        const cemeteryChart = new Chart(cemeteryCtx, {
+            type: 'pie',
+            data: {
+                labels: <?= json_encode(array_column($cemeteryStats, 'name')) ?>,
+                datasets: [{
+                    data: <?= json_encode(array_column($cemeteryStats, 'count')) ?>,
+                    backgroundColor: [
+                        '#007bff',
+                        '#28a745',
+                        '#ffc107',
+                        '#dc3545',
+                        '#6c757d'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+
+        // גרף קווים - פעילות חודשית
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        const monthlyLabels = <?= json_encode(array_map(function($stat) {
+            $months = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+            return $months[$stat['month'] - 1] . ' ' . $stat['year'];
+        }, array_reverse($monthlyStats))) ?>;
+        
+        const monthlyChart = new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'מספר טפסים',
+                    data: <?= json_encode(array_column(array_reverse($monthlyStats), 'count')) ?>,
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+    <?php endif; ?>
+
+        ------------------------------------------------------------------------------------------------------------------
 
 
         <!-- טבלת טפסים אחרונים -->
