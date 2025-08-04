@@ -120,9 +120,7 @@ $userNotifications = $notifications->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>דשבורד - מערכת ניהול טפסים</title>
-    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"> -->
-        <!-- הוסף את השורות האלה לPWA -->
+    <!-- הוסף את השורות האלה לPWA -->
     <link rel="manifest" href="/project_form_levayot/manifest.json">
     <meta name="theme-color" content="#0d6efd">
     <link rel="apple-touch-icon" href="/project_form_levayot/icons/icon-192x192.png">
@@ -131,43 +129,7 @@ $userNotifications = $notifications->fetchAll();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/pwa-init.js?v=<?= time() ?>"></script>
-    <!-- <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .content-wrapper {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-top: 20px;
-        }
-        .stat-card {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .form-type-card {
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-        .form-type-card:hover {
-            border-color: #007bff;
-        }
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-top: 20px;
-        }
-    </style> -->
-    
+
     <style>
         body {
             background-color: #f8f9fa;
@@ -315,7 +277,7 @@ $userNotifications = $notifications->fetchAll();
                 <?php endforeach; ?>
             </div>
 
-                    <!-- כרטיסי סטטיסטיקה -->
+            <!-- כרטיסי סטטיסטיקה -->
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
                     <div class="card stat-card text-white bg-primary">
