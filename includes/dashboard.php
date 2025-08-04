@@ -400,7 +400,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                         <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">צפייה</span>
                                     </a>
                                 <?php else: ?>
-                                    <a href="../form/purchase_form.php?id=<?= $activity['form_uuid'] ?>" 
+                                    <a href="../form/<?= FORM_PURCHASE_URL ?>?id=<?= $activity['form_uuid'] ?>" 
                                        class="btn btn-sm action-btn btn-success-gradient">
                                         <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">צפייה</span>
                                     </a>

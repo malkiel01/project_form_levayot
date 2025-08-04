@@ -8,6 +8,9 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+// כלול פונקציות עזר
+require_once 'dashboard_functions.php';
+
 $db = getDbConnection();
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 
@@ -119,8 +122,7 @@ $recentDeceased = $stmt->fetchAll();
     <title>דשבורד נפטרים - מערכת קדישא</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link href="../css/dashboard-styles.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="../css/dashboard-styles-optimized.css" rel="stylesheet">
 </head>
 <body>
     <?php require_once 'nav.php'; ?>
@@ -132,12 +134,47 @@ $recentDeceased = $stmt->fetchAll();
             <p>ניהול וסטטיסטיקות טפסי נפטרים</p>
         </div>
 
+        <!-- בחירת תצוגה -->
+        <div class="text-center mb-4">
+            <div class="btn-group btn-group-sm" role="group">
+                <a href="dashboard.php" class="btn btn-outline-primary">
+                    <i class="fas fa-th"></i> <span class="d-none d-sm-inline">תצוגה</span> משולבת
+                </a>
+                <a href="dashboard_deceased.php" class="btn btn-primary active">
+                    <i class="fas fa-cross"></i> נפטרים<span class="d-none d-sm-inline"> בלבד</span>
+                </a>
+                <a href="dashboard_purchases.php" class="btn btn-outline-primary">
+                    <i class="fas fa-shopping-cart"></i> רכישות<span class="d-none d-sm-inline"> בלבד</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- כפתורי פעולה מהירה -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-2 justify-content-center">
+                    <a href="../form/form.php" class="btn btn-success action-btn flex-fill flex-sm-grow-0">
+                        <i class="fas fa-plus-circle"></i> הוספת נפטר חדש
+                    </a>
+                    <a href="../form/<?= FORM_DECEASED_URL ?>" class="btn btn-primary action-btn flex-fill flex-sm-grow-0">
+                        <i class="fas fa-calendar-plus"></i> הוספת לוויה
+                    </a>
+                    <a href="../search.php?type=deceased" class="btn btn-outline-primary action-btn flex-fill flex-sm-grow-0">
+                        <i class="fas fa-search"></i> חיפוש נפטר
+                    </a>
+                    <a href="../reports/daily_deceased.php" class="btn btn-outline-secondary action-btn flex-fill flex-sm-grow-0">
+                        <i class="fas fa-file-pdf"></i> דוח יומי
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- סטטיסטיקות ראשיות -->
         <div class="row mb-4">
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card primary-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-users"></i>
                         </div>
                         <h2 class="stat-value"><?= number_format($stats['total']) ?></h2>
@@ -146,10 +183,10 @@ $recentDeceased = $stmt->fetchAll();
                 </div>
             </div>
             
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card success-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-check-circle"></i>
                         </div>
                         <h2 class="stat-value"><?= number_format($stats['completed']) ?></h2>
@@ -158,10 +195,10 @@ $recentDeceased = $stmt->fetchAll();
                 </div>
             </div>
             
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card warning-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-hourglass-half"></i>
                         </div>
                         <h2 class="stat-value"><?= number_format($stats['in_progress']) ?></h2>
@@ -170,10 +207,10 @@ $recentDeceased = $stmt->fetchAll();
                 </div>
             </div>
             
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card info-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-calendar-day"></i>
                         </div>
                         <h2 class="stat-value"><?= number_format($stats['today']) ?></h2>
@@ -185,10 +222,10 @@ $recentDeceased = $stmt->fetchAll();
 
         <!-- סטטיסטיקות משניות -->
         <div class="row mb-4">
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card purple-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-praying-hands"></i>
                         </div>
                         <h2 class="stat-value"><?= number_format($stats['today_burials']) ?></h2>
@@ -197,10 +234,10 @@ $recentDeceased = $stmt->fetchAll();
                 </div>
             </div>
             
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card danger-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-file-alt"></i>
                         </div>
                         <h2 class="stat-value"><?= number_format($stats['draft']) ?></h2>
@@ -209,10 +246,10 @@ $recentDeceased = $stmt->fetchAll();
                 </div>
             </div>
             
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card primary-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-calendar-week"></i>
                         </div>
                         <h2 class="stat-value"><?= number_format($stats['this_week']) ?></h2>
@@ -221,10 +258,10 @@ $recentDeceased = $stmt->fetchAll();
                 </div>
             </div>
             
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-6 col-md-3 mb-3">
                 <div class="stat-card success-card">
                     <div class="card-body">
-                        <div class="stat-icon">
+                        <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-calendar-alt"></i>
                         </div>
                         <h2 class="stat-value"><?= number_format($stats['this_month']) ?></h2>
@@ -237,22 +274,28 @@ $recentDeceased = $stmt->fetchAll();
         <!-- גרפים -->
         <div class="row mb-4">
             <!-- גרף מגמה חודשית -->
-            <div class="col-lg-8 mb-3">
-                <div class="chart-container">
+            <div class="col-lg-8 col-12 mb-3">
+                <div class="chart-container" style="max-height: 400px;">
                     <div class="chart-header">
                         <h3 class="chart-title">מגמת רישום נפטרים - 6 חודשים אחרונים</h3>
                     </div>
-                    <canvas id="monthlyChart" height="100"></canvas>
+                    <div class="chart-placeholder" id="monthlyChartPlaceholder" style="height: 250px;">
+                        <p class="text-muted text-center py-5">הגרף יטען בעוד רגע...</p>
+                    </div>
+                    <canvas id="monthlyChart" style="display: none; max-height: 250px;"></canvas>
                 </div>
             </div>
             
             <!-- התפלגות בתי עלמין -->
-            <div class="col-lg-4 mb-3">
-                <div class="chart-container">
+            <div class="col-lg-4 col-12 mb-3">
+                <div class="chart-container" style="max-height: 400px;">
                     <div class="chart-header">
                         <h3 class="chart-title">התפלגות לפי בתי עלמין</h3>
                     </div>
-                    <canvas id="cemeteryChart" height="200"></canvas>
+                    <div class="chart-placeholder" id="cemeteryChartPlaceholder" style="height: 250px;">
+                        <p class="text-muted text-center py-5">הגרף יטען בעוד רגע...</p>
+                    </div>
+                    <canvas id="cemeteryChart" style="display: none; max-height: 250px;"></canvas>
                 </div>
             </div>
         </div>
@@ -266,9 +309,9 @@ $recentDeceased = $stmt->fetchAll();
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th>מספר טופס</th>
+                            <th class="d-none d-md-table-cell">מספר טופס</th>
                             <th>שם הנפטר</th>
-                            <th>בית עלמין</th>
+                            <th class="d-none d-sm-table-cell">בית עלמין</th>
                             <th>תאריך פטירה</th>
                             <th>סטטוס</th>
                             <th>פעולות</th>
@@ -277,9 +320,15 @@ $recentDeceased = $stmt->fetchAll();
                     <tbody>
                         <?php foreach ($recentDeceased as $deceased): ?>
                         <tr>
-                            <td><?= htmlspecialchars($deceased['form_uuid']) ?></td>
-                            <td><?= htmlspecialchars($deceased['deceased_name']) ?></td>
-                            <td><?= htmlspecialchars($deceased['cemetery_name'] ?? 'לא צוין') ?></td>
+                            <td class="d-none d-md-table-cell text-truncate" style="max-width: 100px;">
+                                <?= htmlspecialchars($deceased['form_uuid']) ?>
+                            </td>
+                            <td class="text-truncate" style="max-width: 150px;">
+                                <?= htmlspecialchars($deceased['deceased_name']) ?>
+                            </td>
+                            <td class="d-none d-sm-table-cell">
+                                <?= htmlspecialchars($deceased['cemetery_name'] ?? 'לא צוין') ?>
+                            </td>
                             <td><?= date('d/m/Y', strtotime($deceased['death_date'])) ?></td>
                             <td>
                                 <span class="status-badge status-<?= $deceased['status'] ?>">
@@ -287,9 +336,9 @@ $recentDeceased = $stmt->fetchAll();
                                 </span>
                             </td>
                             <td>
-                                <a href="form/form.php?id=<?= $deceased['form_uuid'] ?>" 
+                                <a href="../form/form.php?id=<?= $deceased['form_uuid'] ?>" 
                                    class="btn btn-sm action-btn btn-primary-gradient">
-                                    <i class="fas fa-eye"></i> צפייה
+                                    <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">צפייה</span>
                                 </a>
                             </td>
                         </tr>
@@ -298,98 +347,115 @@ $recentDeceased = $stmt->fetchAll();
                 </table>
             </div>
         </div>
-
-        <!-- כפתור הוספת נפטר -->
-        <div class="text-center mt-4">
-            <a href="form/form.php" class="btn btn-lg action-btn btn-success-gradient">
-                <i class="fas fa-plus-circle"></i> הוספת נפטר חדש
-            </a>
-        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- טעינת Chart.js אחרי שהדף נטען -->
     <script>
-    // גרף מגמה חודשית
-    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-    new Chart(monthlyCtx, {
-        type: 'line',
-        data: {
-            labels: <?= json_encode(array_column($monthlyData, 'month')) ?>,
-            datasets: [{
-                label: 'נפטרים',
-                data: <?= json_encode(array_column($monthlyData, 'count')) ?>,
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                borderWidth: 3,
-                tension: 0.3,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
+    // נתוני גרפים
+    const monthlyLabels = <?= json_encode(array_column($monthlyData, 'month')) ?>;
+    const monthlyData = <?= json_encode(array_column($monthlyData, 'count')) ?>;
+    const cemeteryLabels = <?= json_encode(array_column($cemeteryStats, 'name')) ?>;
+    const cemeteryData = <?= json_encode(array_column($cemeteryStats, 'count')) ?>;
+
+    // טעינת Chart.js אחרי שהדף מוכן
+    window.addEventListener('load', function() {
+        // הוסף את האנימציות רק אחרי טעינת הדף
+        document.body.classList.add('animations-ready');
+        
+        // טען את Chart.js
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+        script.onload = initCharts;
+        document.head.appendChild(script);
     });
 
-    // גרף בתי עלמין
-    const cemeteryCtx = document.getElementById('cemeteryChart').getContext('2d');
-    new Chart(cemeteryCtx, {
-        type: 'doughnut',
-        data: {
-            labels: <?= json_encode(array_column($cemeteryStats, 'name')) ?>,
-            datasets: [{
-                data: <?= json_encode(array_column($cemeteryStats, 'count')) ?>,
-                backgroundColor: [
-                    '#667eea',
-                    '#764ba2',
-                    '#84fab0',
-                    '#8fd3f4',
-                    '#fa709a',
-                    '#fee140'
-                ],
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        font: {
-                            size: 12
+    function initCharts() {
+        // הסתר placeholders והצג canvas
+        document.getElementById('monthlyChartPlaceholder').style.display = 'none';
+        document.getElementById('cemeteryChartPlaceholder').style.display = 'none';
+        document.getElementById('monthlyChart').style.display = 'block';
+        document.getElementById('cemeteryChart').style.display = 'block';
+
+        // גרף מגמה חודשית
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'נפטרים',
+                    data: monthlyData,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
                         }
                     }
                 }
             }
-        }
-    });
+        });
 
-    // פונקציית תרגום סטטוס
-    function translateStatus(status) {
-        const translations = {
-            'draft': 'טיוטה',
-            'in_progress': 'בתהליך',
-            'completed': 'הושלם',
-            'archived': 'בארכיון'
-        };
-        return translations[status] || status;
+        // גרף בתי עלמין
+        const cemeteryCtx = document.getElementById('cemeteryChart').getContext('2d');
+        new Chart(cemeteryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: cemeteryLabels,
+                datasets: [{
+                    data: cemeteryData,
+                    backgroundColor: [
+                        '#667eea',
+                        '#764ba2',
+                        '#84fab0',
+                        '#8fd3f4',
+                        '#fa709a',
+                        '#fee140'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000
+                },
+                plugins: {
+                    legend: {
+                        display: window.innerWidth > 768,
+                        position: 'bottom',
+                        labels: {
+                            padding: 10,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
     </script>
 </body>
