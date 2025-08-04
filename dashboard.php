@@ -317,6 +317,27 @@ Permission Level: <?= $_SESSION['permission_level'] ?? 'לא קיים' ?>
             </div>
         </div>
 
+                <?php if ($userPermissionLevel >= 4): ?>
+        <!-- גרף קווים - פעילות חודשית -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-line"></i> פעילות חודשית</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="monthlyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        ------------------
+
+
         <!-- טבלת טפסים אחרונים -->
         <div class="card">
             <div class="card-header bg-primary text-white">
@@ -402,7 +423,7 @@ Permission Level: <?= $_SESSION['permission_level'] ?? 'לא קיים' ?>
                     </table>
                 </div>
                 <?php else: ?>
-                <p class="text-center text-muted">אין טפסים להצגה</p>
+                <!-- <p class="text-center text-muted">אין טפסים להצגה</p> -->
                 <?php endif; ?>
             </div>
         </div>
