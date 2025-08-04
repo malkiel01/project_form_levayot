@@ -224,6 +224,7 @@ $userNotifications = $notifications->fetchAll();
             </h1>
             
             <!-- כרטיסי סוגי טפסים -->
+             <!-- מסכם ראשי -->
             <div class="row mb-4">
                 <?php foreach ($formTypes as $type): ?>
                 <div class="col-md-6 mb-3">
@@ -258,6 +259,46 @@ $userNotifications = $notifications->fetchAll();
                     </div>
                 </div>
                 <?php endforeach; ?>
+            </div>
+
+                    <!-- כרטיסי סטטיסטיקה -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card stat-card text-white bg-primary">
+                        <div class="card-body position-relative">
+                            <i class="fas fa-file-alt stat-icon"></i>
+                            <h5 class="card-title">סה"כ טפסים</h5>
+                            <h2 class="mb-0"><?= number_format($stats['total_forms']) ?></h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-white bg-success">
+                        <div class="card-body position-relative">
+                            <i class="fas fa-check-circle stat-icon"></i>
+                            <h5 class="card-title">טפסים שהושלמו</h5>
+                            <h2 class="mb-0"><?= number_format($stats['completed_forms']) ?></h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-white bg-warning">
+                        <div class="card-body position-relative">
+                            <i class="fas fa-hourglass-half stat-icon"></i>
+                            <h5 class="card-title">בתהליך</h5>
+                            <h2 class="mb-0"><?= number_format($stats['in_progress_forms']) ?></h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-white bg-info">
+                        <div class="card-body position-relative">
+                            <i class="fas fa-calendar-day stat-icon"></i>
+                            <h5 class="card-title">טפסים היום</h5>
+                            <h2 class="mb-0"><?= number_format($stats['today_forms']) ?></h2>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- סטטיסטיקות כלליות - טפסי נפטרים -->
