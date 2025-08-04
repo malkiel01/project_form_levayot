@@ -115,8 +115,17 @@ $userNotifications = $notifications->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>דשבורד - מערכת ניהול טפסים</title>
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"> -->
+        <!-- הוסף את השורות האלה לPWA -->
+    <link rel="manifest" href="/project_form_levayot/manifest.json">
+    <meta name="theme-color" content="#0d6efd">
+    <link rel="apple-touch-icon" href="/project_form_levayot/icons/icon-192x192.png">
+    <!-- סוף הוספות PWA -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/pwa-init.js?v=<?= time() ?>"></script>
     <!-- <style>
         body {
             background-color: #f8f9fa;
