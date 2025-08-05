@@ -62,6 +62,7 @@ define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']);
 // לינקים וקישורים
 define('LOGIN_URL', 'auth/login.php');
 define('LOGOUT_URL', 'auth/logout.php');
+define('LOGIN_SITE_URL', SITE_URL .  'auth/login.php');
 
 define('FORM_URL', 'form/index.php');
 define('FORM_DECEASED_URL', 'form/index_deceased.php');

@@ -21,13 +21,13 @@ function handlePurchaseFormAuth() {
             $viewOnly = ($linkPermissions === 'view');
             $formUuid = $linkResult['form_uuid'];
         } else {
-            header("Location: ../login.php?error=invalid_link");
+            header("Location: " . LOGIN_SITE_URL ."?error=invalid_link");
             exit;
         }
     } else {
         // בדיקת הרשאות משתמש רגיל
         if (!isset($_SESSION['user_id'])) {
-            header("Location: ../login.php");
+            header('Location: ' . LOGIN_SITE_URL);
             exit;
         }
         
