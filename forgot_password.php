@@ -5,7 +5,7 @@ require_once 'config.php';
 
 // אם המשתמש כבר מחובר
 if (isset($_SESSION['user_id'])) {
-    header('Location: dashboard.php');
+    header('Location: ' . DASHBOARD_FULL_URL);
     exit;
 }
 

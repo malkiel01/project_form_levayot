@@ -117,7 +117,7 @@ if ($formType === 'all') {
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="dashboard.php">
+            <a class="navbar-brand" href="<?= DASHBOARD_FULL_URL ?>">
                 <i class="fas fa-home"></i> מערכת ניהול נפטרים
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -126,7 +126,7 @@ if ($formType === 'all') {
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="dashboard.php">
+                        <a class="nav-link" href="<?= DASHBOARD_FULL_URL ?>">
                             <i class="fas fa-tachometer-alt"></i> דשבורד
                         </a>
                     </li>

@@ -178,7 +178,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
         <!-- בחירת תצוגה -->
         <div class="text-center mb-4">
             <div class="btn-group" role="group">
-                <a href="dashboard.php" class="btn btn-primary active">
+                <a href="<?= DASHBOARD_FULL_URL ?>" class="btn btn-primary active">
                     <i class="fas fa-th"></i> תצוגה משולבת
                 </a>
                 <a href="dashboard_deceased.php" class="btn btn-outline-primary">

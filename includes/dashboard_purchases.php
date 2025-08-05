@@ -175,7 +175,7 @@ $recentPurchases = $stmt->fetchAll();
         <!-- בחירת תצוגה -->
         <div class="text-center mb-4">
             <div class="btn-group btn-group-sm" role="group">
-                <a href="dashboard.php" class="btn btn-outline-primary">
+                <a href="<?= DASHBOARD_FULL_URL ?>" class="btn btn-outline-primary">
                     <i class="fas fa-th"></i> <span class="d-none d-sm-inline">תצוגה</span> משולבת
                 </a>
                 <a href="dashboard_deceased.php" class="btn btn-outline-primary">

@@ -130,7 +130,7 @@ if ($formData['cemetery_id']) {
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary no-print">
         <div class="container-fluid">
-            <a class="navbar-brand" href="dashboard.php">
+            <a class="navbar-brand" href="<?= DASHBOARD_FULL_URL ?>">
                 <i class="fas fa-home"></i> מערכת ניהול נפטרים
             </a>
             <ul class="navbar-nav ms-auto">

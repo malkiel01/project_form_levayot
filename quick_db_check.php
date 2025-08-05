@@ -472,7 +472,7 @@ echo htmlspecialchars($sql);
         
         <div style="margin-top: 30px;">
             <a href="database_analyzer.php" class="btn">🔍 בדיקה מלאה של מסד הנתונים</a>
-            <a href="dashboard.php" class="btn btn-success">🏠 חזרה לדשבורד</a>
+            <a href="<?= DASHBOARD_FULL_URL ?>" class="btn btn-success">🏠 חזרה לדשבורד</a>
         </div>
         
     <?php

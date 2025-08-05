@@ -4,7 +4,7 @@ session_start();
 
 // אם המשתמש מחובר, העבר לדשבורד
 if (isset($_SESSION['user_id'])) {
-    header('Location: dashboard.php');
+    header('Location: ' . DASHBOARD_FULL_URL);
     exit;
 }
 ?>

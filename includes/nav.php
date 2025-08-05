@@ -24,7 +24,7 @@ $username = $_SESSION['username'] ?? 'משתמש';
                         <i class="fas fa-chart-line"></i> דשבורדים
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="dashboard.php">
+                        <li><a class="dropdown-item" href="<?= DASHBOARD_FULL_URL ?>">
                             <i class="fas fa-th"></i> דשבורד משולב
                         </a></li>
                         <li><a class="dropdown-item" href="dashboard_deceased.php">
