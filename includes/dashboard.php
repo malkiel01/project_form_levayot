@@ -222,6 +222,19 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                 </a>
             </div>
         </div>
+        <div class="view-selector-container">
+            <div class="btn-group" role="group">
+                <a href="dashboard.php" class="btn btn-primary active">
+                    <i class="fas fa-th"></i> <span class="d-none d-sm-inline">תצוגה</span> משולבת
+                </a>
+                <a href="dashboard_deceased.php" class="btn btn-outline-primary">
+                    <i class="fas fa-cross"></i> נפטרים<span class="d-none d-sm-inline"> בלבד</span>
+                </a>
+                <a href="dashboard_purchases.php" class="btn btn-outline-primary">
+                    <i class="fas fa-shopping-cart"></i> רכישות<span class="d-none d-sm-inline"> בלבד</span>
+                </a>
+            </div>
+        </div>
 
         <!-- כרטיסי סוגי טפסים -->
         <div class="row mb-4">
