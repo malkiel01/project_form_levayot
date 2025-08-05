@@ -405,16 +405,6 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                             <th>שם</th>
                             <th class="d-none d-md-table-cell">מיקום</th>
                             <th>תאריך</th>
-                            <th>סטטוס</th>
-                            <th>פעולות</th>
-                        </tr>
-                    </thead>
-                    <thead>
-                        <tr>
-                            <th>סוג</th>
-                            <th>שם</th>
-                            <th class="d-none d-md-table-cell">מיקום</th>
-                            <th>תאריך</th>
                             <th class="d-none d-sm-table-cell">נוצר ע"י</th>
                             <th>סטטוס</th>
                             <th>פעולות</th>
