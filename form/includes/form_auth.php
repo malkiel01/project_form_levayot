@@ -243,7 +243,7 @@ function showAccessDenied() {
             <div class="alert alert-danger text-center">
                 <h4>גישה נדחתה</h4>
                 <p>אין לך הרשאה לצפות בטופס זה.</p>
-                <a href="../dashboard.php" class="btn btn-primary">חזור לדשבורד</a>
+                <a href="<?= DASHBOARD_FULL_URL ?>" class="btn btn-primary">חזור לדשבורד</a>
             </div>
         </div>
     </body>
@@ -266,7 +266,7 @@ function showInvalidLink() {
             <div class="alert alert-warning text-center">
                 <h4>קישור לא תקף</h4>
                 <p>הקישור שביקשת אינו תקף או שפג תוקפו.</p>
-                <a href="../dashboard.php" class="btn btn-primary">עבור לדשבורד</a>
+                <a href="<?= DASHBOARD_FULL_URL ?>" class="btn btn-primary">עבור לדשבורד</a>
             </div>
         </div>
     </body>

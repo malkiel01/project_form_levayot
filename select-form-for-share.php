@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_uuid'])) {
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/dashboard.php">
+            <a class="navbar-brand" href="<?= DASHBOARD_FULL_URL ?>">
                 <i class="fas fa-home"></i> מערכת ניהול נפטרים
             </a>
         </div>
