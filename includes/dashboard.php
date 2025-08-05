@@ -399,6 +399,66 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                        class="btn btn-sm action-btn btn-primary-gradient">
                                         <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">צפייה</span>
                                     </a>
+<!--  -->
+<!-- <td> -->
+    <div class="btn-group btn-group-sm" role="group">
+        <?php if ($activity['type'] === 'deceased'): ?>
+            <!-- צפייה -->
+            <a href="../form/index_deceased.php?id=<?= $activity['form_uuid'] ?>&view=1" 
+               class="btn btn-outline-primary" 
+               title="צפייה">
+                <i class="fas fa-eye"></i>
+            </a>
+            
+            <!-- עריכה -->
+            <a href="../form/index_deceased.php?id=<?= $activity['form_uuid'] ?>" 
+               class="btn btn-outline-warning" 
+               title="עריכה">
+                <i class="fas fa-edit"></i>
+            </a>
+            
+            <!-- מחיקה (רק למנהלים) -->
+            <?php if ($userPermissionLevel >= 4): ?>
+                <button type="button" 
+                        class="btn btn-outline-danger delete-form-btn" 
+                        data-form-uuid="<?= $activity['form_uuid'] ?>"
+                        data-form-type="deceased"
+                        data-form-name="<?= htmlspecialchars($activity['name']) ?>"
+                        title="מחיקה">
+                    <i class="fas fa-trash"></i>
+                </button>
+            <?php endif; ?>
+            
+        <?php else: ?>
+            <!-- צפייה -->
+            <a href="../form/purchase_form.php?uuid=<?= $activity['form_uuid'] ?>&view=1" 
+               class="btn btn-outline-success" 
+               title="צפייה">
+                <i class="fas fa-eye"></i>
+            </a>
+            
+            <!-- עריכה -->
+            <a href="../form/purchase_form.php?uuid=<?= $activity['form_uuid'] ?>" 
+               class="btn btn-outline-warning" 
+               title="עריכה">
+                <i class="fas fa-edit"></i>
+            </a>
+            
+            <!-- מחיקה (רק למנהלים) -->
+            <?php if ($userPermissionLevel >= 4): ?>
+                <button type="button" 
+                        class="btn btn-outline-danger delete-form-btn" 
+                        data-form-uuid="<?= $activity['form_uuid'] ?>"
+                        data-form-type="purchase"
+                        data-form-name="<?= htmlspecialchars($activity['name']) ?>"
+                        title="מחיקה">
+                    <i class="fas fa-trash"></i>
+                </button>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+<!-- </td> -->
+<!--  -->
                                 <?php else: ?>
                                     <a href="../form/<?= FORM_PURCHASE_URL ?>?id=<?= $activity['form_uuid'] ?>" 
                                        class="btn btn-sm action-btn btn-success-gradient">
