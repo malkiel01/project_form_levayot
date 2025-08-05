@@ -191,6 +191,29 @@ body {
     }
 }
 
+
+
+
+
+
+
+/* תיקון רוחב לטקסט בכרטיסי טופס */
+.form-type-card .text-center.text-md-start {
+    min-width: 200px; /* רוחב מינימלי למניעת שבירת טקסט */
+}
+
+/* או לחלופין - מניעת שבירת שורות לטקסט הספציפי */
+.form-type-card p.text-muted {
+    white-space: nowrap; /* מניעת שבירת שורות */
+}
+
+/* אם עדיין נשבר במסכים בינוניים, אפשר להגדיל את הרוחב */
+@media (min-width: 768px) and (max-width: 991px) {
+    .form-type-card .text-center.text-md-start {
+        min-width: 250px;
+    }
+}
+
 /* כרטיסי סטטיסטיקה - ללא אנימציות בהתחלה */
 .stat-card {
     border-radius: 20px;
