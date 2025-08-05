@@ -4,13 +4,9 @@
 require_once '../config.php';
 require_once '../PurchaseForm.php';
 require_once 'includes/form_auth.php';
-
-// כלול את הקבצים הספציפיים לטופס רכישות
-$includesPath = __DIR__ . '/includes/';
-require_once $includesPath . 'purchase_form_header.php';
-require_once $includesPath . 'purchase_form_sections.php';
-require_once $includesPath . 'purchase_form_scripts.php';
-require_once $includesPath . 'purchase_form_helpers.php';
+require_once 'includes/purchase_form_header.php';
+require_once 'includes/purchase_form_sections.php';
+require_once 'includes/purchase_form_scripts.php';
 
 // טיפול באימות ובהרשאות
 $authResult = handlePurchaseFormAuth();
