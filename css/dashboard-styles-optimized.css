@@ -172,6 +172,7 @@ body {
     margin-right: 0; /* ללא רווח מימין */
     margin-inline-start: auto; /* תמיכה טובה יותר ב-RTL */
     margin-inline-end: 0;
+    margin-top: 1.5rem !important; /* רווח מהתוכן שמעל */
 }
 
 /* במסכי טאבלט - כפתור יותר רחב */
@@ -179,6 +180,7 @@ body {
     .form-type-card .action-btn {
         max-width: 200px;
         min-width: 160px;
+        margin-top: 1.25rem !important; /* רווח קצת יותר קטן בטאבלט */
     }
 }
 
@@ -192,6 +194,7 @@ body {
         margin-right: 0;
         margin-inline-start: 0;
         margin-inline-end: 0;
+        margin-top: 1rem !important; /* רווח יותר קטן במובייל */
     }
 }
 
