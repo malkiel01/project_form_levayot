@@ -75,7 +75,7 @@ function handlePurchaseFormData($formUuid, $userPermissionLevel) {
         if ($result['success']) {
             $formUuid = $result['formUuid'];
             // הפניה לעמוד הטופס עם ה-UUID החדש
-            header("Location: purchase_form.php?uuid=" . $formUuid);
+            header("Location: index_purchase.php?uuid=" . $formUuid);
             exit;
         } else {
             $errorMessage = $result['error'];
@@ -192,7 +192,7 @@ function handlePurchaseFormSubmit($form, $formUuid, $isNewForm, $userPermissionL
         return [
             'success' => true,
             'message' => $result['message'],
-            'redirect' => "purchase_form.php?uuid=$formUuid"
+            'redirect' => "index_purchase.php?uuid=$formUuid"
         ];
     }
     
@@ -282,7 +282,7 @@ function sendPurchaseFormNotifications($formUuid, $event) {
             <p><strong>תאריך הגשה:</strong> " . date('d/m/Y H:i') . "</p>
             <p><strong>הוגש על ידי:</strong> {$formData['submitter_name']}</p>
             <br>
-            <p><a href='" . SITE_URL . "/form/purchase_form.php?uuid=$formUuid'>לחץ כאן לצפייה בטופס</a></p>
+            <p><a href='" . SITE_URL . "/form/index_purchase.php?uuid=$formUuid'>לחץ כאן לצפייה בטופס</a></p>
         ";
         
         // שליחת אימיילים למנהלים

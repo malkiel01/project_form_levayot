@@ -222,7 +222,7 @@ function renderPurchaseFormScripts() {
         
         // תצוגה מקדימה
         $('#previewForm').on('click', function() {
-            window.open(`purchase_form.php?uuid=${formConfig.formUuid}&preview=1`, '_blank');
+            window.open(`index_purchase.php?uuid=${formConfig.formUuid}&preview=1`, '_blank');
         });
         
         // שיתוף טופס

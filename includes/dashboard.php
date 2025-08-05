@@ -251,7 +251,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                     <span class="counter-label">היום</span>
                                 </div>
                             </div>
-                            <a href="../form/purchase_form.php" class="btn btn-success action-btn mt-3 w-100" onclick="event.stopPropagation();">
+                            <a href="../form/index_purchase.php" class="btn btn-success action-btn mt-3 w-100" onclick="event.stopPropagation();">
                                 <i class="fas fa-plus"></i> רכישה חדשה
                             </a>
                         </div>

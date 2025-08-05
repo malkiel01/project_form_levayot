@@ -70,7 +70,7 @@ define('LOGIN_SITE_URL', SITE_URL .  'auth/login.php');
 
 define('FORM_URL', 'form/index_deceased.php');
 define('FORM_DECEASED_URL', 'form/index_deceased.php');
-define('FORM_PURCHASE_URL', 'form/purchase_form.php');
+define('FORM_PURCHASE_URL', 'form/index_purchase.php');
 
     define('DASHBOARD_URL', SITE_URL . '/includes/dashboard.php');
 //    define('DASHBOARD_URL', SITE_URL . '/includes/dashboard_light.php');

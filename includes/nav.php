@@ -45,13 +45,7 @@ $username = $_SESSION['username'] ?? 'משתמש';
                         <li><a class="dropdown-item" href="../form/index_deceased.php">
                             <i class="fas fa-plus"></i> טופס נפטר חדש
                         </a></li>
-                        <li><a class="dropdown-item" href="../form/purchase_form.php">
-                            <i class="fas fa-plus"></i> טופס רכישה חדש
-                        </a></li>
-                        <li><a class="dropdown-item" href="../form/form.php">
-                            <i class="fas fa-plus"></i> טופס נפטר חדש
-                        </a></li>
-                        <li><a class="dropdown-item" href="../form/purchase_form.php">
+                        <li><a class="dropdown-item" href="../form/index_purchase.php">
                             <i class="fas fa-plus"></i> טופס רכישה חדש
                         </a></li>
                         <li><hr class="dropdown-divider"></li>

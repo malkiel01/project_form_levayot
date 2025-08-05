@@ -1,5 +1,5 @@
 <?php
-// form/purchase_form.php - הקובץ הראשי של טופס רכישות
+// form/index_purchase.php - הקובץ הראשי של טופס רכישות
 
 require_once '../config.php';
 

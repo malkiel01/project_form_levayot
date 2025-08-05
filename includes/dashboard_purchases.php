@@ -191,7 +191,7 @@ $recentPurchases = $stmt->fetchAll();
         <div class="row mb-4">
             <div class="col-12">
                 <div class="d-flex flex-wrap gap-2 justify-content-center">
-                    <a href="../form/purchase_form.php" class="btn btn-success action-btn flex-fill flex-sm-grow-0">
+                    <a href="../form/index_purchase.php" class="btn btn-success action-btn flex-fill flex-sm-grow-0">
                         <i class="fas fa-plus-circle"></i> רכישה חדשה
                     </a>
                     <a href="../search.php?type=purchase" class="btn btn-outline-success action-btn flex-fill flex-sm-grow-0">
@@ -376,7 +376,7 @@ $recentPurchases = $stmt->fetchAll();
                                 </span>
                             </td>
                             <td>
-                                <a href="../form/purchase_form.php?id=<?= $purchase['form_uuid'] ?>" 
+                                <a href="../form/index_purchase.php?id=<?= $purchase['form_uuid'] ?>" 
                                    class="btn btn-sm action-btn btn-success-gradient">
                                     <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">צפייה</span>
                                 </a>

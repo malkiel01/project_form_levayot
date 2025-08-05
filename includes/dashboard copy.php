@@ -252,7 +252,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                     <span class="counter-label">היום</span>
                                 </div>
                             </div>
-                            <a href="../form/purchase_form.php" class="btn btn-success action-btn mt-3">
+                            <a href="../form/index_purchase.php" class="btn btn-success action-btn mt-3">
                                 <i class="fas fa-plus"></i> רכישה חדשה
                             </a>
                         </div>
@@ -395,7 +395,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                         <i class="fas fa-eye"></i> צפייה
                                     </a>
                                 <?php else: ?>
-                                    <a href="../form/purchase_form.php?id=<?= $activity['form_uuid'] ?>" 
+                                    <a href="../form/index_purchase.php?id=<?= $activity['form_uuid'] ?>" 
                                        class="btn btn-sm action-btn btn-success-gradient">
                                         <i class="fas fa-eye"></i> צפייה
                                     </a>
