@@ -385,19 +385,138 @@ body.animations-ready .stat-card:nth-child(4) { animation-delay: 0.25s; }
     max-height: 180px !important;
 }
 
+/* ------------------- */
+
+/* כפתורי פעולה מעוצבים */
+.btn-view-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-view-gradient:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-edit-gradient {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-edit-gradient:hover {
+    background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+}
+
+.btn-delete-gradient {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-delete-gradient:hover {
+    background: linear-gradient(135deg, #ee5a6f 0%, #ff6b6b 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+/* קבוצת כפתורים */
 .btn-group-sm .btn {
-    padding: 0.25rem 0.5rem;
+    padding: 0.4rem 0.6rem;
     font-size: 0.875rem;
+    border-radius: 5px;
+    margin: 0 2px;
 }
 
-.delete-form-btn {
-    cursor: pointer;
+.btn-group {
+    display: flex;
+    gap: 4px;
 }
 
-.btn-group .btn:not(:last-child) {
-    border-left: 0;
+/* טבלה רספונסיבית */
+@media (max-width: 768px) {
+    .recent-table .table {
+        font-size: 0.85rem;
+    }
+    
+    .recent-table th,
+    .recent-table td {
+        padding: 0.5rem;
+    }
+    
+    /* הסתרת עמודת מיקום במובייל */
+    .recent-table th:nth-child(3),
+    .recent-table td:nth-child(3) {
+        display: none;
+    }
+    
+    /* כפתורים קטנים יותר במובייל */
+    .btn-group-sm .btn {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .btn-group-sm .btn i {
+        font-size: 0.875rem;
+    }
 }
 
+@media (max-width: 576px) {
+    /* עיצוב מיוחד למובייל קטן */
+    .recent-table {
+        font-size: 0.8rem;
+    }
+    
+    /* שם מקוצר יותר */
+    td .text-truncate {
+        max-width: 100px !important;
+    }
+    
+    /* תאריך קצר */
+    .recent-table td small {
+        font-size: 0.75rem;
+    }
+    
+    /* סטטוס קטן יותר */
+    .status-badge {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    /* כפתורים רק עם אייקונים */
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.4rem;
+    }
+}
+
+/* אנימציות לכפתורים */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+    }
+}
+
+.btn-view-gradient:focus {
+    animation: pulse 1.5s infinite;
+}
+
+/* ------------------- */
 
 /* תפריט צד למובייל */
 @media (max-width: 768px) {
