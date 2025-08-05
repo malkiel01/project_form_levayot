@@ -8,11 +8,11 @@
 
     // אם המשתמש כבר מחובר
     if (isset($_SESSION['user_id'])) {
-        $redirect = $_GET['redirect'] ?? DASHBOARD_URL;
+        $redirect = $_GET['redirect'] ?? DASHBOARD_FULL_URL;
         if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
             $redirect = basename($redirect);
             if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
-                $redirect = DASHBOARD_URL;
+                $redirect = DASHBOARD_FULL_URL;
             }
         }
         header('Location: ' . ltrim($redirect, '/'));
@@ -21,7 +21,7 @@
 
     $error = '';
     $success = '';
-    $redirect = $_GET['redirect'] ?? DASHBOARD_URL;
+    $redirect = $_GET['redirect'] ?? DASHBOARD_FULL_URL;
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
         error_log("===== LOGIN ATTEMPT =====");
@@ -35,7 +35,7 @@
         
         $username = sanitizeInput($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
-        $redirect = sanitizeInput($_POST['redirect'] ?? DASHBOARD_URL);
+        $redirect = sanitizeInput($_POST['redirect'] ?? DASHBOARD_FULL_URL);
 
         error_log("Username entered: $username");
         error_log("Password entered: [$password] (len=" . strlen($password) . ")");
@@ -123,7 +123,7 @@
                             if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
                                 $redirect = basename($redirect);
                                 if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
-                                    $redirect = DASHBOARD_URL;
+                                    $redirect = DASHBOARD_FULL_URL;
                                 }
                             }
                             header('Location: ' . ltrim($redirect, '/'));
@@ -356,7 +356,7 @@
                 <p class="text-muted">v2</p>
             </div>
             
-            <?php if ($redirect !== DASHBOARD_URL): ?>
+            <?php if ($redirect !== DASHBOARD_FULL_URL): ?>
                 <div class="redirect-info">
                     <i class="fas fa-info-circle"></i>
                     <strong>הודעה:</strong> תועבר לטופס לאחר ההתחברות
@@ -514,7 +514,7 @@
                     
                     if (data.success) {
                         // הצלחה - הפנה למיקום המבוקש
-                        window.location.href = data.redirect || '<?= DASHBOARD_URL ?>';
+                        window.location.href = data.redirect || '<?= DASHBOARD_FULL_URL ?>';
                     } else {
                         // הצג הודעת שגיאה
                         showGoogleError(data.message || 'שגיאה בהתחברות עם Google');

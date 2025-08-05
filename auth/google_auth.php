@@ -28,7 +28,7 @@ try {
     
     // אימות הטוקן מול Google
     $id_token = $data['credential'];
-    $redirect = $data['redirect'] ?? DASHBOARD_URL;
+    $redirect = $data['redirect'] ?? DASHBOARD_FULL_URL;
     
     // URL לאימות
     $verify_url = 'https://oauth2.googleapis.com/tokeninfo?id_token=' . $id_token;

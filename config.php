@@ -68,11 +68,9 @@ define('FORM_URL', 'form/index_deceased.php');
 define('FORM_DECEASED_URL', 'form/index_deceased.php');
 define('FORM_PURCHASE_URL', 'form/index_purchase.php');
 
-    define('DASHBOARD_URL', SITE_URL . '/includes/dashboard.php');
-//    define('DASHBOARD_URL', SITE_URL . '/includes/dashboard_light.php');
-   define('DASHBOARD_FULL_URL', SITE_URL . '/includes/dashboard.php');
-   define('DASHBOARD_DECEASED_URL', SITE_URL . '/includes/dashboard_deceased.php');
-   define('DASHBOARD_PURCHASES_URL', SITE_URL . '/includes/dashboard_purchases.php');
+define('DASHBOARD_FULL_URL', SITE_URL . '/includes/dashboard.php');
+define('DASHBOARD_DECEASED_URL', SITE_URL . '/includes/dashboard_deceased.php');
+define('DASHBOARD_PURCHASES_URL', SITE_URL . '/includes/dashboard_purchases.php');
 
 
 define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip', 'rar']);
