@@ -1,5 +1,5 @@
 <?php
-// form/index.php - הקובץ הראשי של הטופס
+// form/index_deceased.php - הקובץ הראשי של הטופס
 
 require_once '../config.php';
 require_once '../DeceasedForm.php';
