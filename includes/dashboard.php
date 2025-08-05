@@ -218,10 +218,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                 </div>
                             </div>
                             <a href="../<?= FORM_DECEASED_URL ?>" class="btn btn-primary action-btn mt-3 w-100" onclick="event.stopPropagation();">
-                                <i class="fas fa-plus"></i> טו2ס חדש
-                            </a>
-                            <a href="../<?= FORM_DECEASED_URL ?>" class="btn btn-primary action-btn mt-3 w-100" onclick="event.stopPropagation();">
-                                <i class="fas fa-plus"></i> <?= "../" . FORM_DECEASED_URL ?>
+                                <i class="fas fa-plus"></i> טופס חדש
                             </a>
                         </div>
                     </div>

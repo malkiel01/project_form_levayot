@@ -208,7 +208,7 @@ function handleFormSubmit($form, $formUuid, $isNewForm, $userPermissionLevel) {
             if ($newFormId) {
                 $_SESSION['form_saved_message'] = 'הטופס נוצר בהצלחה!';
                 $result['success'] = true;
-                $result['redirect'] = "index.php?id={$formUuid}&saved=1";
+                $result['redirect'] = "index_deceased.php?id={$formUuid}&saved=1";
             } else {
                 $result['message'] = 'שגיאה ביצירת הטופס';
             }
