@@ -4,7 +4,7 @@
 require_once '../config.php';
 require_once '../PurchaseForm.php';
 require_once 'includes/form_auth.php';
-require_once 'includes/purchase_form_header.php';
+require_once 'form/includes/purchase_form_header.php';
 require_once 'includes/purchase_form_sections.php';
 require_once 'includes/purchase_form_scripts.php';
 
