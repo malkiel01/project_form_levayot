@@ -4,53 +4,53 @@
 require_once '../config.php';
 require_once '../PurchaseForm.php';
 require_once 'includes/form_auth.php';
-// require_once 'includes/purchase_form_headers.php';
-// require_once 'includes/purchase_form_sections.php';
-// require_once 'includes/purchase_form_scripts.php';
+require_once 'includes/purchase_form_headers.php';
+require_once 'includes/purchase_form_sections.php';
+require_once 'includes/purchase_form_scripts.php';
 
-// // טיפול באימות ובהרשאות
-// $authResult = handlePurchaseFormAuth();
-// extract($authResult); // מחלץ: $isLinkAccess, $linkPermissions, $viewOnly, $formUuid, $userPermissionLevel
+// טיפול באימות ובהרשאות
+$authResult = handlePurchaseFormAuth();
+extract($authResult); // מחלץ: $isLinkAccess, $linkPermissions, $viewOnly, $formUuid, $userPermissionLevel
 
-// // טיפול בנתוני הטופס
-// $formHandler = handlePurchaseFormData($formUuid, $userPermissionLevel);
-// extract($formHandler); // מחלץ: $isNewForm, $formData, $form, $successMessage, $errorMessage, $errors
+// טיפול בנתוני הטופס
+$formHandler = handlePurchaseFormData($formUuid, $userPermissionLevel);
+extract($formHandler); // מחלץ: $isNewForm, $formData, $form, $successMessage, $errorMessage, $errors
 
-// // קבלת נתוני עזר
-// $formHelpers = getPurchaseFormHelpers($form, $formData, $userPermissionLevel);
-// extract($formHelpers); // מחלץ: $requiredFields, $cemeteries, $blocks, $sections, $rows, $graves, $plots, $paymentMethods, $purchaseTypes
+// קבלת נתוני עזר
+$formHelpers = getPurchaseFormHelpers($form, $formData, $userPermissionLevel);
+extract($formHelpers); // מחלץ: $requiredFields, $cemeteries, $blocks, $sections, $rows, $graves, $plots, $paymentMethods, $purchaseTypes
 
-// // טיפול בשליחת הטופס
-// if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$viewOnly) {
-//     $postResult = handlePurchaseFormSubmit($form, $formUuid, $isNewForm, $userPermissionLevel);
-//     if ($postResult['success']) {
-//         if ($postResult['redirect']) {
-//             header("Location: " . $postResult['redirect']);
-//             exit;
-//         }
-//         $successMessage = $postResult['message'];
-//         if (isset($postResult['formData'])) {
-//             $formData = $postResult['formData'];
-//         }
-//     } else {
-//         $errorMessage = $postResult['message'];
-//         if (isset($postResult['errors'])) {
-//             $errors = $postResult['errors'];
-//         }
-//     }
-// }
+// טיפול בשליחת הטופס
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$viewOnly) {
+    $postResult = handlePurchaseFormSubmit($form, $formUuid, $isNewForm, $userPermissionLevel);
+    if ($postResult['success']) {
+        if ($postResult['redirect']) {
+            header("Location: " . $postResult['redirect']);
+            exit;
+        }
+        $successMessage = $postResult['message'];
+        if (isset($postResult['formData'])) {
+            $formData = $postResult['formData'];
+        }
+    } else {
+        $errorMessage = $postResult['message'];
+        if (isset($postResult['errors'])) {
+            $errors = $postResult['errors'];
+        }
+    }
+}
 
-// // בדוק הודעות מה-session
-// if (isset($_SESSION['purchase_form_saved_message'])) {
-//     $successMessage = $_SESSION['purchase_form_saved_message'];
-//     unset($_SESSION['purchase_form_saved_message']);
-// }
+// בדוק הודעות מה-session
+if (isset($_SESSION['purchase_form_saved_message'])) {
+    $successMessage = $_SESSION['purchase_form_saved_message'];
+    unset($_SESSION['purchase_form_saved_message']);
+}
 ?>
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
     <?php 
-    // renderPurchaseFormHead($isNewForm); 
+    renderPurchaseFormHead($isNewForm); 
     ?>
 </head>
 <body>
