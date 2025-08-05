@@ -122,15 +122,36 @@ for ($i = 11; $i >= 0; $i--) {
 // פעילות אחרונה - משולב
 $recentActivity = [];
 
+// // נפטרים אחרונים
+// $stmt = $db->prepare("
+//     SELECT 'deceased' as type, form_uuid, deceased_name as name, 
+//            created_at, status, death_date as event_date
+//     FROM deceased_forms
+//     WHERE $whereClause
+//     ORDER BY created_at DESC
+//     LIMIT 5
+// ");
+
 // נפטרים אחרונים
 $stmt = $db->prepare("
-    SELECT 'deceased' as type, form_uuid, deceased_name as name, 
-           created_at, status, death_date as event_date
-    FROM deceased_forms
+    SELECT 
+        'deceased' as type, 
+        df.form_uuid, 
+        df.deceased_name as name, 
+        df.created_at, 
+        df.status, 
+        df.death_date as event_date,
+        c.name as cemetery_name,
+        b.name as block_name
+    FROM deceased_forms df
+    LEFT JOIN cemeteries c ON df.cemetery_id = c.id
+    LEFT JOIN blocks b ON df.block_id = b.id
     WHERE $whereClause
-    ORDER BY created_at DESC
+    ORDER BY df.created_at DESC
     LIMIT 5
 ");
+$stmt->execute($params);
+$recentDeceased = $stmt->fetchAll();
 $stmt->execute($params);
 $recentDeceased = $stmt->fetchAll();
 
@@ -358,6 +379,123 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                 </div>
             </div>
         </div>
+
+<!-- פעילות אחרונה -->
+<div class="recent-table">
+    <div class="p-3">
+        <h3 class="mb-0">פעילות אחרונה במערכת</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>סוג</th>
+                    <th>שם</th>
+                    <th class="d-none d-md-table-cell">מיקום</th>
+                    <th>תאריך</th>
+                    <th>סטטוס</th>
+                    <th>פעולות</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($recentActivity as $activity): ?>
+                <tr>
+                    <td>
+                        <?php if ($activity['type'] === 'deceased'): ?>
+                            <i class="fas fa-cross text-primary" title="נפטר"></i>
+                        <?php else: ?>
+                            <i class="fas fa-shopping-cart text-success" title="רכישה"></i>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <div class="text-truncate" style="max-width: 150px;">
+                            <strong><?= htmlspecialchars($activity['name'] ?? 'לא ידוע') ?></strong>
+                        </div>
+                    </td>
+                    <td class="d-none d-md-table-cell">
+                        <?php if ($activity['type'] === 'deceased' && !empty($activity['cemetery_name'])): ?>
+                            <small class="text-muted">
+                                <?= htmlspecialchars($activity['cemetery_name']) ?>
+                                <?php if (!empty($activity['block_name'])): ?>
+                                    - <?= htmlspecialchars($activity['block_name']) ?>
+                                <?php endif; ?>
+                            </small>
+                        <?php else: ?>
+                            <small class="text-muted">-</small>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <small><?= date('d/m/y', strtotime($activity['event_date'])) ?></small>
+                    </td>
+                    <td>
+                        <span class="status-badge status-<?= $activity['status'] ?>">
+                            <?= translateStatus($activity['status']) ?>
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <?php if ($activity['type'] === 'deceased'): ?>
+                                <!-- צפייה -->
+                                <a href="../form/index_deceased.php?id=<?= $activity['form_uuid'] ?>&view=1" 
+                                   class="btn btn-sm btn-view-gradient" 
+                                   title="צפייה">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                
+                                <!-- עריכה -->
+                                <a href="../form/index_deceased.php?id=<?= $activity['form_uuid'] ?>" 
+                                   class="btn btn-sm btn-edit-gradient" 
+                                   title="עריכה">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                
+                                <!-- מחיקה (רק למנהלים) -->
+                                <?php if ($userPermissionLevel >= 4): ?>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-delete-gradient delete-form-btn" 
+                                            data-form-uuid="<?= $activity['form_uuid'] ?>"
+                                            data-form-type="deceased"
+                                            data-form-name="<?= htmlspecialchars($activity['name']) ?>"
+                                            title="מחיקה">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                <?php endif; ?>
+                                
+                            <?php else: ?>
+                                <!-- צפייה -->
+                                <a href="../form/purchase_form.php?uuid=<?= $activity['form_uuid'] ?>&view=1" 
+                                   class="btn btn-sm btn-view-gradient" 
+                                   title="צפייה">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                
+                                <!-- עריכה -->
+                                <a href="../form/purchase_form.php?uuid=<?= $activity['form_uuid'] ?>" 
+                                   class="btn btn-sm btn-edit-gradient" 
+                                   title="עריכה">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                
+                                <!-- מחיקה (רק למנהלים) -->
+                                <?php if ($userPermissionLevel >= 4): ?>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-delete-gradient delete-form-btn" 
+                                            data-form-uuid="<?= $activity['form_uuid'] ?>"
+                                            data-form-type="purchase"
+                                            data-form-name="<?= htmlspecialchars($activity['name']) ?>"
+                                            title="מחיקה">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
 
         <!-- פעילות אחרונה -->
         <div class="recent-table">
