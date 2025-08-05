@@ -2,6 +2,10 @@
 // form/purchase_form.php - הקובץ הראשי של טופס רכישות
 
 require_once '../config.php';
+
+// יצירת חיבור למסד הנתונים
+$pdo = getDbConnection();
+
 require_once '../PurchaseForm.php';
 require_once 'includes/form_auth.php';
 require_once 'includes/purchase_form_headers.php';
