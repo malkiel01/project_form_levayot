@@ -236,7 +236,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                             <h3 class="mt-3">טפסי נפטרים</h3>
                             <p class="text-muted mb-0 d-none d-md-block">ניהול רישום נפטרים וקבורה</p>
                         </div>
-                        style="border: 1px red solid"
+                        <!-- style="border: 1px red solid" -->
                         <div class="text-center text-md-end w-100 w-md-auto">
                             <div class="counter-section">
                                 <div class="counter-item">
