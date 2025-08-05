@@ -132,7 +132,6 @@ function revokeUserPermission($fieldName, $userId, $action = 'view') {
 // -----------
 
 
-
 // פונקציה ליצירת חיבור לדטהבייס
 function getDbConnection() {
     try {
@@ -187,35 +186,6 @@ function generateUUID() {
 }
 
 // פונקציה לבדיקת הרשאות
-function hasPermissionOld($fieldName, $permissionLevel, $action = 'view') {
-    static $permissionsCache = [];
-    
-    // יצירת מפתח למטמון
-    $cacheKey = $fieldName . '_' . $permissionLevel . '_' . $action;
-    
-    // בדוק אם כבר במטמון
-    if (isset($permissionsCache[$cacheKey])) {
-        return $permissionsCache[$cacheKey];
-    }
-    
-    $db = getDbConnection();
-    $column = $action === 'edit' ? 'can_edit' : 'can_view';
-    
-    $stmt = $db->prepare("
-        SELECT $column 
-        FROM field_permissions 
-        WHERE field_name = ? AND permission_level = ?
-    ");
-    $stmt->execute([$fieldName, $permissionLevel]);
-    $result = $stmt->fetch();
-    
-    $hasPermission = $result ? (bool)$result[$column] : false;
-    
-    // שמור במטמון
-    $permissionsCache[$cacheKey] = $hasPermission;
-    
-    return $hasPermission;
-}
 function hasPermission($fieldName, $permissionLevel, $action = 'view') {
     static $cache = [];
     
@@ -278,6 +248,30 @@ function hasPermission($fieldName, $permissionLevel, $action = 'view') {
         $cache[$cacheKey] = ($permissionLevel >= 4);
         return $cache[$cacheKey];
     }
+}
+// פונקציה לבדיקת הרשאה ספציפית למשתמש
+function userHasPermission($userId, $permissionName) {
+    global $db;
+    
+    $stmt = $db->prepare("
+        SELECT has_permission 
+        FROM user_permissions 
+        WHERE user_id = ? AND permission_name = ? AND has_permission = 1
+    ");
+    $stmt->execute([$userId, $permissionName]);
+    
+    return $stmt->fetchColumn() == 1;
+}
+
+// פונקציה לבדיקה אם המשתמש יכול למחוק טפסים
+function canDeleteForms($userId, $permissionLevel) {
+    // מנהלים תמיד יכולים
+    if ($permissionLevel >= 4) {
+        return true;
+    }
+    
+    // בדוק הרשאה ספציפית
+    return userHasPermission($userId, 'delete_forms');
 }
 
 // פונקציה לסניטציה של קלט

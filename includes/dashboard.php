@@ -14,6 +14,9 @@ require_once 'dashboard_functions.php';
 $db = getDbConnection();
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 
+// בדוק אם המשתמש יכול למחוק טפסים
+$canDelete = canDeleteForms($_SESSION['user_id'], $userPermissionLevel);
+
 // קבלת סוגי הטפסים הפעילים
 $formTypes = $db->query("
     SELECT * FROM form_types WHERE is_active = 1 ORDER BY id
@@ -439,7 +442,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                         </a>
                                         
                                         <!-- מחיקה (רק למנהלים) -->
-                                        <?php if ($userPermissionLevel >= 4): ?>
+                                        <?php if ($canDelete): ?>
                                             <button type="button" 
                                                     class="btn btn-sm btn-delete-gradient delete-form-btn" 
                                                     data-form-uuid="<?= $activity['form_uuid'] ?>"
