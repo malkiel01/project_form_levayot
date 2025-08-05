@@ -407,64 +407,6 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                 <?php endif; ?>
                             </td>
                         </tr>
-<td>
-    <div class="btn-group btn-group-sm" role="group">
-        <?php if ($activity['type'] === 'deceased'): ?>
-            <!-- צפייה -->
-            <a href="../form/index_deceased.php?id=<?= $activity['form_uuid'] ?>&view=1" 
-               class="btn btn-outline-primary" 
-               title="צפייה">
-                <i class="fas fa-eye"></i>
-            </a>
-            
-            <!-- עריכה -->
-            <a href="../form/index_deceased.php?id=<?= $activity['form_uuid'] ?>" 
-               class="btn btn-outline-warning" 
-               title="עריכה">
-                <i class="fas fa-edit"></i>
-            </a>
-            
-            <!-- מחיקה (רק למנהלים) -->
-            <?php if ($userPermissionLevel >= 4): ?>
-                <button type="button" 
-                        class="btn btn-outline-danger delete-form-btn" 
-                        data-form-uuid="<?= $activity['form_uuid'] ?>"
-                        data-form-type="deceased"
-                        data-form-name="<?= htmlspecialchars($activity['name']) ?>"
-                        title="מחיקה">
-                    <i class="fas fa-trash"></i>
-                </button>
-            <?php endif; ?>
-            
-        <?php else: ?>
-            <!-- צפייה -->
-            <a href="../form/purchase_form.php?uuid=<?= $activity['form_uuid'] ?>&view=1" 
-               class="btn btn-outline-success" 
-               title="צפייה">
-                <i class="fas fa-eye"></i>
-            </a>
-            
-            <!-- עריכה -->
-            <a href="../form/purchase_form.php?uuid=<?= $activity['form_uuid'] ?>" 
-               class="btn btn-outline-warning" 
-               title="עריכה">
-                <i class="fas fa-edit"></i>
-            </a>
-            
-            <!-- מחיקה (רק למנהלים) -->
-            <?php if ($userPermissionLevel >= 4): ?>
-                <button type="button" 
-                        class="btn btn-outline-danger delete-form-btn" 
-                        data-form-uuid="<?= $activity['form_uuid'] ?>"
-                        data-form-type="purchase"
-                        data-form-name="<?= htmlspecialchars($activity['name']) ?>"
-                        title="מחיקה">
-                    <i class="fas fa-trash"></i>
-                </button>
-            <?php endif; ?>
-        <?php endif; ?>
-    </div>
-</td>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
@@ -476,188 +418,188 @@ $recentActivity = array_slice($recentActivity, 0, 10);
     
     <!-- טעינת Chart.js אחרי שהדף נטען -->
     <script>
-    // נתוני גרפים
-    const monthlyLabels = <?= json_encode(array_column($monthlyData, 'month')) ?>;
-    const deceasedData = <?= json_encode(array_column($monthlyData, 'deceased')) ?>;
-    const purchasesData = <?= json_encode(array_column($monthlyData, 'purchases')) ?>;
-    const revenueData = <?= json_encode(array_column($monthlyData, 'revenue')) ?>;
+        // נתוני גרפים
+        const monthlyLabels = <?= json_encode(array_column($monthlyData, 'month')) ?>;
+        const deceasedData = <?= json_encode(array_column($monthlyData, 'deceased')) ?>;
+        const purchasesData = <?= json_encode(array_column($monthlyData, 'purchases')) ?>;
+        const revenueData = <?= json_encode(array_column($monthlyData, 'revenue')) ?>;
 
-    // טעינת Chart.js אחרי שהדף מוכן
-    window.addEventListener('load', function() {
-        // הוסף את האנימציות רק אחרי טעינת הדף
-        document.body.classList.add('animations-ready');
-        
-        // טען את Chart.js
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-        script.onload = initCharts;
-        document.head.appendChild(script);
-    });
-
-    function initCharts() {
-        // הסתר placeholders והצג canvas
-        document.getElementById('yearlyChartPlaceholder').style.display = 'none';
-        document.getElementById('summaryChartPlaceholder').style.display = 'none';
-        document.getElementById('yearlyChart').style.display = 'block';
-        document.getElementById('summaryChart').style.display = 'block';
-
-        // גרף פעילות שנתית
-        const yearlyCtx = document.getElementById('yearlyChart').getContext('2d');
-        window.yearlyChart = new Chart(yearlyCtx, {
-            type: 'line',
-            data: {
-                labels: monthlyLabels,
-                datasets: [{
-                    label: 'נפטרים',
-                    data: deceasedData,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.3
-                }, {
-                    label: 'רכישות',
-                    data: purchasesData,
-                    borderColor: '#28a745',
-                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: {
-                    duration: 1000
-                },
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: window.innerWidth > 768,
-                        position: 'top'
-                    }
-                }
-            }
+        // טעינת Chart.js אחרי שהדף מוכן
+        window.addEventListener('load', function() {
+            // הוסף את האנימציות רק אחרי טעינת הדף
+            document.body.classList.add('animations-ready');
+            
+            // טען את Chart.js
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+            script.onload = initCharts;
+            document.head.appendChild(script);
         });
 
-        // גרף סיכום
-        const summaryCtx = document.getElementById('summaryChart').getContext('2d');
-        new Chart(summaryCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['נפטרים', 'רכישות'],
-                datasets: [{
-                    data: [
-                        <?= $stats['deceased']['total'] ?>,
-                        <?= $stats['purchase']['total'] ?>
-                    ],
-                    backgroundColor: [
-                        '#667eea',
-                        '#28a745'
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: {
-                    duration: 1000
-                },
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            font: {
-                                size: 14
-                            }
-                        }
-                    }
-                }
-            }
-        });
+        function initCharts() {
+            // הסתר placeholders והצג canvas
+            document.getElementById('yearlyChartPlaceholder').style.display = 'none';
+            document.getElementById('summaryChartPlaceholder').style.display = 'none';
+            document.getElementById('yearlyChart').style.display = 'block';
+            document.getElementById('summaryChart').style.display = 'block';
 
-        // החלפת תצוגות גרף
-        document.querySelectorAll('.chart-option').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.chart-option').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                const view = this.dataset.view;
-                window.yearlyChart.destroy();
-                
-                let config = {
-                    type: 'line',
-                    data: {
-                        labels: monthlyLabels
+            // גרף פעילות שנתית
+            const yearlyCtx = document.getElementById('yearlyChart').getContext('2d');
+            window.yearlyChart = new Chart(yearlyCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [{
+                        label: 'נפטרים',
+                        data: deceasedData,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3
+                    }, {
+                        label: 'רכישות',
+                        data: purchasesData,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: {
-                            duration: 500
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: window.innerWidth > 768,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+
+            // גרף סיכום
+            const summaryCtx = document.getElementById('summaryChart').getContext('2d');
+            new Chart(summaryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['נפטרים', 'רכישות'],
+                    datasets: [{
+                        data: [
+                            <?= $stats['deceased']['total'] ?>,
+                            <?= $stats['purchase']['total'] ?>
+                        ],
+                        backgroundColor: [
+                            '#667eea',
+                            '#28a745'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 14
+                                }
                             }
                         }
                     }
-                };
-
-                switch(view) {
-                    case 'deceased':
-                        config.type = 'bar';
-                        config.data.datasets = [{
-                            label: 'נפטרים',
-                            data: deceasedData,
-                            backgroundColor: '#667eea'
-                        }];
-                        break;
-                    case 'purchases':
-                        config.type = 'bar';
-                        config.data.datasets = [{
-                            label: 'רכישות',
-                            data: purchasesData,
-                            backgroundColor: '#28a745'
-                        }];
-                        break;
-                    case 'revenue':
-                        config.type = 'area';
-                        config.data.datasets = [{
-                            label: 'הכנסות (₪)',
-                            data: revenueData,
-                            backgroundColor: 'rgba(255, 193, 7, 0.2)',
-                            borderColor: '#ffc107',
-                            borderWidth: 3,
-                            fill: true
-                        }];
-                        config.options.scales.y.ticks = {
-                            callback: function(value) {
-                                return '₪' + value.toLocaleString();
-                            }
-                        };
-                        break;
-                    default:
-                        location.reload();
                 }
-                
-                window.yearlyChart = new Chart(yearlyCtx, config);
             });
-        });
-    }
+
+            // החלפת תצוגות גרף
+            document.querySelectorAll('.chart-option').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.chart-option').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const view = this.dataset.view;
+                    window.yearlyChart.destroy();
+                    
+                    let config = {
+                        type: 'line',
+                        data: {
+                            labels: monthlyLabels
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: {
+                                duration: 500
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    };
+
+                    switch(view) {
+                        case 'deceased':
+                            config.type = 'bar';
+                            config.data.datasets = [{
+                                label: 'נפטרים',
+                                data: deceasedData,
+                                backgroundColor: '#667eea'
+                            }];
+                            break;
+                        case 'purchases':
+                            config.type = 'bar';
+                            config.data.datasets = [{
+                                label: 'רכישות',
+                                data: purchasesData,
+                                backgroundColor: '#28a745'
+                            }];
+                            break;
+                        case 'revenue':
+                            config.type = 'area';
+                            config.data.datasets = [{
+                                label: 'הכנסות (₪)',
+                                data: revenueData,
+                                backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                                borderColor: '#ffc107',
+                                borderWidth: 3,
+                                fill: true
+                            }];
+                            config.options.scales.y.ticks = {
+                                callback: function(value) {
+                                    return '₪' + value.toLocaleString();
+                                }
+                            };
+                            break;
+                        default:
+                            location.reload();
+                    }
+                    
+                    window.yearlyChart = new Chart(yearlyCtx, config);
+                });
+            });
+        }
     </script>
 </body>
 </html>
