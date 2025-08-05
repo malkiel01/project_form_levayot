@@ -271,7 +271,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                             <h3 class="mt-3">טפסי רכישות</h3>
                             <p class="text-muted mb-0 d-none d-md-block">רכישת חלקות ושירותים</p>
                         </div>
-                        <div class="text-center text-md-end w-100 w-md-auto">
+                        <div class="text-center text-md-start w-100 w-md-auto">
                             <div class="counter-section">
                                 <div class="counter-item">
                                     <span class="counter-value text-primary"><?= number_format($stats['purchase']['total']) ?></span>
