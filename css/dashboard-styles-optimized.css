@@ -164,18 +164,12 @@ body {
 /* סוף עיצוב בחירת התצוגה בדשבורד */
 
 /* תיקון כפתורי פעולה בכרטיסי סוג טופס */
-.form-type-card .text-center.text-md-end {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important; /* יישור לשמאל */
-    width: 100% !important;
-}
-
 .form-type-card .action-btn {
     max-width: 180px; /* רוחב מקסימלי במסכים גדולים */
     width: auto; /* רוחב אוטומטי */
     min-width: 150px; /* רוחב מינימלי */
-    margin-top: 1rem !important; /* רווח מהמונים */
+    margin-left: 0; /* הצמדה לשמאל */
+    margin-right: auto; /* דוחף את הכפתור לשמאל */
 }
 
 /* במסכי טאבלט - כפתור יותר רחב */
@@ -183,10 +177,6 @@ body {
     .form-type-card .action-btn {
         max-width: 200px;
         min-width: 160px;
-    }
-    
-    .form-type-card .text-center.text-md-end {
-        align-items: center !important; /* מרכז בטאבלט */
     }
 }
 
@@ -196,10 +186,8 @@ body {
         max-width: 100%;
         width: 100% !important;
         min-width: auto;
-    }
-    
-    .form-type-card .text-center.text-md-end {
-        align-items: stretch !important; /* כפתור ברוחב מלא */
+        margin-left: 0;
+        margin-right: 0;
     }
 }
 
