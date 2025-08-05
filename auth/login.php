@@ -8,16 +8,36 @@
 
     // אם המשתמש כבר מחובר
     if (isset($_SESSION['user_id'])) {
-        $redirect = $_GET['redirect'] ?? DASHBOARD_FULL_URL;
+        // קבל את הדשבורד המתאים למשתמש הנוכחי
+        $userDashboard = getUserDashboardUrl($_SESSION['user_id'], $_SESSION['permission_level']);
+        $redirect = $_GET['redirect'] ?? $userDashboard;
+        
+        // בדיקת תקינות ה-redirect
         if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
             $redirect = basename($redirect);
             if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
-                $redirect = DASHBOARD_FULL_URL;
+                $redirect = $userDashboard;
             }
         }
-        // header('Location: ' . ltrim($redirect, '/'));
-        // $userDashboard = getUserDashboardUrl($user['id'], $user['permission_level']);
-        // exit;
+        
+        // בדוק אם למשתמש יש הרשאה ל-redirect
+        $allowedDashboards = getUserAllowedDashboards($_SESSION['user_id']);
+        $canAccessRedirect = false;
+        
+        foreach ($allowedDashboards as $dashboard) {
+            if (strpos($redirect, basename($dashboard['url'])) !== false) {
+                $canAccessRedirect = true;
+                break;
+            }
+        }
+        
+        // אם אין הרשאה, הפנה לדשבורד המתאים
+        if (!$canAccessRedirect) {
+            $redirect = $userDashboard;
+        }
+        
+        header('Location: ' . ltrim($redirect, '/'));
+        exit;
     }
 
     $error = '';
@@ -77,60 +97,6 @@
                         $pwResult = password_verify($password, $user['password']);
                         error_log("password_verify result: " . ($pwResult ? "TRUE" : "FALSE"));
 
-                        // הדפס פערים תו-לתו בין סיסמה לסיסמה ב־DB (במקרה של סיסמאות פשוטות לטסט בלבד)
-                        // (שים לב - לא מומלץ לייצור, רק לדיבוג)
-                        $diff = [];
-                        for ($i = 0; $i < max(strlen($password), strlen($user['password'])); $i++) {
-                            $a = $password[$i] ?? '';
-                            $b = $user['password'][$i] ?? '';
-                            if ($a !== $b) $diff[] = "pos $i: entered='" . addslashes($a) . "', db='" . addslashes($b) . "'";
-                        }
-                        if ($diff) {
-                            error_log("DIFF password vs db: " . implode(' | ', $diff));
-                        }
-
-                        // if ($pwResult) {
-                        //     // התחברות מוצלחת
-                        //     error_log("LOGIN SUCCESS for user " . $user['username']);
-                        //     $db->prepare("
-                        //         UPDATE users 
-                        //         SET failed_login_attempts = 0, 
-                        //             locked_until = NULL, 
-                        //             last_login = NOW() 
-                        //         WHERE id = ?
-                        //     ")->execute([$user['id']]);
-                            
-                        //     // הגדרת סשן
-                        //     $_SESSION['user_id'] = $user['id'];
-                        //     $_SESSION['username'] = $user['username'];
-                        //     $_SESSION['full_name'] = $user['full_name'];
-                        //     $_SESSION['permission_level'] = $user['permission_level'];
-                        //     $_SESSION['login_time'] = time();
-                        //     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-                            
-                        //     // רישום בלוג
-                        //     $db->prepare("
-                        //         INSERT INTO activity_log 
-                        //         (user_id, action, details, ip_address, user_agent) 
-                        //         VALUES (?, 'login_success', ?, ?, ?)
-                        //     ")->execute([
-                        //         $user['id'], 
-                        //         json_encode(['redirect' => $redirect]), 
-                        //         $_SERVER['REMOTE_ADDR'] ?? '', 
-                        //         $_SERVER['HTTP_USER_AGENT'] ?? ''
-                        //     ]);
-                            
-                        //     // הפניה
-                        //     if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
-                        //         $redirect = basename($redirect);
-                        //         if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
-                        //             $redirect = DASHBOARD_FULL_URL;
-                        //         }
-                        //     }
-                        //     // header('Location: ' . ltrim($redirect, '/'));
-                        //     $userDashboard = getUserDashboardUrl($user['id'], $user['permission_level']);
-                        //     exit;
-                        // }
                         if ($pwResult) {
                             // התחברות מוצלחת
                             error_log("LOGIN SUCCESS for user " . $user['username']);
@@ -189,8 +155,7 @@
                                 header('Location: ' . $userDashboard);
                             }
                             exit;
-                        }
-                        else {
+                        } else {
                             // סיסמה שגויה
                             $attempts = $user['failed_login_attempts'] + 1;
                             $lockUntil = null;
@@ -248,31 +213,6 @@
     if (isset($_SESSION['registration_success'])) {
         $success = $_SESSION['registration_success'];
         unset($_SESSION['registration_success']);
-    }
-
-
-    // אם יש redirect ספציפי ולמשתמש יש הרשאה אליו, השתמש בו
-    if ($redirect && $redirect !== DASHBOARD_FULL_URL) {
-        // בדוק אם המשתמש יכול לגשת ל-redirect המבוקש
-        $allowedDashboards = getUserAllowedDashboards($user['id']);
-        $canAccessRedirect = false;
-        
-        foreach ($allowedDashboards as $dashboard) {
-            if (strpos($redirect, basename($dashboard['url'])) !== false) {
-                $canAccessRedirect = true;
-                break;
-            }
-        }
-        
-        if ($canAccessRedirect) {
-            header('Location: ' . ltrim($redirect, '/'));
-        } else {
-            // אין הרשאה ל-redirect המבוקש, שלח לדשבורד המתאים
-            header('Location: ' . $userDashboard);
-        }
-    } else {
-        // אין redirect ספציפי, שלח לדשבורד המתאים
-        header('Location: ' . $userDashboard);
     }
 ?>
 <!DOCTYPE html>
@@ -391,30 +331,7 @@
             color: #1976d2;
         }
 
-        /* <!-- הוסף CSS לשיפור התצוגה --> */
-
-        /* .google-signin {
-            margin: 20px 0;
-            display: flex;
-            justify-content: center;
-            flex-direction: column;
-            align-items: center;
-        } */
-        
-        /* .g_id_signin {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            justify-content: center;
-        } */
-        
-        /* וודא שהכפתור ממורכז
-        .g_id_signin iframe {
-            margin: 0 auto;
-            display: block;
-        } */
-
-            /* עיצוב מתוקן לכפתור Google */
+        /* עיצוב מתוקן לכפתור Google */
         .google-signin {
             margin: 20px 0;
             display: flex;
@@ -635,79 +552,6 @@
                 alertDiv.remove();
             }, 5000);
         }
-        
-        // הסר את הקוד שמשנה את גודל הכפתור - תן ל-Google לטפל בזה
-        // window.addEventListener('load', function() { ... });
     </script>
 </body>
 </html>
-
-    // בקובץ auth/login.php - מצא את השורות האלה (בערך שורות 115-130):
-
-    // הסר את השורות האלה מהמקום הנוכחי (שורה 19):
-    // $userDashboard = getUserDashboardUrl($user['id'], $user['permission_level']);
-    // exit;
-
-    // ובמקום זה, מצא את הבלוק של התחברות מוצלחת (אחרי שורה 115 בערך)
-    // והחלף את כל הקוד של ההפניה בזה:
-
-    if ($pwResult) {
-        // התחברות מוצלחת
-        error_log("LOGIN SUCCESS for user " . $user['username']);
-        $db->prepare("
-            UPDATE users 
-            SET failed_login_attempts = 0, 
-                locked_until = NULL, 
-                last_login = NOW() 
-            WHERE id = ?
-        ")->execute([$user['id']]);
-        
-        // הגדרת סשן
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['full_name'] = $user['full_name'];
-        $_SESSION['permission_level'] = $user['permission_level'];
-        $_SESSION['login_time'] = time();
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        
-        // רישום בלוג
-        $db->prepare("
-            INSERT INTO activity_log 
-            (user_id, action, details, ip_address, user_agent) 
-            VALUES (?, 'login_success', ?, ?, ?)
-        ")->execute([
-            $user['id'], 
-            json_encode(['redirect' => $redirect]), 
-            $_SERVER['REMOTE_ADDR'] ?? '', 
-            $_SERVER['HTTP_USER_AGENT'] ?? ''
-        ]);
-        
-        // קבלת הדשבורד המתאים למשתמש
-        $userDashboard = getUserDashboardUrl($user['id'], $user['permission_level']);
-        
-        // אם יש redirect ספציפי ולמשתמש יש הרשאה אליו, השתמש בו
-        if ($redirect && $redirect !== DASHBOARD_FULL_URL) {
-            // בדוק אם המשתמש יכול לגשת ל-redirect המבוקש
-            $allowedDashboards = getUserAllowedDashboards($user['id']);
-            $canAccessRedirect = false;
-            
-            foreach ($allowedDashboards as $dashboard) {
-                if (strpos($redirect, basename($dashboard['url'])) !== false) {
-                    $canAccessRedirect = true;
-                    break;
-                }
-            }
-            
-            if ($canAccessRedirect) {
-                header('Location: ' . ltrim($redirect, '/'));
-            } else {
-                // אין הרשאה ל-redirect המבוקש, שלח לדשבורד המתאים
-                header('Location: ' . $userDashboard);
-            }
-        } else {
-            // אין redirect ספציפי, שלח לדשבורד המתאים
-            header('Location: ' . $userDashboard);
-        }
-        exit;
-    }
-    

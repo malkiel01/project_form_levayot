@@ -138,31 +138,6 @@ try {
     $_SESSION['login_time'] = time();
     $_SESSION['login_method'] = 'google';
     $_SESSION['user_picture'] = $picture;
-
-    // הוסף את הקוד הזה:
-    // קבלת הדשבורד המתאים למשתמש
-    $userDashboard = getUserDashboardUrl($user['id'], $user['permission_level']);
-
-    // בדיקה אם יש redirect ספציפי
-    if ($redirect && $redirect !== DASHBOARD_FULL_URL) {
-        $allowedDashboards = getUserAllowedDashboards($user['id']);
-        $canAccessRedirect = false;
-        
-        foreach ($allowedDashboards as $dashboard) {
-            if (strpos($redirect, basename($dashboard['url'])) !== false) {
-                $canAccessRedirect = true;
-                break;
-            }
-        }
-        
-        if (!$canAccessRedirect) {
-            // אם אין הרשאה ל-redirect המבוקש, שנה אותו לדשבורד המתאים
-            $redirect = $userDashboard;
-        }
-    } else {
-        // אין redirect ספציפי, השתמש בדשבורד המתאים
-        $redirect = $userDashboard;
-    }
     
     // רישום בלוג
     logActivity('login_success', [
