@@ -694,19 +694,27 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                         cancelButtonColor: '#3085d6',
                         confirmButtonText: 'כן, מחק',
                         cancelButtonText: 'ביטול'
-                    }).then((result) => {
+                    }).then((result) => { 
                         if (result.isConfirmed) {
+                            // דיבוג - בדוק מה יש במשתנים
+                            console.log('Form UUID:', formUuid);
+                            console.log('Form Type:', formType);
+                            console.log('Form Name:', formName);
+                            
+                            const payload = {
+                                form_uuid: formUuid,
+                                form_type: formType,
+                                csrf_token: '<?= $_SESSION['csrf_token'] ?>'
+                            };
+                            console.log('Sending payload:', payload);
+                            
                             // שליחת בקשת מחיקה
-                            fetch('../ajax/delete_form.php', {
+                            fetch('../form/ajax/delete_form.php', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                 },
-                                body: JSON.stringify({
-                                    form_uuid: formUuid,
-                                    form_type: formType,
-                                    csrf_token: '<?= $_SESSION['csrf_token'] ?>'
-                                })
+                                body: JSON.stringify(payload)
                             })
                             .then(response => {
                                 console.log('Response status:', response.status);
