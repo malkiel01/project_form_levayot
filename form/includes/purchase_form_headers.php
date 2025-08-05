@@ -26,7 +26,7 @@ function handlePurchaseFormAuth() {
             $viewOnly = ($linkPermissions === 'view');
             $formUuid = $linkResult['form_uuid'];
         } else {
-            header("Location: ../login.php?error=invalid_link");
+            header("Location: ../" . LOGIN_URL . "?error=invalid_link");
             exit;
         }
     } else {

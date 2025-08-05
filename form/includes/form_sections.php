@@ -380,7 +380,7 @@ function renderActionButtons($isNewForm, $formUuid, $viewOnly, $isLinkAccess) {
                     <span class="btn-text">רשימת טפסים</span>
                 </a>
             <?php else: ?>
-                <a href="../<?= LOGIN_URL ?>" class="btn action-btn outline"
+                <a href="../../<?= LOGIN_URL ?>" class="btn action-btn outline"
                    data-bs-toggle="tooltip" 
                    data-bs-placement="top" 
                    title="התחבר למערכת">
