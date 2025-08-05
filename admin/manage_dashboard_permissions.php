@@ -108,12 +108,12 @@ $permissions = $db->query("
     <!-- ניווט עליון -->
     <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
         <div class="container-fluid">
-            <a class="navbar-brand" href="../<?php echo DASHBOARD_FULL_URL; ?>">
+            <a class="navbar-brand" href="<?= DASHBOARD_FULL_URL ?>">
                 <i class="fas fa-book-dead me-2"></i>
                 מערכת ניהול לוויות
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="../<?php echo DASHBOARD_FULL_URL; ?>">
+                <a class="nav-link" href="<?= DASHBOARD_FULL_URL ?>">
                     <i class="fas fa-arrow-right me-1"></i>
                     חזרה לדשבורד
                 </a>
