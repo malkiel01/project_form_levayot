@@ -22,13 +22,17 @@ $formTypes = $db->query("
     SELECT * FROM form_types WHERE is_active = 1 ORDER BY id
 ")->fetchAll();
 
-// בניית תנאי WHERE לפי הרשאות
+// // בניית תנאי WHERE לפי הרשאות
+// $whereClause = "1=1";
+// $params = [];
+// if ($userPermissionLevel < 4) {
+//     $whereClause .= " AND created_by = ?";
+//     $params[] = $_SESSION['user_id'];
+// }
+
+// כולם רואים את כל הרשומות
 $whereClause = "1=1";
 $params = [];
-if ($userPermissionLevel < 4) {
-    $whereClause .= " AND created_by = ?";
-    $params[] = $_SESSION['user_id'];
-}
 
 // סטטיסטיקות משולבות
 $stats = [
@@ -136,25 +140,41 @@ $stmt = $db->prepare("
         df.status, 
         df.death_date as event_date,
         c.name as cemetery_name,
-        b.name as block_name
+        b.name as block_name,
+        df.created_by,
+        u.full_name as creator_name,
+        u.username as creator_username
     FROM deceased_forms df
     LEFT JOIN cemeteries c ON df.cemetery_id = c.id
     LEFT JOIN blocks b ON df.block_id = b.id
+    LEFT JOIN users u ON df.created_by = u.id
     WHERE $whereClause
     ORDER BY df.created_at DESC
-    LIMIT 5
+    LIMIT 30
 ");
+
 $stmt->execute($params);
 $recentDeceased = $stmt->fetchAll();
 
 // רכישות אחרונות
 $stmt = $db->prepare("
-    SELECT 'purchase' as type, form_uuid, buyer_name as name, 
-           created_at, status, purchase_date as event_date
-    FROM purchase_forms
+    SELECT 
+        'purchase' as type, 
+        pf.form_uuid, 
+        pf.buyer_name as name, 
+        pf.created_at, 
+        pf.status, 
+        pf.purchase_date as event_date,
+        NULL as cemetery_name,
+        NULL as block_name,
+        pf.created_by,
+        u.full_name as creator_name,
+        u.username as creator_username
+    FROM purchase_forms pf
+    LEFT JOIN users u ON pf.created_by = u.id
     WHERE $whereClause
-    ORDER BY created_at DESC
-    LIMIT 5
+    ORDER BY pf.created_at DESC
+    LIMIT 30
 ");
 $stmt->execute($params);
 $recentPurchases = $stmt->fetchAll();
