@@ -49,7 +49,9 @@ require_once 'includes/form_auth.php';
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-    <?php renderPurchaseFormHead($isNewForm); ?>
+    <?php 
+    // renderPurchaseFormHead($isNewForm); 
+    ?>
 </head>
 <body>
     <?php renderLoadingOverlay(); ?>
