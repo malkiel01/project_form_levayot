@@ -684,7 +684,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                     }).then((result) => {
                         if (result.isConfirmed) {
                             // שליחת בקשת מחיקה
-                            fetch('../form/ajax/delete_form.php', {
+                            fetch('../ajax/delete_form.php', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
