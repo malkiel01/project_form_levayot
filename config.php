@@ -129,6 +129,192 @@ function revokeUserPermission($fieldName, $userId, $action = 'view') {
 }
 // -----------
 
+// <?php
+// // dashboard_router.php - הוסף את הפונקציות האלה לקובץ config.php
+
+/**
+ * פונקציה לקבלת כתובת הדשבורד המתאים למשתמש
+ */
+function getUserDashboardUrl($userId = null, $permissionLevel = null) {
+    $db = getDbConnection();
+    
+    // אם לא נשלחו פרמטרים, קח מהסשן
+    if ($userId === null) {
+        $userId = $_SESSION['user_id'] ?? null;
+    }
+    if ($permissionLevel === null) {
+        $permissionLevel = $_SESSION['permission_level'] ?? 1;
+    }
+    
+    // מנהלים ועורכים מתקדמים - תמיד דשבורד ראשי
+    if ($permissionLevel >= 3) {
+        return DASHBOARD_FULL_URL;
+    }
+    
+    // עורכים רגילים וצופים - בדוק הרשאות ספציפיות
+    if ($permissionLevel == 2) {
+        // בדוק אם יש הרשאה לדשבורד ספציפי
+        $stmt = $db->prepare("
+            SELECT dashboard_type 
+            FROM user_dashboard_permissions 
+            WHERE user_id = ? AND has_permission = 1
+            ORDER BY 
+                CASE dashboard_type 
+                    WHEN 'main' THEN 1 
+                    WHEN 'deceased' THEN 2 
+                    WHEN 'purchases' THEN 3 
+                END
+            LIMIT 1
+        ");
+        $stmt->execute([$userId]);
+        $allowedDashboard = $stmt->fetchColumn();
+        
+        if ($allowedDashboard) {
+            switch($allowedDashboard) {
+                case 'main':
+                    return DASHBOARD_FULL_URL;
+                case 'deceased':
+                    return DASHBOARD_DECEASED_URL;
+                case 'purchases':
+                    return DASHBOARD_PURCHASES_URL;
+            }
+        }
+    }
+    
+    // ברירת מחדל - דשבורד צפייה בלבד
+    return SITE_URL . '/includes/dashboard_view_only.php';
+}
+
+/**
+ * פונקציה להענקת הרשאה לדשבורד למשתמש
+ */
+function grantDashboardPermission($userId, $dashboardType, $grantedBy = null) {
+    $db = getDbConnection();
+    
+    try {
+        $stmt = $db->prepare("
+            INSERT INTO user_dashboard_permissions 
+            (user_id, dashboard_type, has_permission, created_by) 
+            VALUES (?, ?, 1, ?)
+            ON DUPLICATE KEY UPDATE 
+            has_permission = 1,
+            created_by = ?
+        ");
+        
+        $grantedBy = $grantedBy ?? $_SESSION['user_id'] ?? null;
+        return $stmt->execute([$userId, $dashboardType, $grantedBy, $grantedBy]);
+        
+    } catch (Exception $e) {
+        error_log("Error granting dashboard permission: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * פונקציה להסרת הרשאה לדשבורד
+ */
+function revokeDashboardPermission($userId, $dashboardType) {
+    $db = getDbConnection();
+    
+    try {
+        $stmt = $db->prepare("
+            UPDATE user_dashboard_permissions 
+            SET has_permission = 0 
+            WHERE user_id = ? AND dashboard_type = ?
+        ");
+        return $stmt->execute([$userId, $dashboardType]);
+        
+    } catch (Exception $e) {
+        error_log("Error revoking dashboard permission: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * פונקציה לבדיקת הרשאה לדשבורד
+ */
+function hasDashboardPermission($userId, $dashboardType) {
+    $db = getDbConnection();
+    
+    // מנהלים תמיד יכולים
+    $stmt = $db->prepare("SELECT permission_level FROM users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $permissionLevel = $stmt->fetchColumn();
+    
+    if ($permissionLevel >= 3) {
+        return true;
+    }
+    
+    // בדוק הרשאה ספציפית
+    $stmt = $db->prepare("
+        SELECT has_permission 
+        FROM user_dashboard_permissions 
+        WHERE user_id = ? AND dashboard_type = ? AND has_permission = 1
+    ");
+    $stmt->execute([$userId, $dashboardType]);
+    
+    return (bool) $stmt->fetchColumn();
+}
+
+/**
+ * פונקציה לקבלת רשימת הדשבורדים המותרים למשתמש
+ */
+function getUserAllowedDashboards($userId = null) {
+    $db = getDbConnection();
+    
+    if ($userId === null) {
+        $userId = $_SESSION['user_id'] ?? null;
+    }
+    
+    // קבל רמת הרשאה
+    $stmt = $db->prepare("SELECT permission_level FROM users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $permissionLevel = $stmt->fetchColumn();
+    
+    $dashboards = [];
+    
+    // מנהלים ועורכים מתקדמים - גישה לכל הדשבורדים
+    if ($permissionLevel >= 3) {
+        $dashboards = [
+            ['type' => 'main', 'name' => 'דשבורד ראשי', 'url' => DASHBOARD_FULL_URL, 'icon' => 'fas fa-home'],
+            ['type' => 'deceased', 'name' => 'דשבורד נפטרים', 'url' => DASHBOARD_DECEASED_URL, 'icon' => 'fas fa-user-alt-slash'],
+            ['type' => 'purchases', 'name' => 'דשבורד רכישות', 'url' => DASHBOARD_PURCHASES_URL, 'icon' => 'fas fa-shopping-cart']
+        ];
+    } else {
+        // בדוק הרשאות ספציפיות
+        $stmt = $db->prepare("
+            SELECT dashboard_type 
+            FROM user_dashboard_permissions 
+            WHERE user_id = ? AND has_permission = 1
+        ");
+        $stmt->execute([$userId]);
+        $allowedTypes = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        foreach ($allowedTypes as $type) {
+            switch($type) {
+                case 'main':
+                    $dashboards[] = ['type' => 'main', 'name' => 'דשבורד ראשי', 'url' => DASHBOARD_FULL_URL, 'icon' => 'fas fa-home'];
+                    break;
+                case 'deceased':
+                    $dashboards[] = ['type' => 'deceased', 'name' => 'דשבורד נפטרים', 'url' => DASHBOARD_DECEASED_URL, 'icon' => 'fas fa-user-alt-slash'];
+                    break;
+                case 'purchases':
+                    $dashboards[] = ['type' => 'purchases', 'name' => 'דשבורד רכישות', 'url' => DASHBOARD_PURCHASES_URL, 'icon' => 'fas fa-shopping-cart'];
+                    break;
+            }
+        }
+    }
+    
+    // תמיד הוסף דשבורד צפייה בלבד כאופציה
+    $dashboards[] = ['type' => 'view_only', 'name' => 'צפייה בלבד', 'url' => SITE_URL . '/includes/dashboard_view_only.php', 'icon' => 'fas fa-eye'];
+    
+    return $dashboards;
+}
+
+// הוסף את הקבוע החדש
+define('DASHBOARD_VIEW_ONLY_URL', SITE_URL . '/includes/dashboard_view_only.php');
+
+// ----------
 
 // פונקציה ליצירת חיבור לדטהבייס
 function getDbConnection() {
