@@ -34,12 +34,12 @@ $stmt = $db->prepare("SELECT COUNT(*) FROM purchase_forms WHERE created_by = ?")
 $stmt->execute([$userId]);
 $stats['my_purchase_forms'] = $stmt->fetchColumn();
 
-// הטפסים האחרונים שלי
+// הטפסים האחרונים שלי - תיקון collation
 $stmt = $db->prepare("
     SELECT 
         'deceased' as form_type,
         form_uuid,
-        deceased_name as name,
+        CONVERT(deceased_name USING utf8mb4) COLLATE utf8mb4_unicode_ci as name,
         status,
         created_at
     FROM deceased_forms 
@@ -50,7 +50,7 @@ $stmt = $db->prepare("
     SELECT 
         'purchase' as form_type,
         form_uuid,
-        buyer_name as name,
+        CONVERT(buyer_name USING utf8mb4) COLLATE utf8mb4_unicode_ci as name,
         status,
         created_at
     FROM purchase_forms 
