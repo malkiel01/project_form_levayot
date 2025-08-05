@@ -1,6 +1,11 @@
 <?php
 // includes/purchase_form_helpers.php - פונקציות עזר לטופס רכישות
-require_once '../../config.php';
+
+// כלול את קובץ form_auth.php אם לא נכלל כבר
+if (!function_exists('handleFormAuth')) {
+    require_once 'form_auth.php';
+}
+
 /**
  * טיפול באימות והרשאות
  */
@@ -21,13 +26,13 @@ function handlePurchaseFormAuth() {
             $viewOnly = ($linkPermissions === 'view');
             $formUuid = $linkResult['form_uuid'];
         } else {
-            header("Location: " . LOGIN_SITE_URL ."?error=invalid_link");
+            header("Location: ../login.php?error=invalid_link");
             exit;
         }
     } else {
         // בדיקת הרשאות משתמש רגיל
         if (!isset($_SESSION['user_id'])) {
-            header('Location: ' . LOGIN_SITE_URL);
+            header("Location: ../login.php");
             exit;
         }
         
@@ -51,6 +56,11 @@ function handlePurchaseFormAuth() {
  */
 function handlePurchaseFormData($formUuid, $userPermissionLevel) {
     global $pdo;
+    
+    // בדיקה שיש חיבור למסד
+    if (!isset($pdo) || $pdo === null) {
+        die('שגיאה: אין חיבור למסד הנתונים. אנא בדוק את קובץ config.php');
+    }
     
     $form = new PurchaseForm($pdo);
     $isNewForm = empty($formUuid);
