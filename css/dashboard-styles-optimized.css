@@ -191,12 +191,6 @@ body {
     }
 }
 
-
-
-
-
-
-
 /* תיקון רוחב לטקסט בכרטיסי טופס */
 .form-type-card .text-center.text-md-start {
     min-width: 200px; /* רוחב מינימלי למניעת שבירת טקסט */
