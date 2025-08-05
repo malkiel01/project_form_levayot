@@ -1,8 +1,8 @@
 <?php
 // view_form.php - צפייה בטופס נפטר
 
-require_once 'config.php';
-require_once 'DeceasedForm.php';
+require_once '../../config.php';
+require_once '../../DeceasedForm.php';
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
