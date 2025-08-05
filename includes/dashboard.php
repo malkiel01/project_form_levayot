@@ -448,8 +448,8 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                                     data-form-uuid="<?= $activity['form_uuid'] ?>"
                                                     data-form-type="deceased"
                                                     data-form-name="<?= htmlspecialchars($activity['name']) ?>"
-                                                    title="מח222יקה">
-                                                <i class="fas fa-trash"></i>333
+                                                    title="מחיקה">
+                                                <i class="fas fa-trash"></i>
                                             </button>
                                         <?php endif; ?>
                                         
@@ -476,7 +476,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                                     data-form-type="purchase"
                                                     data-form-name="<?= htmlspecialchars($activity['name']) ?>"
                                                     title="מחיקה">
-                                                <i class="fas fa-trash"></i>
+                                                <i class="fas fa-trash"></i>444
                                             </button>
                                         <?php endif; ?>
                                     <?php endif; ?>
