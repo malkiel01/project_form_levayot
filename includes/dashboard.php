@@ -252,7 +252,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                 </div>
                             </div>
                             <a href="../form/index_deceased.php" class="btn btn-primary action-btn mt-3 w-100" onclick="event.stopPropagation();">
-                                <i class="fas fa-plus"></i> טופס חדש
+                                <i class="fas fa-plus"></i> לוויה חדשה
                             </a>
                         </div>
                     </div>
