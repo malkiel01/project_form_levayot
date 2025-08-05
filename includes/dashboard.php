@@ -425,7 +425,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                 <div class="btn-group btn-group-sm" role="group">
                                     <?php if ($activity['type'] === 'deceased'): ?>
                                         <!-- צפייה -->
-                                        <a href="../view_form.php?id=<?= $activity['form_uuid'] ?>&view=1" 
+                                        <a href="../form/includes/view_form.php?id=<?= $activity['form_uuid'] ?>&view=1" 
                                         class="btn btn-sm btn-view-gradient" 
                                         title="צפייה">
                                             <i class="fas fa-eye"></i>
