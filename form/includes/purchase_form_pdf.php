@@ -1,8 +1,8 @@
 <?php
 // form/purchase_form_pdf.php - יצירת PDF של טופס רכישות
 
-require_once '../config.php';
-require_once '../PurchaseForm.php';
+require_once '../../config.php';
+require_once '../../PurchaseForm.php';
 
 // בדיקת הרשאות
 if (!isset($_SESSION['user_id'])) {

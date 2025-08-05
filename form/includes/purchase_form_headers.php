@@ -1,6 +1,6 @@
 <?php
 // includes/purchase_form_helpers.php - פונקציות עזר לטופס רכישות
-require_once '../config.php';
+require_once '../../config.php';
 /**
  * טיפול באימות והרשאות
  */
