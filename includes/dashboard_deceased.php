@@ -1,12 +1,16 @@
 <?php
 // dashboard_deceased.php - דשבורד נפטרים בלבד
 require_once '../config.php';
+require_once 'auth_check.php';
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
     header('Location: ' . LOGIN_URL);
     exit;
 }
+
+// בדיקת הרשאה לדשבורד נפטרים
+checkPageAccess('dashboard_deceased', 1, true);
 
 // כלול פונקציות עזר
 require_once 'dashboard_functions.php';

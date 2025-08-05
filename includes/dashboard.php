@@ -1,12 +1,16 @@
 <?php
 // dashboard.php - דשבורד משולב משופר
 require_once '../config.php';
+require_once 'auth_check.php';
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
     header('Location: ' . LOGIN_URL);
     exit;
 }
+
+// בדיקת הרשאה לדשבורד ראשי
+checkPageAccess('dashboard', 1, true);
 
 // כלול פונקציות עזר
 require_once 'dashboard_functions.php';
