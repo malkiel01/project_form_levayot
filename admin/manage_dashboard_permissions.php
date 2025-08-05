@@ -1,6 +1,10 @@
 <?php
 // admin/manage_dashboard_permissions.php - דף ניהול הרשאות דשבורדים
 require_once '../config.php';
+require_once '../includes/auth_check.php';
+
+// רק מנהלים יכולים לגשת לדף זה
+checkPageAccess('admin_permissions', 4, false);
 
 // רק מנהלים
 if (!isset($_SESSION['user_id']) || $_SESSION['permission_level'] < 4) {
