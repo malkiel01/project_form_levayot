@@ -191,6 +191,37 @@ body {
     }
 }
 
+
+
+
+
+
+
+/* תיקון כפתורי פעולה בכרטיסי סוג טופס - יישור לשמאל */
+.form-type-card .text-center.text-md-end {
+    text-align: start !important; /* יישור לשמאל במסכים גדולים */
+}
+
+.form-type-card .text-center.text-md-end .action-btn {
+    margin-left: 0 !important; /* ביטול margin שמאלי */
+    margin-right: auto !important; /* לא עובד ב-RTL, אז נשתמש ב-inline */
+    margin-inline-start: 0 !important; /* תחילת השורה (ימין ב-RTL) */
+    margin-inline-end: auto !important; /* סוף השורה (שמאל ב-RTL) */
+    display: inline-block; /* כדי שה-margin יעבוד */
+}
+
+/* במובייל - החזר למרכז */
+@media (max-width: 768px) {
+    .form-type-card .text-center.text-md-end {
+        text-align: center !important;
+    }
+    
+    .form-type-card .text-center.text-md-end .action-btn {
+        margin-inline-start: auto !important;
+        margin-inline-end: auto !important;
+    }
+}
+
 /* כרטיסי סטטיסטיקה - ללא אנימציות בהתחלה */
 .stat-card {
     border-radius: 20px;
