@@ -409,9 +409,21 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                             <th>פעולות</th>
                         </tr>
                     </thead>
+                    <thead>
+                        <tr>
+                            <th>סוג</th>
+                            <th>שם</th>
+                            <th class="d-none d-md-table-cell">מיקום</th>
+                            <th>תאריך</th>
+                            <th class="d-none d-sm-table-cell">נוצר ע"י</th>
+                            <th>סטטוס</th>
+                            <th>פעולות</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php foreach ($recentActivity as $activity): ?>
                         <tr>
+                            <!-- אייקון רשומה -->
                             <td>
                                 <?php if ($activity['type'] === 'deceased'): ?>
                                     <i class="fas fa-cross text-primary" title="נפטר"></i>
@@ -419,11 +431,13 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                     <i class="fas fa-shopping-cart text-success" title="רכישה"></i>
                                 <?php endif; ?>
                             </td>
+                            <!-- שם -->
                             <td>
                                 <div class="text-truncate" style="max-width: 150px;">
                                     <strong><?= htmlspecialchars($activity['name'] ?? 'לא ידוע') ?></strong>
                                 </div>
                             </td>
+                            <!-- בית עלמין -->
                             <td class="d-none d-md-table-cell">
                                 <?php if ($activity['type'] === 'deceased' && !empty($activity['cemetery_name'])): ?>
                                     <small class="text-muted">
@@ -436,9 +450,20 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                     <small class="text-muted">-</small>
                                 <?php endif; ?>
                             </td>
+                            <!-- תאריך -->
                             <td>
                                 <small><?= date('d/m/y', strtotime($activity['event_date'])) ?></small>
                             </td>
+                            <!-- שם היוצר -->
+                            <td class="d-none d-sm-table-cell">
+                                <small class="text-muted">
+                                    <?= htmlspecialchars($activity['creator_name'] ?? $activity['creator_username'] ?? 'לא ידוע') ?>
+                                    <?php if ($activity['created_by'] == $_SESSION['user_id']): ?>
+                                        <span class="badge bg-info ms-1">שלי</span>
+                                    <?php endif; ?>
+                                </small>
+                            </td>
+                            <!-- סטטוס -->
                             <td>
                                 <span class="status-badge status-<?= $activity['status'] ?>">
                                     <?= translateStatus($activity['status']) ?>
