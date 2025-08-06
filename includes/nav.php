@@ -4,11 +4,14 @@
 // בדיקת הרשאות
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 $username = $_SESSION['username'] ?? 'משתמש';
+
+// קבע את נתיב הבסיס - ברירת מחדל או מה שמוגדר
+$navBasePath = $navBasePath ?? '';
 ?>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container-fluid">
-        <a class="navbar-brand" href="<?= SITE_URL ?>">
+        <a class="navbar-brand" href="<?= $navBasePath ?>dashboard.php">
             <i class="fas fa-home"></i> מערכת קדישא
         </a>
         
@@ -24,13 +27,13 @@ $username = $_SESSION['username'] ?? 'משתמש';
                         <i class="fas fa-chart-line"></i> דשבורדים
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="<?= DASHBOARD_FULL_URL ?>">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>dashboard.php">
                             <i class="fas fa-th"></i> דשבורד משולב
                         </a></li>
-                        <li><a class="dropdown-item" href="dashboard_deceased.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>dashboard_deceased.php">
                             <i class="fas fa-cross"></i> דשבורד נפטרים
                         </a></li>
-                        <li><a class="dropdown-item" href="dashboard_purchases.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>dashboard_purchases.php">
                             <i class="fas fa-shopping-cart"></i> דשבורד רכישות
                         </a></li>
                     </ul>
@@ -42,17 +45,17 @@ $username = $_SESSION['username'] ?? 'משתמש';
                         <i class="fas fa-file-alt"></i> טפסים
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="../form/index_deceased.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>form/index_deceased.php">
                             <i class="fas fa-plus"></i> טופס נפטר חדש
                         </a></li>
-                        <li><a class="dropdown-item" href="../form/index_purchase.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>form/index_purchase.php">
                             <i class="fas fa-plus"></i> טופס רכישה חדש
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="../forms_list.php?type=deceased">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>includes/lists/deceased_list.php">
                             <i class="fas fa-list"></i> רשימת נפטרים
                         </a></li>
-                        <li><a class="dropdown-item" href="../forms_list.php?type=purchase">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>includes/lists/purchase_list.php">
                             <i class="fas fa-list"></i> רשימת רכישות
                         </a></li>
                     </ul>
@@ -65,17 +68,17 @@ $username = $_SESSION['username'] ?? 'משתמש';
                         <i class="fas fa-cogs"></i> ניהול
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="../admin/users.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/users.php">
                             <i class="fas fa-users"></i> ניהול משתמשים
                         </a></li>
-                        <li><a class="dropdown-item" href="../admin/permissions.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/permissions.php">
                             <i class="fas fa-shield-alt"></i> ניהול הרשאות
                         </a></li>
-                        <li><a class="dropdown-item" href="../admin/cemeteries.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/cemeteries.php">
                             <i class="fas fa-map-marked-alt"></i> ניהול בתי עלמין
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="../admin/logs.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/logs.php">
                             <i class="fas fa-history"></i> יומן פעילות
                         </a></li>
                     </ul>
@@ -90,14 +93,14 @@ $username = $_SESSION['username'] ?? 'משתמש';
                         <i class="fas fa-user-circle"></i> <?= htmlspecialchars($username) ?>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="../profile.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>profile.php">
                             <i class="fas fa-user"></i> הפרופיל שלי
                         </a></li>
-                        <li><a class="dropdown-item" href="../settings.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>settings.php">
                             <i class="fas fa-cog"></i> הגדרות
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="../auth/logout.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>auth/logout.php">
                             <i class="fas fa-sign-out-alt"></i> יציאה
                         </a></li>
                     </ul>
