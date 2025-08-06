@@ -94,7 +94,7 @@ $myRecentForms = array_slice($myRecentForms, 0, 10);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="../css/dashboard-styles-optimized.css" rel="stylesheet">
     <style>
-        /* body {
+        body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -149,7 +149,7 @@ $myRecentForms = array_slice($myRecentForms, 0, 10);
             font-size: 0.875rem;
             padding: 0.375rem 0.75rem;
             border-radius: 20px;
-        } */
+        }
     </style>
 </head>
 <body>
