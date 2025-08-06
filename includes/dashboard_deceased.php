@@ -273,7 +273,7 @@ $recentActivity = $stmt->fetchAll();
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <a href="../form/includes/view_form.php?id=<?= $activity['form_uuid'] ?>&view=1" 
+                                            <a href="../form/includes/view_deceased_form.php?id=<?= $activity['form_uuid'] ?>&view=1" 
                                             class="btn btn-sm btn-view-gradient" 
                                             title="צפייה">
                                                 <i class="fas fa-eye"></i>
