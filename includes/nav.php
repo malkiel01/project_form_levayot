@@ -71,20 +71,20 @@ $allowedDashboards = getUserAllowedDashboards($userId);
                         <i class="fas fa-cogs"></i> ניהול
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/users.php">
+                        <li><a class="dropdown-item" href="<?= SITE_URL . '/' ?>admin/users.php">
                             <i class="fas fa-users"></i> ניהול משתמשים
                         </a></li>
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/permissions.php">
+                        <li><a class="dropdown-item" href="<?= SITE_URL . '/' ?>admin/permissions.php">
                             <i class="fas fa-shield-alt"></i> ניהול הרשאות
                         </a></li>
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/manage_dashboard_permissions.php">
+                        <li><a class="dropdown-item" href="<?= SITE_URL . '/' ?>admin/manage_dashboard_permissions.php">
                             <i class="fas fa-tachometer-alt"></i> הרשאות דשבורדים
                         </a></li>
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/cemeteries.php">
+                        <li><a class="dropdown-item" href="<?= SITE_URL . '/' ?>admin/cemeteries.php">
                             <i class="fas fa-map-marked-alt"></i> ניהול בתי עלמין
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/logs.php">
+                        <li><a class="dropdown-item" href="<?= SITE_URL . '/' ?>admin/logs.php">
                             <i class="fas fa-history"></i> יומן פעילות
                         </a></li>
                     </ul>
