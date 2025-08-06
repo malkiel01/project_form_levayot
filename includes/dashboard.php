@@ -201,7 +201,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
     <div class="container-fluid py-4">
         <!-- כותרת הדשבורד -->
         <div class="dashboard-header">
-            <h1><i class="fas fa-chart-line"></i> דשבורד ראש2י</h1>
+            <h1><i class="fas fa-chart-line"></i> דשבורד ראשי</h1>
             <p>מבט כולל על המערכת - נפטרים ורכישות</p>
         </div>
 
@@ -350,7 +350,6 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                     <div class="p-3">
                         <h3 class="mb-0">
                             <i class="fas fa-cross text-primary"></i> נפטרים אחרונים
-                            <i class="fas fa-cross text-primary"></i> נפטרים אחרונים
                         </h3>
                     </div>
                     <div class="table-responsive">
@@ -400,7 +399,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                             <div class="btn-group btn-group-sm" role="group">
                                                 <a href="../form/includes/view_deceased_form.php?id=<?= $activity['form_uuid'] ?>&view=1" 
                                                 class="btn btn-sm btn-view-gradient" 
-                                                title="צפיי33ה">
+                                                title="צפייה">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="../form/index_deceased.php?id=<?= $activity['form_uuid'] ?>" 
@@ -459,10 +458,10 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                             </thead>
                             <tbody>
                                 <?php 
-                                $recentPurchasesFiltered = array_filter($recentActivity, function($item) {
-                                    return $item['type'] === 'purchase';
-                                });
-                                $recentPurchasesFiltered = array_slice($recentPurchasesFiltered, 0, 5);
+                                    $recentPurchasesFiltered = array_filter($recentActivity, function($item) {
+                                        return $item['type'] === 'purchase';
+                                    });
+                                    $recentPurchasesFiltered = array_slice($recentPurchasesFiltered, 0, 5);
                                 ?>
                                 
                                 <?php if (!empty($recentPurchasesFiltered)): ?>
