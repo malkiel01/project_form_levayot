@@ -37,11 +37,11 @@ $savedPreferences = getUserPreferences($userId, 'deceased_filters');
 
 // בניית השאילתא
 $params = [];
-$whereClause = buildWhereClause($currentFilters, $params);
+$whereClause = buildWhereClause($currentFilters, $params, 'df'); // הוסף את ה-alias
 
 // הוסף הגבלת הרשאות
 if ($userPermissionLevel < 4) {
-    $whereClause .= ($whereClause ? ' AND ' : ' WHERE ') . 'created_by = ?';
+    $whereClause .= ($whereClause ? ' AND ' : ' WHERE ') . 'df.created_by = ?'; // הוסף df.
     $params[] = $userId;
 }
 

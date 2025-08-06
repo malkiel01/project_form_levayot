@@ -98,7 +98,7 @@ function deleteUserPreference($userId, $preferenceId) {
 /**
  * בניית תנאי WHERE לפי פילטרים
  */
-function buildWhereClause($filters, &$params) {
+function buildWhereClause2($filters, &$params) {
     $conditions = [];
     
     // פילטר תאריכים
@@ -149,6 +149,65 @@ function buildWhereClause($filters, &$params) {
     // סטטוס
     if (!empty($filters['status'])) {
         $conditions[] = "status = ?";
+        $params[] = $filters['status'];
+    }
+    
+    return $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+}
+/**
+ * בניית תנאי WHERE לפי פילטרים
+ */
+function buildWhereClause($filters, &$params, $tableAlias = 'df') {
+    $conditions = [];
+    
+    // פילטר תאריכים - הוסף את alias הטבלה
+    if (!empty($filters['date_range'])) {
+        switch ($filters['date_range']) {
+            case 'last_month':
+                $conditions[] = "{$tableAlias}.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+                break;
+            case 'last_year':
+                $conditions[] = "{$tableAlias}.created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+                break;
+            case 'custom':
+                if (!empty($filters['date_from'])) {
+                    $conditions[] = "{$tableAlias}.created_at >= ?";
+                    $params[] = $filters['date_from'];
+                }
+                if (!empty($filters['date_to'])) {
+                    $conditions[] = "{$tableAlias}.created_at <= ?";
+                    $params[] = $filters['date_to'] . ' 23:59:59';
+                }
+                break;
+        }
+    }
+    
+    // חיפוש טקסט - הוסף את alias הטבלה
+    if (!empty($filters['search_text'])) {
+        $searchText = '%' . $filters['search_text'] . '%';
+        $conditions[] = "({$tableAlias}.deceased_name LIKE ? OR {$tableAlias}.father_name LIKE ? OR {$tableAlias}.mother_name LIKE ?)";
+        $params[] = $searchText;
+        $params[] = $searchText;
+        $params[] = $searchText;
+    }
+    
+    // פילטר מיקום - הוסף את alias הטבלה
+    if (!empty($filters['cemetery_id'])) {
+        $conditions[] = "{$tableAlias}.cemetery_id = ?";
+        $params[] = $filters['cemetery_id'];
+    }
+    if (!empty($filters['block_id'])) {
+        $conditions[] = "{$tableAlias}.block_id = ?";
+        $params[] = $filters['block_id'];
+    }
+    if (!empty($filters['section_id'])) {
+        $conditions[] = "{$tableAlias}.section_id = ?";
+        $params[] = $filters['section_id'];
+    }
+    
+    // סטטוס - הוסף את alias הטבלה
+    if (!empty($filters['status'])) {
+        $conditions[] = "{$tableAlias}.status = ?";
         $params[] = $filters['status'];
     }
     
