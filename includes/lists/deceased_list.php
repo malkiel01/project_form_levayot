@@ -1,9 +1,11 @@
 <?php
 // includes/lists/deceased_list.php - רשימת טפסי נפטרים
 
-require_once '../config.php';
+require_once '../../config.php';
 require_once 'list_functions.php';
 require_once 'list_filters.php';
+
+
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
