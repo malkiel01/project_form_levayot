@@ -178,6 +178,85 @@ $recentActivity = $stmt->fetchAll();
             </div>
         </div>
 
+        <!-- פעילות אחרונה -->
+        <div class="recent-table">
+            <div class="p-3">
+                <h3 class="mb-0">פעילות אחרונה במערכת</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>סוג</th>
+                            <th>שם</th>
+                            <th class="d-none d-md-table-cell">סכום</th>
+                            <th>תאריך</th>
+                            <th class="d-none d-sm-table-cell">נוצר ע"י</th>
+                            <th>סטטוס</th>
+                            <th>פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($recentActivity as $activity): ?>
+                        <tr>
+                            <td>
+                                <i class="fas fa-shopping-cart text-success" title="רכישה"></i>
+                            </td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 150px;">
+                                    <strong><?= htmlspecialchars($activity['name'] ?? 'לא ידוע') ?></strong>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <small>₪<?= number_format($activity['total_amount'] ?? 0) ?></small>
+                            </td>
+                            <td>
+                                <small><?= date('d/m/y', strtotime($activity['event_date'])) ?></small>
+                            </td>
+                            <td class="d-none d-sm-table-cell">
+                                <small class="text-muted">
+                                    <?= htmlspecialchars($activity['creator_name'] ?? $activity['creator_username'] ?? 'לא ידוע') ?>
+                                    <?php if ($activity['created_by'] == $_SESSION['user_id']): ?>
+                                        <span class="badge bg-info ms-1">שלי</span>
+                                    <?php endif; ?>
+                                </small>
+                            </td>
+                            <td>
+                                <span class="status-badge status-<?= $activity['status'] ?>">
+                                    <?= translateStatus($activity['status']) ?>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="../form/purchase_form.php?uuid=<?= $activity['form_uuid'] ?>&view=1" 
+                                       class="btn btn-sm btn-view-gradient" 
+                                       title="צפייה">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="../form/purchase_form.php?uuid=<?= $activity['form_uuid'] ?>" 
+                                       class="btn btn-sm btn-edit-gradient" 
+                                       title="עריכה">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <?php if ($canDelete): ?>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-delete-gradient delete-form-btn" 
+                                                data-form-uuid="<?= $activity['form_uuid'] ?>"
+                                                data-form-type="purchase"
+                                                data-form-name="<?= htmlspecialchars($activity['name']) ?>"
+                                                title="מחיקה">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- סטטיסטיקות ראשיות -->
         <div class="row mb-4">
             <div class="col-6 col-md-3 mb-3">
@@ -275,84 +354,6 @@ $recentActivity = $stmt->fetchAll();
             </div>
         </div>
 
-        <!-- פעילות אחרונה -->
-        <div class="recent-table">
-            <div class="p-3">
-                <h3 class="mb-0">פעילות אחרונה במערכת</h3>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>סוג</th>
-                            <th>שם</th>
-                            <th class="d-none d-md-table-cell">סכום</th>
-                            <th>תאריך</th>
-                            <th class="d-none d-sm-table-cell">נוצר ע"י</th>
-                            <th>סטטוס</th>
-                            <th>פעולות</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($recentActivity as $activity): ?>
-                        <tr>
-                            <td>
-                                <i class="fas fa-shopping-cart text-success" title="רכישה"></i>
-                            </td>
-                            <td>
-                                <div class="text-truncate" style="max-width: 150px;">
-                                    <strong><?= htmlspecialchars($activity['name'] ?? 'לא ידוע') ?></strong>
-                                </div>
-                            </td>
-                            <td class="d-none d-md-table-cell">
-                                <small>₪<?= number_format($activity['total_amount'] ?? 0) ?></small>
-                            </td>
-                            <td>
-                                <small><?= date('d/m/y', strtotime($activity['event_date'])) ?></small>
-                            </td>
-                            <td class="d-none d-sm-table-cell">
-                                <small class="text-muted">
-                                    <?= htmlspecialchars($activity['creator_name'] ?? $activity['creator_username'] ?? 'לא ידוע') ?>
-                                    <?php if ($activity['created_by'] == $_SESSION['user_id']): ?>
-                                        <span class="badge bg-info ms-1">שלי</span>
-                                    <?php endif; ?>
-                                </small>
-                            </td>
-                            <td>
-                                <span class="status-badge status-<?= $activity['status'] ?>">
-                                    <?= translateStatus($activity['status']) ?>
-                                </span>
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="../form/purchase_form.php?uuid=<?= $activity['form_uuid'] ?>&view=1" 
-                                       class="btn btn-sm btn-view-gradient" 
-                                       title="צפייה">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="../form/purchase_form.php?uuid=<?= $activity['form_uuid'] ?>" 
-                                       class="btn btn-sm btn-edit-gradient" 
-                                       title="עריכה">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <?php if ($canDelete): ?>
-                                        <button type="button" 
-                                                class="btn btn-sm btn-delete-gradient delete-form-btn" 
-                                                data-form-uuid="<?= $activity['form_uuid'] ?>"
-                                                data-form-type="purchase"
-                                                data-form-name="<?= htmlspecialchars($activity['name']) ?>"
-                                                title="מחיקה">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
