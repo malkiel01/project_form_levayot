@@ -1,5 +1,6 @@
 <?php
 // includes/nav.php - תפריט ניווט משותף
+require_once '../config.php';
 
 // בדיקת הרשאות
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
@@ -47,10 +48,10 @@ $allowedDashboards = getUserAllowedDashboards($userId);
                         <i class="fas fa-file-alt"></i> טפסים
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="<?= $navBasePath . FORM_DECEASED_URL ?>">
+                        <li><a class="dropdown-item" href="<?= FORM_DECEASED_URL ?>">
                             <i class="fas fa-plus"></i> טופס נפטר חדש
                         </a></li>
-                        <li><a class="dropdown-item" href="<?= $navBasePath . FORM_PURCHASE_URL ?>">
+                        <li><a class="dropdown-item" href="<?= FORM_PURCHASE_URL ?>">
                             <i class="fas fa-plus"></i> טופס רכישה חדש
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
