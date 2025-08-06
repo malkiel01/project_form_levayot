@@ -408,6 +408,7 @@ body {
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem; /* מרווח מתחת לטבלה */
 }
 
 .recent-table .table {
@@ -437,6 +438,30 @@ body {
     padding: 1rem;
     vertical-align: middle;
     border-top: 1px solid #f0f0f0;
+}
+
+.recent-table .table-responsive {
+    height: 400px; /* גובה קבוע */
+    overflow-y: auto; /* גלילה אנכית */
+    overflow-x: auto; /* גלילה אופקית במידת הצורך */
+}
+
+/* שמירה על הכותרות בזמן גלילה */
+.recent-table table thead {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 10;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* עיצוב לכשאין תוצאות */
+.no-results-container {
+    height: 350px; /* גובה דומה לטבלה עם תוצאות */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
 }
 
 /* תגי סטטוס */
