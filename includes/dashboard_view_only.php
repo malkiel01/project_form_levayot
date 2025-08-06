@@ -92,65 +92,7 @@ $myRecentForms = array_slice($myRecentForms, 0, 10);
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .dashboard-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 1.5rem;
-            transition: transform 0.2s;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
-        }
-        
-        .recent-forms-table {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .available-dashboards {
-            background: #e3f2fd;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .navbar {
-            background-color: #343a40 !important;
-        }
-        
-        .status-badge {
-            font-size: 0.875rem;
-            padding: 0.375rem 0.75rem;
-            border-radius: 20px;
-        }
-    </style>
+    <link href="../css/dashboard-styles-optimized.css" rel="stylesheet">
 </head>
 <body>
     <!-- ניווט עליון -->
@@ -165,16 +107,14 @@ $myRecentForms = array_slice($myRecentForms, 0, 10);
     }
     ?>
 
-    <!-- כותרת הדשבורד -->
-    <div class="dashboard-header">
-        <div class="container">
-            <h1 class="mb-0">
-                <i class="fas fa-tachometer-alt me-2"></i>
-                דשבורד צפייה בלבד
-            </h1>
-            <p class="mb-0 mt-2">ברוך הבא, <?php echo htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username']); ?></p>
+    <div class="container-fluid py-4">
+        <!-- כותרת הדשבורד -->
+        <div class="dashboard-header">
+            <h1><i class="fas fa-tachometer-alt"></i> דשבורד צפייה בלבד</h1>
+            <p>ברוך הבא, <?php echo htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username']); ?></p>
         </div>
     </div>
+    
 
     <div class="container">
         <!-- סטטיסטיקות -->
