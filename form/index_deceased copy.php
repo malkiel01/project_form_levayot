@@ -50,27 +50,8 @@ if (isset($_SESSION['form_saved_message'])) {
 <html dir="rtl" lang="he">
 <head>
     <?php renderFormHead($isNewForm); ?>
-    <style>
-        /* התאמות עיצוב כשיש תפריט */
-        <?php if (!$isLinkAccess && $userPermissionLevel > 1): ?>
-        body {
-            padding-top: 0;
-        }
-        .container {
-            margin-top: 20px;
-        }
-        <?php endif; ?>
-    </style>
 </head>
 <body>
-    <?php 
-    // הצג תפריט רק למשתמשים מחוברים עם הרשאה גבוהה מצופה (רמה 2 ומעלה)
-    if (!$isLinkAccess && isset($_SESSION['user_id']) && $userPermissionLevel > 1) {
-        $navBasePath = '../';
-        include '../includes/nav.php';
-    }
-    ?>
-    
     <?php renderLoadingOverlay(); ?>
     <?php renderUserStatusIndicator($isLinkAccess, $viewOnly); ?>
     
@@ -118,7 +99,7 @@ if (isset($_SESSION['form_saved_message'])) {
             requiredFields: <?= json_encode($requiredFields) ?>,
             csrfToken: '<?= $_SESSION['csrf_token'] ?>',
             // הוספת נתוני הרשאות
-            userPermissionLevel: <?= isset($_SESSION['user_id']) ? $_SESSION['permission_level'] : 0 ?>,
+            userPermissionLevel: <?= isset($_SESSION['permission_level']) ? $_SESSION['permission_level'] : 0 ?>,
             canShare: <?= (isset($_SESSION['user_id']) && isset($_SESSION['permission_level']) && $_SESSION['permission_level'] >= 3) ? 'true' : 'false' ?>
         };
         
@@ -134,6 +115,7 @@ if (isset($_SESSION['form_saved_message'])) {
     </script>
 
     <?php renderFormScripts(); ?>
+
 
 </body>
 </html>
