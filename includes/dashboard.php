@@ -201,7 +201,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
     <div class="container-fluid py-4">
         <!-- כותרת הדשבורד -->
         <div class="dashboard-header">
-            <h1><i class="fas fa-chart-line"></i> דשבורד ראשי</h1>
+            <h1><i class="fas fa-chart-line"></i> דשבורד ראש2י</h1>
             <p>מבט כולל על המערכת - נפטרים ורכישות</p>
         </div>
 
