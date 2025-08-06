@@ -211,7 +211,7 @@ function exportDeceasedList() {
                         </thead>
                         <tbody>
                             <?php foreach ($results as $row): ?>
-                                <tr onclick="window.location='../../view_form.php?id=<?= $row['form_uuid'] ?>'">
+                                <tr onclick="window.location='../../view_deceased_form.php?id=<?= $row['form_uuid'] ?>'">
                                     <td><?= substr($row['form_uuid'], 0, 8) ?>...</td>
                                     <td><strong><?= htmlspecialchars($row['deceased_name']) ?></strong></td>
                                     <td><?= htmlspecialchars($row['identification_number'] ?? '-') ?></td>
@@ -235,7 +235,7 @@ function exportDeceasedList() {
                                     <td><?= date('d/m/Y H:i', strtotime($row['created_at'])) ?></td>
                                     <td onclick="event.stopPropagation()">
                                         <div class="btn-group btn-group-sm">
-                                            <a href="../../view_form.php?id=<?= $row['form_uuid'] ?>" 
+                                            <a href="../../view_deceased_form.php?id=<?= $row['form_uuid'] ?>" 
                                                class="btn btn-info" title="צפייה">
                                                 <i class="fas fa-eye"></i>
                                             </a>
