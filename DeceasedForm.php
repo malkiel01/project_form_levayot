@@ -32,101 +32,6 @@ class DeceasedForm {
     }
 
     // יצירת טופס חדש
-    public function createForm2($data) {
-        // וודא שיש UUID תקין
-        if (empty($data['form_uuid'])) {
-            throw new Exception("UUID חסר");
-        }
-        
-        // וודא שה-UUID לא ריק
-        if (trim($data['form_uuid']) === '') {
-            throw new Exception("UUID ריק");
-        }
-        
-        // בדוק שה-UUID לא קיים כבר
-        $checkStmt = $this->db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE form_uuid = ?");
-        $checkStmt->execute([$data['form_uuid']]);
-        if ($checkStmt->fetchColumn() > 0) {
-            throw new Exception("UUID כבר קיים במערכת");
-        }
-        
-        $data['created_by'] = $_SESSION['user_id'] ?? null;
-        
-        // תמיד התחל כטיוטה
-        $data['status'] = 'draft';
-        
-        // חישוב אחוז התקדמות
-        $data['progress_percentage'] = $this->calculateProgress($data);
-        
-        // בדוק אם כל שדות החובה מלאים
-        if ($this->areAllRequiredFieldsFilled($data)) {
-            $data['status'] = 'completed';
-        }
-        
-        // נקה שדות ריקים שעלולים לגרום לבעיות Foreign Key
-        $fieldsToClean = ['cemetery_id', 'block_id', 'section_id', 'row_id', 'grave_id', 'plot_id'];
-        foreach ($fieldsToClean as $field) {
-            if (isset($data[$field]) && ($data[$field] === '' || $data[$field] === null)) {
-                unset($data[$field]);
-            }
-        }
-        
-        // בניית שאילתת INSERT
-        $fields = [];
-        $values = [];
-        $placeholders = [];
-        
-        // וודא ש-form_uuid נכלל
-        if (!in_array('form_uuid', array_keys($data))) {
-            throw new Exception("form_uuid חסר בנתונים");
-        }
-        
-        foreach ($data as $field => $value) {
-            if ($this->canEditField($field) || $field === 'form_uuid' || $field === 'created_by' || $field === 'status' || $field === 'progress_percentage') {
-                $fields[] = $field;
-                $values[] = $value;
-                $placeholders[] = '?';
-            }
-        }
-        
-        if (empty($fields)) {
-            throw new Exception("אין שדות לשמירה");
-        }
-        
-        $sql = "INSERT INTO deceased_forms (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
-        
-        try {
-            error_log("Creating new form - UUID: " . $data['form_uuid']);
-            error_log("SQL: " . $sql);
-            error_log("Values: " . print_r($values, true));
-            
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute($values);
-            
-            $this->formId = $this->db->lastInsertId();
-            
-            // רישום בלוג
-            $logStmt = $this->db->prepare("
-                INSERT INTO activity_log (user_id, form_id, action, details, ip_address, user_agent) 
-                VALUES (?, ?, 'create_form', ?, ?, ?)
-            ");
-            $logStmt->execute([
-                $_SESSION['user_id'] ?? null,
-                $this->formId,
-                json_encode(['form_uuid' => $data['form_uuid'], 'status' => $data['status']]),
-                $_SERVER['REMOTE_ADDR'] ?? '',
-                $_SERVER['HTTP_USER_AGENT'] ?? ''
-            ]);
-            
-            error_log("Form created successfully - UUID: " . $data['form_uuid'] . ", ID: " . $this->formId . ", Status: " . $data['status']);
-            
-            return $data['form_uuid'];
-        } catch (PDOException $e) {
-            error_log("Error creating form: " . $e->getMessage());
-            throw new Exception("שגיאה ביצירת הטופס: " . $e->getMessage());
-        }
-    }
-    // יצירת טופס חדש
     public function createForm($data) {
         // וודא שיש UUID תקין
         if (empty($data['form_uuid'])) {
@@ -234,7 +139,7 @@ class DeceasedForm {
     }
 
     // עדכון טופס
-    public function updateForm($data) {
+    public function updateForm2($data) {
         if (!$this->formId) {
             throw new Exception("No form loaded");
         }
@@ -266,6 +171,92 @@ class DeceasedForm {
         
         foreach ($data as $field => $value) {
             if ($this->canEditField($field) || in_array($field, ['updated_by', 'progress_percentage', 'status'])) {
+                $fields[] = "$field = ?";
+                $values[] = $value;
+            }
+        }
+        
+        if (empty($fields)) {
+            return false;
+        }
+        
+        $values[] = $this->formId;
+        $sql = "UPDATE deceased_forms SET " . implode(', ', $fields) . " WHERE id = ?";
+        
+        try {
+            error_log("Updating form - ID: " . $this->formId . ", New Status: " . $data['status']);
+            
+            $stmt = $this->db->prepare($sql);
+            $result = $stmt->execute($values);
+            
+            // רישום בלוג
+            $logStmt = $this->db->prepare("
+                INSERT INTO activity_log (user_id, form_id, action, details, ip_address, user_agent) 
+                VALUES (?, ?, 'update_form', ?, ?, ?)
+            ");
+            $logStmt->execute([
+                $_SESSION['user_id'] ?? null,
+                $this->formId,
+                json_encode(['updated_fields' => array_keys($data), 'status' => $data['status']]),
+                $_SERVER['REMOTE_ADDR'] ?? '',
+                $_SERVER['HTTP_USER_AGENT'] ?? ''
+            ]);
+            
+            return $result;
+        } catch (PDOException $e) {
+            error_log("Error updating form: " . $e->getMessage());
+            throw new Exception("שגיאה בעדכון הטופס: " . $e->getMessage());
+        }
+    }
+    // עדכון טופס
+    public function updateForm($data) {
+        if (!$this->formId) {
+            throw new Exception("No form loaded");
+        }
+        
+        // הסר שדות שלא שייכים לטבלה
+        unset($data['csrf_token']);
+        unset($data['save']);
+        unset($data['save_and_view']);
+        unset($data['form_uuid']); // לא מעדכנים את ה-UUID
+        
+        $data['updated_by'] = $_SESSION['user_id'] ?? null;
+        
+        // נקה שדות ריקים שעלולים לגרום לבעיות Foreign Key
+        $fieldsToClean = ['cemetery_id', 'block_id', 'section_id', 'row_id', 'grave_id', 'plot_id'];
+        foreach ($fieldsToClean as $field) {
+            if (isset($data[$field]) && ($data[$field] === '' || $data[$field] === null)) {
+                $data[$field] = null; // המר לNULL במקום מחרוזת ריקה
+            }
+        }
+        
+        // מיזוג עם הנתונים הקיימים לצורך חישוב אחוז התקדמות
+        $mergedData = array_merge($this->formData, $data);
+        $data['progress_percentage'] = $this->calculateProgress($mergedData);
+        
+        // בדוק אם כל שדות החובה מלאים
+        if ($this->areAllRequiredFieldsFilled($mergedData)) {
+            $data['status'] = 'completed';
+        } else {
+            $data['status'] = 'draft';
+        }
+        
+        // רשימת השדות התקינים בטבלה (ללא form_uuid)
+        $validFields = [
+            'status', 'progress_percentage', 'identification_type',
+            'identification_number', 'deceased_name', 'father_name', 'mother_name',
+            'birth_date', 'death_date', 'death_time', 'burial_date', 'burial_time',
+            'burial_license', 'death_location', 'cemetery_id', 'block_id', 'section_id',
+            'row_id', 'grave_id', 'plot_id', 'informant_name', 'informant_phone',
+            'informant_relationship', 'notes', 'client_signature', 'updated_by'
+        ];
+        
+        // בניית שאילתת UPDATE
+        $fields = [];
+        $values = [];
+        
+        foreach ($data as $field => $value) {
+            if (in_array($field, $validFields)) {
                 $fields[] = "$field = ?";
                 $values[] = $value;
             }

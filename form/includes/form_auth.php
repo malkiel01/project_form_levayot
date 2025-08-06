@@ -194,41 +194,6 @@ function getFormHelpers($form, $formData, $userPermissionLevel) {
     return compact('requiredFields', 'cemeteries', 'blocks', 'sections', 'rows', 'graves', 'plots');
 }
 
-function handleFormSubmit2($form, $formUuid, $isNewForm, $userPermissionLevel) {
-    $result = ['success' => false, 'message' => '', 'redirect' => null];
-    
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        $result['message'] = 'שגיאת אבטחה. אנא רענן את הדף ונסה שוב.';
-        return $result;
-    }
-    
-    try {
-        if ($isNewForm) {
-            $newFormId = $form->createForm($_POST, $formUuid);
-            if ($newFormId) {
-                $_SESSION['form_saved_message'] = 'הטופס נוצר בהצלחה!';
-                $result['success'] = true;
-                $result['redirect'] = "index_deceased.php?id={$formUuid}&saved=1";
-            } else {
-                $result['message'] = 'שגיאה ביצירת הטופס';
-            }
-        } else {
-            if ($form->updateForm($_POST)) {
-                $result['success'] = true;
-                $result['message'] = 'הטופס עודכן בהצלחה!';
-                $result['formData'] = $form->getFormData();
-            } else {
-                $result['message'] = 'שגיאה בעדכון הטופס';
-            }
-        }
-    } catch (Exception $e) {
-        $result['message'] = 'שגיאה: ' . $e->getMessage();
-        error_log("Form submit error: " . $e->getMessage());
-    }
-    
-    return $result;
-}
-
 function handleFormSubmit($form, $formUuid, $isNewForm, $userPermissionLevel) {
     $result = ['success' => false, 'message' => '', 'redirect' => null];
     
