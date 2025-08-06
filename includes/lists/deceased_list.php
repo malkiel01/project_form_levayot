@@ -5,8 +5,6 @@ require_once '../../config.php';
 require_once 'list_functions.php';
 require_once 'list_filters.php';
 
-
-
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../../' . LOGIN_URL);
@@ -37,11 +35,11 @@ $savedPreferences = getUserPreferences($userId, 'deceased_filters');
 
 // בניית השאילתא
 $params = [];
-$whereClause = buildWhereClause($currentFilters, $params, 'df'); // הוסף את ה-alias
+$whereClause = buildWhereClause($currentFilters, $params, 'df');
 
 // הוסף הגבלת הרשאות
 if ($userPermissionLevel < 4) {
-    $whereClause .= ($whereClause ? ' AND ' : ' WHERE ') . 'df.created_by = ?'; // הוסף df.
+    $whereClause .= ($whereClause ? ' AND ' : ' WHERE ') . 'df.created_by = ?';
     $params[] = $userId;
 }
 
@@ -50,8 +48,8 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $perPage = 20;
 $offset = ($page - 1) * $perPage;
 
-// ספירת סך התוצאות
-$countSql = "SELECT COUNT(*) FROM deceased_forms $whereClause";
+// ספירת סך התוצאות - תיקון: הוספת df כ-alias
+$countSql = "SELECT COUNT(*) FROM deceased_forms df $whereClause";
 $countStmt = $db->prepare($countSql);
 $countStmt->execute($params);
 $totalResults = $countStmt->fetchColumn();
@@ -81,7 +79,17 @@ $results = $stmt->fetchAll();
 
 // פונקציה לייצוא לאקסל
 function exportDeceasedList() {
-    global $db, $currentFilters, $params, $whereClause;
+    global $db, $currentFilters, $userId, $userPermissionLevel;
+    
+    // בניית השאילתא מחדש עבור הייצוא
+    $params = [];
+    $whereClause = buildWhereClause($currentFilters, $params, 'df');
+    
+    // הוסף הגבלת הרשאות
+    if ($userPermissionLevel < 4) {
+        $whereClause .= ($whereClause ? ' AND ' : ' WHERE ') . 'df.created_by = ?';
+        $params[] = $userId;
+    }
     
     $sql = "
         SELECT 
@@ -285,16 +293,26 @@ function exportDeceasedList() {
         
         fetch('../../ajax/delete_form.php', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({form_uuid: formUuid})
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': '<?= $_SESSION['csrf_token'] ?>'
+            },
+            body: JSON.stringify({
+                form_uuid: formUuid,
+                csrf_token: '<?= $_SESSION['csrf_token'] ?>'
+            })
         })
         .then(response => response.json())
         .then(result => {
             if (result.success) {
                 location.reload();
             } else {
-                alert('שגיאה במחיקת הטופס');
+                alert('שגיאה במחיקת הטופס: ' + (result.message || 'שגיאה לא ידועה'));
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('שגיאה במחיקת הטופס');
         });
     }
     </script>
