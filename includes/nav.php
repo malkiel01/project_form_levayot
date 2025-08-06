@@ -4,14 +4,18 @@
 // בדיקת הרשאות
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 $username = $_SESSION['username'] ?? 'משתמש';
+$userId = $_SESSION['user_id'] ?? null;
 
 // קבע את נתיב הבסיס - ברירת מחדל או מה שמוגדר
 $navBasePath = $navBasePath ?? '';
+
+// קבל את הדשבורדים המותרים למשתמש
+$allowedDashboards = getUserAllowedDashboards($userId);
 ?>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container-fluid">
-        <a class="navbar-brand" href="<?= $navBasePath ?>dashboard.php">
+        <a class="navbar-brand" href="<?= getUserDashboardUrl($userId, $userPermissionLevel) ?>">
             <i class="fas fa-home"></i> מערכת קדישא
         </a>
         
@@ -22,22 +26,20 @@ $navBasePath = $navBasePath ?? '';
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <!-- דשבורד -->
+                <?php if (!empty($allowedDashboards)): ?>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                         <i class="fas fa-chart-line"></i> דשבורדים
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>dashboard.php">
-                            <i class="fas fa-th"></i> דשבורד משולב
-                        </a></li>
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>dashboard_deceased.php">
-                            <i class="fas fa-cross"></i> דשבורד נפטרים
-                        </a></li>
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>dashboard_purchases.php">
-                            <i class="fas fa-shopping-cart"></i> דשבורד רכישות
-                        </a></li>
+                        <?php foreach ($allowedDashboards as $dashboard): ?>
+                            <li><a class="dropdown-item" href="<?= $dashboard['url'] ?>">
+                                <i class="<?= $dashboard['icon'] ?>"></i> <?= $dashboard['name'] ?>
+                            </a></li>
+                        <?php endforeach; ?>
                     </ul>
                 </li>
+                <?php endif; ?>
                 
                 <!-- טפסים -->
                 <li class="nav-item dropdown">
@@ -45,17 +47,17 @@ $navBasePath = $navBasePath ?? '';
                         <i class="fas fa-file-alt"></i> טפסים
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>form/index_deceased.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath . FORM_DECEASED_URL ?>">
                             <i class="fas fa-plus"></i> טופס נפטר חדש
                         </a></li>
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>form/index_purchase.php">
+                        <li><a class="dropdown-item" href="<?= $navBasePath . FORM_PURCHASE_URL ?>">
                             <i class="fas fa-plus"></i> טופס רכישה חדש
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>includes/lists/deceased_list.php">
+                        <li><a class="dropdown-item" href="<?= DECEASED_LIST_URL ?>">
                             <i class="fas fa-list"></i> רשימת נפטרים
                         </a></li>
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>includes/lists/purchase_list.php">
+                        <li><a class="dropdown-item" href="<?= PURCHASE_LIST_URL ?>">
                             <i class="fas fa-list"></i> רשימת רכישות
                         </a></li>
                     </ul>
@@ -73,6 +75,9 @@ $navBasePath = $navBasePath ?? '';
                         </a></li>
                         <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/permissions.php">
                             <i class="fas fa-shield-alt"></i> ניהול הרשאות
+                        </a></li>
+                        <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/manage_dashboard_permissions.php">
+                            <i class="fas fa-tachometer-alt"></i> הרשאות דשבורדים
                         </a></li>
                         <li><a class="dropdown-item" href="<?= $navBasePath ?>admin/cemeteries.php">
                             <i class="fas fa-map-marked-alt"></i> ניהול בתי עלמין
