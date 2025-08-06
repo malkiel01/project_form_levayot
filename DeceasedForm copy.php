@@ -329,7 +329,7 @@ class DeceasedForm {
     }
     
     // קבלת שדות חובה לפי הרשאה
-    private function getRequiredFields2() {
+    private function getRequiredFields() {
         $stmt = $this->db->prepare("
             SELECT field_name 
             FROM field_permissions 
@@ -338,30 +338,6 @@ class DeceasedForm {
         $stmt->execute([$this->userPermissionLevel]);
         
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
-    }
-    private function getRequiredFields() {
-        // שלב 1: קבל את כל השדות המוגדרים כחובה
-        $stmt = $this->db->prepare("
-            SELECT field_name, view_permission_levels 
-            FROM field_permissions 
-            WHERE form_type = 'deceased' 
-            AND is_required = 1
-        ");
-        $stmt->execute();
-        
-        $requiredFields = [];
-        
-        // שלב 2: סנן רק את השדות שהמשתמש הנוכחי רשאי לראות
-        while ($row = $stmt->fetch()) {
-            $viewLevels = json_decode($row['view_permission_levels'], true);
-            
-            // בדוק אם רמת ההרשאה של המשתמש כלולה ב-JSON
-            if (is_array($viewLevels) && in_array($this->userPermissionLevel, $viewLevels)) {
-                $requiredFields[] = $row['field_name'];
-            }
-        }
-        
-        return $requiredFields;
     }
     
     // בדיקת הרשאת צפייה בשדה
