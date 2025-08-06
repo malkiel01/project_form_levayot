@@ -211,7 +211,7 @@ function exportDeceasedList() {
                         </thead>
                         <tbody>
                             <?php foreach ($results as $row): ?>
-                                <tr onclick="window.location='../../view_deceased_form.php?id=<?= $row['form_uuid'] ?>'">
+                                <tr onclick="window.location='../../view_decease44d_form.php?id=<?= $row['form_uuid'] ?>'">
                                     <td><?= substr($row['form_uuid'], 0, 8) ?>...</td>
                                     <td><strong><?= htmlspecialchars($row['deceased_name']) ?></strong></td>
                                     <td><?= htmlspecialchars($row['identification_number'] ?? '-') ?></td>
