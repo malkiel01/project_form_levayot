@@ -178,7 +178,58 @@ $recentActivity = $stmt->fetchAll();
             </div>
         </div>
 
-        <!-- פעילות אחרונה -->
+        <!-- סטטיסטיקות ראשיות -->
+        <div class="row mb-4">
+            <div class="col-6 col-md-3 mb-3">
+                <div class="stat-card primary-card">
+                    <div class="card-body">
+                        <div class="stat-icon d-none d-md-block">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h2 class="stat-value"><?= number_format($stats['purchase']['total']) ?></h2>
+                        <p class="stat-label">סה"כ רכישות</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-6 col-md-3 mb-3">
+                <div class="stat-card success-card">
+                    <div class="card-body">
+                        <div class="stat-icon d-none d-md-block">
+                            <i class="fas fa-shekel-sign"></i>
+                        </div>
+                        <h2 class="stat-value">₪<?= number_format($stats['purchase']['total_amount']) ?></h2>
+                        <p class="stat-label">סך העסקאות</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-6 col-md-3 mb-3">
+                <div class="stat-card warning-card">
+                    <div class="card-body">
+                        <div class="stat-icon d-none d-md-block">
+                            <i class="fas fa-money-check-alt"></i>
+                        </div>
+                        <h2 class="stat-value">₪<?= number_format($stats['purchase']['paid_amount']) ?></h2>
+                        <p class="stat-label">סה"כ שולם</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-6 col-md-3 mb-3">
+                <div class="stat-card info-card">
+                    <div class="card-body">
+                        <div class="stat-icon d-none d-md-block">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <h2 class="stat-value"><?= number_format($stats['purchase']['today']) ?></h2>
+                        <p class="stat-label">רכישות היום</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                <!-- פעילות אחרונה -->
         <div class="recent-table">
             <div class="p-3">
                 <h3 class="mb-0">פעילות אחרונה במערכת</h3>
@@ -254,57 +305,6 @@ $recentActivity = $stmt->fetchAll();
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-            </div>
-        </div>
-
-        <!-- סטטיסטיקות ראשיות -->
-        <div class="row mb-4">
-            <div class="col-6 col-md-3 mb-3">
-                <div class="stat-card primary-card">
-                    <div class="card-body">
-                        <div class="stat-icon d-none d-md-block">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <h2 class="stat-value"><?= number_format($stats['purchase']['total']) ?></h2>
-                        <p class="stat-label">סה"כ רכישות</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-6 col-md-3 mb-3">
-                <div class="stat-card success-card">
-                    <div class="card-body">
-                        <div class="stat-icon d-none d-md-block">
-                            <i class="fas fa-shekel-sign"></i>
-                        </div>
-                        <h2 class="stat-value">₪<?= number_format($stats['purchase']['total_amount']) ?></h2>
-                        <p class="stat-label">סך העסקאות</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-6 col-md-3 mb-3">
-                <div class="stat-card warning-card">
-                    <div class="card-body">
-                        <div class="stat-icon d-none d-md-block">
-                            <i class="fas fa-money-check-alt"></i>
-                        </div>
-                        <h2 class="stat-value">₪<?= number_format($stats['purchase']['paid_amount']) ?></h2>
-                        <p class="stat-label">סה"כ שולם</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-6 col-md-3 mb-3">
-                <div class="stat-card info-card">
-                    <div class="card-body">
-                        <div class="stat-icon d-none d-md-block">
-                            <i class="fas fa-calendar-day"></i>
-                        </div>
-                        <h2 class="stat-value"><?= number_format($stats['purchase']['today']) ?></h2>
-                        <p class="stat-label">רכישות היום</p>
-                    </div>
-                </div>
             </div>
         </div>
 
