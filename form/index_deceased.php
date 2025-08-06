@@ -69,6 +69,7 @@ if (isset($_SESSION['form_saved_message'])) {
             
             <form method="POST" id="deceasedForm" novalidate>
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                <input type="hidden" name="form_uuid" value="<?= $formUuid ?>">
                 
                 <?php renderDeceasedSection($formData, $form, $requiredFields, $errors ?? [], $viewOnly); ?>
                 <?php renderDeathSection($formData, $form, $requiredFields, $errors ?? [], $viewOnly); ?>
