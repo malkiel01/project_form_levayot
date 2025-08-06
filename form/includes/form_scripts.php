@@ -1,17 +1,18 @@
 <?php
 // form/includes/form_scripts.php - כל הסקריפטים של הטופס
+require_once '../../config.php';
 
 function renderFormScripts() {
     ?>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="../js/form-validation.js?v=<?= time() ?>"></script>
-    <script src="../js/form-signature.js?v=<?= time() ?>"></script>
-    <script src="../js/form-share.js?v=<?= time() ?>"></script>
-    <script src="../js/form-fields.js?v=<?= time() ?>"></script>
-    <script src="../js/form-autosave.js?v=<?= time() ?>"></script>
-    <script src="../js/form-login-check.js?v=<?= time() ?>"></script>
-    <script src="../js/file-manager.js?v=<?= time() ?>"></script>
-    <script src="../../js/pwa-init.js?v=<?= time() ?>"></script>
+    <script src="<?= SITE_URL ?>/form/js/form-validation.js?v=<?= time() ?>"></script>
+    <script src="<?= SITE_URL ?>/form/js/form-signature.js?v=<?= time() ?>"></script>
+    <script src="<?= SITE_URL ?>/form/js/form-share.js?v=<?= time() ?>"></script>
+    <script src="<?= SITE_URL ?>/form/js/form-fields.js?v=<?= time() ?>"></script>
+    <script src="<?= SITE_URL ?>/form/js/form-autosave.js?v=<?= time() ?>"></script>
+    <script src="<?= SITE_URL ?>/form/js/form-login-check.js?v=<?= time() ?>"></script>
+    <script src="<?= SITE_URL ?>/form/js/file-manager.js?v=<?= time() ?>"></script>
+    <script src="<?= SITE_URL ?>/js/pwa-init.js?v=<?= time() ?>"></script>
     <script>
         // בדיקה שכל הסקריפטים נטענו
         document.addEventListener('DOMContentLoaded', function() {
