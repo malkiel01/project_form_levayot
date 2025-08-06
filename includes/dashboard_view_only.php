@@ -94,18 +94,18 @@ $myRecentForms = array_slice($myRecentForms, 0, 10);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="../css/dashboard-styles-optimized.css" rel="stylesheet">
     <style>
-        body {
+        /* body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        } */
         
-        .dashboard-header {
+        /* .dashboard-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 2rem 0;
             margin-bottom: 2rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+        } */
         
         .stat-card {
             background: white;
