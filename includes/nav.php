@@ -1,6 +1,10 @@
 <?php
 // includes/nav.php - תפריט ניווט משותף
-require_once '../config.php';
+// require_once '../config.php';
+// קביעת הנתיב לקובץ config.php באופן דינמי
+$configPath = __DIR__ . '/../config.php';
+require_once $configPath;
+
 
 // בדיקת הרשאות
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
