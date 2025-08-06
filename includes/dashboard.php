@@ -26,14 +26,6 @@ $formTypes = $db->query("
     SELECT * FROM form_types WHERE is_active = 1 ORDER BY id
 ")->fetchAll();
 
-// // בניית תנאי WHERE לפי הרשאות
-// $whereClause = "1=1";
-// $params = [];
-// if ($userPermissionLevel < 4) {
-//     $whereClause .= " AND created_by = ?";
-//     $params[] = $_SESSION['user_id'];
-// }
-
 // כולם רואים את כל הרשומות
 $whereClause = "1=1";
 $params = [];

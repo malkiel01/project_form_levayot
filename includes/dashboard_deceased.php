@@ -18,79 +18,41 @@ require_once 'dashboard_functions.php';
 $db = getDbConnection();
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 
-// בניית תנאי WHERE לפי הרשאות
+// בדוק אם המשתמש יכול למחוק טפסים
+$canDelete = canDeleteForms($_SESSION['user_id'], 'delete_forms');
+
+// כולם רואים את כל הרשומות
 $whereClause = "1=1";
 $params = [];
-if ($userPermissionLevel < 4) {
-    $whereClause .= " AND created_by = ?";
-    $params[] = $_SESSION['user_id'];
-}
 
 // סטטיסטיקות נפטרים
-$stats = [];
+$stats = [
+    'deceased' => []
+];
 
-// סה"כ נפטרים
+// סטטיסטיקות נפטרים
 $stmt = $db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE $whereClause");
 $stmt->execute($params);
-$stats['total'] = $stmt->fetchColumn();
+$stats['deceased']['total'] = $stmt->fetchColumn();
 
-// נפטרים שהושלמו
 $stmt = $db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE $whereClause AND status = 'completed'");
 $stmt->execute($params);
-$stats['completed'] = $stmt->fetchColumn();
+$stats['deceased']['completed'] = $stmt->fetchColumn();
 
-// בתהליך
-$stmt = $db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE $whereClause AND status = 'in_progress'");
-$stmt->execute($params);
-$stats['in_progress'] = $stmt->fetchColumn();
-
-// טיוטות
-$stmt = $db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE $whereClause AND status = 'draft'");
-$stmt->execute($params);
-$stats['draft'] = $stmt->fetchColumn();
-
-// נפטרים היום
 $stmt = $db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE $whereClause AND DATE(created_at) = CURDATE()");
 $stmt->execute($params);
-$stats['today'] = $stmt->fetchColumn();
+$stats['deceased']['today'] = $stmt->fetchColumn();
 
-// קבורות היום
 $stmt = $db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE $whereClause AND DATE(burial_date) = CURDATE()");
 $stmt->execute($params);
-$stats['today_burials'] = $stmt->fetchColumn();
+$stats['deceased']['today_burials'] = $stmt->fetchColumn();
 
-// השבוע
-$stmt = $db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE $whereClause AND YEARWEEK(created_at) = YEARWEEK(NOW())");
-$stmt->execute($params);
-$stats['this_week'] = $stmt->fetchColumn();
-
-// החודש
-$stmt = $db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE $whereClause AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())");
-$stmt->execute($params);
-$stats['this_month'] = $stmt->fetchColumn();
-
-// סטטיסטיקות לפי בית עלמין
-$cemeteryStatsQuery = "
-    SELECT c.name, c.id, COUNT(df.id) as count 
-    FROM cemeteries c
-    LEFT JOIN deceased_forms df ON c.id = df.cemetery_id";
-if ($userPermissionLevel < 4) {
-    $cemeteryStatsQuery .= " AND df.created_by = ?";
-}
-$cemeteryStatsQuery .= " GROUP BY c.id ORDER BY count DESC";
-
-$stmt = $db->prepare($cemeteryStatsQuery);
-if ($userPermissionLevel < 4) {
-    $stmt->execute([$_SESSION['user_id']]);
-} else {
-    $stmt->execute();
-}
-$cemeteryStats = $stmt->fetchAll();
-
-// נתוני גרף חודשי - 6 חודשים אחרונים
+// נתונים לגרפים - 12 חודשים אחרונים
 $monthlyData = [];
-for ($i = 5; $i >= 0; $i--) {
+for ($i = 11; $i >= 0; $i--) {
     $date = date('Y-m', strtotime("-$i months"));
+    
+    // נפטרים
     $stmt = $db->prepare("
         SELECT COUNT(*) FROM deceased_forms 
         WHERE $whereClause 
@@ -98,24 +60,38 @@ for ($i = 5; $i >= 0; $i--) {
     ");
     $params_with_date = array_merge($params, [$date]);
     $stmt->execute($params_with_date);
+    $deceased_count = $stmt->fetchColumn();
+    
     $monthlyData[] = [
         'month' => date('m/Y', strtotime("-$i months")),
-        'count' => $stmt->fetchColumn()
+        'deceased' => $deceased_count
     ];
 }
 
-// 10 נפטרים אחרונים
-$recentQuery = "
-    SELECT df.*, c.name as cemetery_name 
+// פעילות אחרונה - נפטרים בלבד
+$stmt = $db->prepare("
+    SELECT 
+        'deceased' as type, 
+        df.form_uuid, 
+        df.deceased_name as name, 
+        df.created_at, 
+        df.status, 
+        df.death_date as event_date,
+        c.name as cemetery_name,
+        b.name as block_name,
+        df.created_by,
+        u.full_name as creator_name,
+        u.username as creator_username
     FROM deceased_forms df
     LEFT JOIN cemeteries c ON df.cemetery_id = c.id
+    LEFT JOIN blocks b ON df.block_id = b.id
+    LEFT JOIN users u ON df.created_by = u.id
     WHERE $whereClause
     ORDER BY df.created_at DESC
     LIMIT 10
-";
-$stmt = $db->prepare($recentQuery);
+");
 $stmt->execute($params);
-$recentDeceased = $stmt->fetchAll();
+$recentActivity = $stmt->fetchAll();
 
 ?>
 <!DOCTYPE html>
@@ -127,6 +103,7 @@ $recentDeceased = $stmt->fetchAll();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="../css/dashboard-styles-optimized.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <?php require_once 'nav.php'; ?>
@@ -135,12 +112,12 @@ $recentDeceased = $stmt->fetchAll();
         <!-- כותרת הדשבורד -->
         <div class="dashboard-header">
             <h1><i class="fas fa-cross"></i> דשבורד נפטרים</h1>
-            <p>ניהול וסטטיסטיקות טפסי נפטרים</p>
+            <p>מבט כולל על טפסי נפטרים</p>
         </div>
 
         <!-- בחירת תצוגה -->
-        <div class="text-center mb-4">
-            <div class="btn-group btn-group-sm" role="group">
+        <div class="view-selector-container">
+            <div class="btn-group" role="group">
                 <a href="<?= DASHBOARD_FULL_URL ?>" class="btn btn-outline-primary">
                     <i class="fas fa-th"></i> <span class="d-none d-sm-inline">תצוגה</span> משולבת
                 </a>
@@ -153,19 +130,38 @@ $recentDeceased = $stmt->fetchAll();
             </div>
         </div>
 
-        <!-- כפתורי פעולה מהירה -->
+        <!-- כרטיס נפטרים -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="d-flex flex-wrap gap-2 justify-content-center">
-                    <a href="../<?= FORM_DECEASED_URL ?>" class="btn btn-primary action-btn flex-fill flex-sm-grow-0">
-                        <i class="fas fa-calendar-plus"></i> הוספת לוויה
-                    </a>
-                    <a href="../search.php?type=deceased" class="btn btn-outline-primary action-btn flex-fill flex-sm-grow-0">
-                        <i class="fas fa-search"></i> חיפוש נפטר
-                    </a>
-                    <a href="../reports/daily_deceased.php" class="btn btn-outline-secondary action-btn flex-fill flex-sm-grow-0">
-                        <i class="fas fa-file-pdf"></i> דוח יומי
-                    </a>
+                <div class="form-type-card" onclick="location.href='../<?= DECEASED_LIST_URL ?>'">
+                    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between">
+                        <div class="text-center text-md-start mb-3 mb-md-0">
+                            <div class="form-type-icon mx-auto mx-md-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-cross text-white"></i>
+                            </div>
+                            <h3 class="mt-3">טפסי נפטרים</h3>
+                            <p class="text-muted mb-0 d-none d-md-block">ניהול רישום נפטרים וקבורה</p>
+                        </div>
+                        <div class="text-center text-md-start w-100 w-md-auto">
+                            <div class="counter-section">
+                                <div class="counter-item">
+                                    <span class="counter-value text-primary"><?= number_format($stats['deceased']['total']) ?></span>
+                                    <span class="counter-label">סה"כ</span>
+                                </div>
+                                <div class="counter-item">
+                                    <span class="counter-value text-success"><?= number_format($stats['deceased']['completed']) ?></span>
+                                    <span class="counter-label">הושלמו</span>
+                                </div>
+                                <div class="counter-item">
+                                    <span class="counter-value text-info"><?= number_format($stats['deceased']['today']) ?></span>
+                                    <span class="counter-label">היום</span>
+                                </div>
+                            </div>
+                            <a href="../form/index_deceased.php" class="btn btn-primary action-btn mt-3 w-100" onclick="event.stopPropagation();">
+                                <i class="fas fa-plus"></i> לוויה חדשה
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -176,10 +172,10 @@ $recentDeceased = $stmt->fetchAll();
                 <div class="stat-card primary-card">
                     <div class="card-body">
                         <div class="stat-icon d-none d-md-block">
-                            <i class="fas fa-users"></i>
+                            <i class="fas fa-file-alt"></i>
                         </div>
-                        <h2 class="stat-value"><?= number_format($stats['total']) ?></h2>
-                        <p class="stat-label">סה"כ נפטרים</p>
+                        <h2 class="stat-value"><?= number_format($stats['deceased']['total']) ?></h2>
+                        <p class="stat-label">סה"כ טפסים</p>
                     </div>
                 </div>
             </div>
@@ -190,7 +186,7 @@ $recentDeceased = $stmt->fetchAll();
                         <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-check-circle"></i>
                         </div>
-                        <h2 class="stat-value"><?= number_format($stats['completed']) ?></h2>
+                        <h2 class="stat-value"><?= number_format($stats['deceased']['completed']) ?></h2>
                         <p class="stat-label">טפסים שהושלמו</p>
                     </div>
                 </div>
@@ -200,10 +196,10 @@ $recentDeceased = $stmt->fetchAll();
                 <div class="stat-card warning-card">
                     <div class="card-body">
                         <div class="stat-icon d-none d-md-block">
-                            <i class="fas fa-hourglass-half"></i>
+                            <i class="fas fa-praying-hands"></i>
                         </div>
-                        <h2 class="stat-value"><?= number_format($stats['in_progress']) ?></h2>
-                        <p class="stat-label">בתהליך טיפול</p>
+                        <h2 class="stat-value"><?= number_format($stats['deceased']['today_burials']) ?></h2>
+                        <p class="stat-label">קבורות היום</p>
                     </div>
                 </div>
             </div>
@@ -214,59 +210,8 @@ $recentDeceased = $stmt->fetchAll();
                         <div class="stat-icon d-none d-md-block">
                             <i class="fas fa-calendar-day"></i>
                         </div>
-                        <h2 class="stat-value"><?= number_format($stats['today']) ?></h2>
+                        <h2 class="stat-value"><?= number_format($stats['deceased']['today']) ?></h2>
                         <p class="stat-label">נרשמו היום</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- סטטיסטיקות משניות -->
-        <div class="row mb-4">
-            <div class="col-6 col-md-3 mb-3">
-                <div class="stat-card purple-card">
-                    <div class="card-body">
-                        <div class="stat-icon d-none d-md-block">
-                            <i class="fas fa-praying-hands"></i>
-                        </div>
-                        <h2 class="stat-value"><?= number_format($stats['today_burials']) ?></h2>
-                        <p class="stat-label">קבורות היום</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-6 col-md-3 mb-3">
-                <div class="stat-card danger-card">
-                    <div class="card-body">
-                        <div class="stat-icon d-none d-md-block">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <h2 class="stat-value"><?= number_format($stats['draft']) ?></h2>
-                        <p class="stat-label">טיוטות</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-6 col-md-3 mb-3">
-                <div class="stat-card primary-card">
-                    <div class="card-body">
-                        <div class="stat-icon d-none d-md-block">
-                            <i class="fas fa-calendar-week"></i>
-                        </div>
-                        <h2 class="stat-value"><?= number_format($stats['this_week']) ?></h2>
-                        <p class="stat-label">השבוע</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-6 col-md-3 mb-3">
-                <div class="stat-card success-card">
-                    <div class="card-body">
-                        <div class="stat-icon d-none d-md-block">
-                            <i class="fas fa-calendar-alt"></i>
-                        </div>
-                        <h2 class="stat-value"><?= number_format($stats['this_month']) ?></h2>
-                        <p class="stat-label">החודש</p>
                     </div>
                 </div>
             </div>
@@ -274,73 +219,121 @@ $recentDeceased = $stmt->fetchAll();
 
         <!-- גרפים -->
         <div class="row mb-4">
-            <!-- גרף מגמה חודשית -->
+            <!-- גרף פעילות שנתית -->
             <div class="col-lg-8 col-12 mb-3">
                 <div class="chart-container" style="max-height: 400px;">
                     <div class="chart-header">
-                        <h3 class="chart-title">מגמת רישום נפטרים - 6 חודשים אחרונים</h3>
+                        <h3 class="chart-title">פעילות שנתית - 12 חודשים אחרונים</h3>
                     </div>
-                    <div class="chart-placeholder" id="monthlyChartPlaceholder" style="height: 250px;">
+                    <div class="chart-placeholder" id="yearlyChartPlaceholder" style="height: 250px;">
                         <p class="text-muted text-center py-5">הגרף יטען בעוד רגע...</p>
                     </div>
-                    <canvas id="monthlyChart" style="display: none; max-height: 250px;"></canvas>
+                    <canvas id="yearlyChart" style="display: none; max-height: 250px;"></canvas>
                 </div>
             </div>
             
-            <!-- התפלגות בתי עלמין -->
+            <!-- סיכום סטטיסטי -->
             <div class="col-lg-4 col-12 mb-3">
                 <div class="chart-container" style="max-height: 400px;">
                     <div class="chart-header">
-                        <h3 class="chart-title">התפלגות לפי בתי עלמין</h3>
+                        <h3 class="chart-title">סיכום פעילות</h3>
                     </div>
-                    <div class="chart-placeholder" id="cemeteryChartPlaceholder" style="height: 250px;">
-                        <p class="text-muted text-center py-5">הגרף יטען בעוד רגע...</p>
+                    <div class="mt-3 p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>אחוז השלמה</span>
+                            <strong><?= round(($stats['deceased']['completed'] / max($stats['deceased']['total'], 1)) * 100) ?>%</strong>
+                        </div>
+                        <div class="progress mb-4" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: <?= round(($stats['deceased']['completed'] / max($stats['deceased']['total'], 1)) * 100) ?>%">
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <h4><?= number_format($stats['deceased']['total']) ?></h4>
+                            <p class="text-muted">סך כל הטפסים</p>
+                        </div>
                     </div>
-                    <canvas id="cemeteryChart" style="display: none; max-height: 250px;"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- נפטרים אחרונים -->
+        <!-- פעילות אחרונה -->
         <div class="recent-table">
             <div class="p-3">
-                <h3 class="mb-0">נפטרים אחרונים</h3>
+                <h3 class="mb-0">פעילות אחרונה במערכת</h3>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th class="d-none d-md-table-cell">מספר טופס</th>
-                            <th>שם הנפטר</th>
-                            <th class="d-none d-sm-table-cell">בית עלמין</th>
-                            <th>תאריך פטירה</th>
+                            <th>סוג</th>
+                            <th>שם</th>
+                            <th class="d-none d-md-table-cell">מיקום</th>
+                            <th>תאריך</th>
+                            <th class="d-none d-sm-table-cell">נוצר ע"י</th>
                             <th>סטטוס</th>
                             <th>פעולות</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($recentDeceased as $deceased): ?>
+                        <?php foreach ($recentActivity as $activity): ?>
                         <tr>
-                            <td class="d-none d-md-table-cell text-truncate" style="max-width: 100px;">
-                                <?= htmlspecialchars($deceased['form_uuid']) ?>
+                            <td>
+                                <i class="fas fa-cross text-primary" title="נפטר"></i>
                             </td>
-                            <td class="text-truncate" style="max-width: 150px;">
-                                <?= htmlspecialchars($deceased['deceased_name']) ?>
+                            <td>
+                                <div class="text-truncate" style="max-width: 150px;">
+                                    <strong><?= htmlspecialchars($activity['name'] ?? 'לא ידוע') ?></strong>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <small class="text-muted">
+                                    <?= htmlspecialchars($activity['cemetery_name'] ?? '-') ?>
+                                    <?php if (!empty($activity['block_name'])): ?>
+                                        - <?= htmlspecialchars($activity['block_name']) ?>
+                                    <?php endif; ?>
+                                </small>
+                            </td>
+                            <td>
+                                <small><?= date('d/m/y', strtotime($activity['event_date'])) ?></small>
                             </td>
                             <td class="d-none d-sm-table-cell">
-                                <?= htmlspecialchars($deceased['cemetery_name'] ?? 'לא צוין') ?>
+                                <small class="text-muted">
+                                    <?= htmlspecialchars($activity['creator_name'] ?? $activity['creator_username'] ?? 'לא ידוע') ?>
+                                    <?php if ($activity['created_by'] == $_SESSION['user_id']): ?>
+                                        <span class="badge bg-info ms-1">שלי</span>
+                                    <?php endif; ?>
+                                </small>
                             </td>
-                            <td><?= date('d/m/Y', strtotime($deceased['death_date'])) ?></td>
                             <td>
-                                <span class="status-badge status-<?= $deceased['status'] ?>">
-                                    <?= translateStatus($deceased['status']) ?>
+                                <span class="status-badge status-<?= $activity['status'] ?>">
+                                    <?= translateStatus($activity['status']) ?>
                                 </span>
                             </td>
                             <td>
-                                <a href="../form/form.php?id=<?= $deceased['form_uuid'] ?>" 
-                                   class="btn btn-sm action-btn btn-primary-gradient">
-                                    <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">צפייה</span>
-                                </a>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="../form/includes/view_form.php?id=<?= $activity['form_uuid'] ?>&view=1" 
+                                       class="btn btn-sm btn-view-gradient" 
+                                       title="צפייה">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="../form/index_deceased.php?id=<?= $activity['form_uuid'] ?>" 
+                                       class="btn btn-sm btn-edit-gradient" 
+                                       title="עריכה">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <?php if ($canDelete): ?>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-delete-gradient delete-form-btn" 
+                                                data-form-uuid="<?= $activity['form_uuid'] ?>"
+                                                data-form-type="deceased"
+                                                data-form-name="<?= htmlspecialchars($activity['name']) ?>"
+                                                title="מחיקה">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -354,110 +347,133 @@ $recentDeceased = $stmt->fetchAll();
     
     <!-- טעינת Chart.js אחרי שהדף נטען -->
     <script>
-    // נתוני גרפים
-    const monthlyLabels = <?= json_encode(array_column($monthlyData, 'month')) ?>;
-    const monthlyData = <?= json_encode(array_column($monthlyData, 'count')) ?>;
-    const cemeteryLabels = <?= json_encode(array_column($cemeteryStats, 'name')) ?>;
-    const cemeteryData = <?= json_encode(array_column($cemeteryStats, 'count')) ?>;
+        // נתוני גרפים
+        const monthlyLabels = <?= json_encode(array_column($monthlyData, 'month')) ?>;
+        const deceasedData = <?= json_encode(array_column($monthlyData, 'deceased')) ?>;
 
-    // טעינת Chart.js אחרי שהדף מוכן
-    window.addEventListener('load', function() {
-        // הוסף את האנימציות רק אחרי טעינת הדף
-        document.body.classList.add('animations-ready');
-        
-        // טען את Chart.js
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-        script.onload = initCharts;
-        document.head.appendChild(script);
-    });
-
-    function initCharts() {
-        // הסתר placeholders והצג canvas
-        document.getElementById('monthlyChartPlaceholder').style.display = 'none';
-        document.getElementById('cemeteryChartPlaceholder').style.display = 'none';
-        document.getElementById('monthlyChart').style.display = 'block';
-        document.getElementById('cemeteryChart').style.display = 'block';
-
-        // גרף מגמה חודשית
-        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-        new Chart(monthlyCtx, {
-            type: 'line',
-            data: {
-                labels: monthlyLabels,
-                datasets: [{
-                    label: 'נפטרים',
-                    data: monthlyData,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.3,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: {
-                    duration: 1000
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
+        // טעינת Chart.js אחרי שהדף מוכן
+        window.addEventListener('load', function() {
+            document.body.classList.add('animations-ready');
+            
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+            script.onload = initCharts;
+            document.head.appendChild(script);
         });
 
-        // גרף בתי עלמין
-        const cemeteryCtx = document.getElementById('cemeteryChart').getContext('2d');
-        new Chart(cemeteryCtx, {
-            type: 'doughnut',
-            data: {
-                labels: cemeteryLabels,
-                datasets: [{
-                    data: cemeteryData,
-                    backgroundColor: [
-                        '#667eea',
-                        '#764ba2',
-                        '#84fab0',
-                        '#8fd3f4',
-                        '#fa709a',
-                        '#fee140'
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: {
-                    duration: 1000
+        function initCharts() {
+            document.getElementById('yearlyChartPlaceholder').style.display = 'none';
+            document.getElementById('yearlyChart').style.display = 'block';
+
+            // גרף פעילות שנתית
+            const yearlyCtx = document.getElementById('yearlyChart').getContext('2d');
+            new Chart(yearlyCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [{
+                        label: 'נפטרים',
+                        data: deceasedData,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3
+                    }]
                 },
-                plugins: {
-                    legend: {
-                        display: window.innerWidth > 768,
-                        position: 'bottom',
-                        labels: {
-                            padding: 10,
-                            font: {
-                                size: 11
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
                             }
                         }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
                     }
                 }
-            }
+            });
+        }
+
+        // סקריפט למחיקת טפסים
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.delete-form-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const formUuid = this.dataset.formUuid;
+                    const formType = this.dataset.formType;
+                    const formName = this.dataset.formName;
+                    
+                    Swal.fire({
+                        title: 'האם אתה בטוח?',
+                        html: `האם למחוק את הטופס של <strong>${formName}</strong>?<br>פעולה זו אינה ניתנת לביטול!`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'כן, מחק',
+                        cancelButtonText: 'ביטול'
+                    }).then((result) => { 
+                        if (result.isConfirmed) {
+                            fetch('../form/ajax/delete_form.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    form_uuid: formUuid,
+                                    form_type: formType,
+                                    csrf_token: '<?= $_SESSION['csrf_token'] ?>'
+                                })
+                            })
+                            .then(response => response.text())
+                            .then(text => {
+                                try {
+                                    const data = JSON.parse(text);
+                                    if (data.success) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'נמחק!',
+                                            text: 'הטופס נמחק בהצלחה',
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        }).then(() => {
+                                            location.reload();
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'שגיאה',
+                                            text: data.message || 'אירעה שגיאה במחיקת הטופס'
+                                        });
+                                    }
+                                } catch (e) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'שגיאה',
+                                        text: 'תגובה לא תקינה מהשרת'
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'שגיאה',
+                                    text: 'אירעה שגיאה בתקשורת עם השרת'
+                                });
+                            });
+                        }
+                    });
+                });
+            });
         });
-    }
     </script>
 </body>
 </html>
