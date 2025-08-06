@@ -130,9 +130,9 @@ if ($formData['cemetery_id']) {
     <?php 
     // טעינת התפריט המתאים
     if (!$isLoggedIn || $userPermissionLevel == 1) {
-        require_once '../nav_view_only.php';
+        require_once '../../includes/nav_view_only.php';
     } else {
-        require_once '../nav.php';
+        require_once '../../includes/nav.php';
     }
     ?>
 
