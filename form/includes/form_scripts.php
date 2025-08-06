@@ -1,6 +1,6 @@
 <?php
 // form/includes/form_scripts.php - כל הסקריפטים של הטופס
-require_once '../../../config.php';
+require_once '../config.php';
 
 function renderFormScripts() {
     ?>
