@@ -7,6 +7,19 @@ require_once '../DeceasedForm.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// הוסף פונקציה זו
+function debugToBrowser($message, $data = null) {
+    static $debugOutput = [];
+    $debugOutput[] = [
+        'message' => $message,
+        'data' => $data,
+        'time' => date('H:i:s')
+    ];
+    
+    // שמור בסשן לצפייה מאוחרת
+    $_SESSION['debug_output'] = $debugOutput;
+}
+
 // יצירת לוג ייעודי לדיבוג
 function debugLog($message, $data = null) {
     $timestamp = date('Y-m-d H:i:s');
@@ -26,6 +39,15 @@ function debugLog($message, $data = null) {
     file_put_contents($logFile, $logMessage . "\n\n", FILE_APPEND);
 }
 
+// אם יש פרמטר show_debug, הצג את הדיבוג
+if (isset($_GET['show_debug'])) {
+    header('Content-Type: text/plain');
+    print_r($_SESSION['debug_output'] ?? 'No debug data');
+    exit;
+}
+
+// התחלת דיבוג
+debugToBrowser("=== START AJAX SAVE REQUEST ===");
 debugLog("=== START AJAX SAVE REQUEST ===");
 debugLog("Request Method: " . $_SERVER['REQUEST_METHOD']);
 debugLog("User IP: " . $_SERVER['REMOTE_ADDR']);
@@ -35,18 +57,21 @@ header('Content-Type: application/json');
 // בדיקת משתמש
 if (!isset($_SESSION['user_id'])) {
     debugLog("ERROR: User not authenticated");
+    debugToBrowser("ERROR: User not authenticated");
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
 }
 
 debugLog("User authenticated: ID = {$_SESSION['user_id']}, Username = " . ($_SESSION['username'] ?? 'N/A'));
+debugToBrowser("User authenticated: ID = {$_SESSION['user_id']}");
 
 // בדיקת CSRF token
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
     debugLog("ERROR: CSRF token mismatch");
     debugLog("Received token: " . ($_POST['csrf_token'] ?? 'none'));
     debugLog("Session token: " . ($_SESSION['csrf_token'] ?? 'none'));
+    debugToBrowser("ERROR: CSRF token mismatch");
     echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
     exit;
 }
@@ -56,15 +81,18 @@ $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 
 debugLog("Form UUID: " . ($formUuid ?? 'NULL'));
 debugLog("User Permission Level: $userPermissionLevel");
+debugToBrowser("Form UUID: " . ($formUuid ?? 'NULL'));
 
 if (!$formUuid) {
     debugLog("ERROR: Form UUID missing");
+    debugToBrowser("ERROR: Form UUID missing");
     echo json_encode(['success' => false, 'message' => 'Form UUID required']);
     exit;
 }
 
 // דיבוג של כל הנתונים שהתקבלו (לפני סניטציה)
 debugLog("RAW POST DATA:", $_POST);
+debugToBrowser("RAW POST DATA:", $_POST);
 
 // סניטציה של הנתונים
 $formData = sanitizeInput($_POST);
@@ -75,6 +103,7 @@ $formData['form_uuid'] = $formUuid;
 
 // דיבוג של הנתונים אחרי סניטציה
 debugLog("SANITIZED DATA:", $formData);
+debugToBrowser("SANITIZED DATA:", array_keys($formData));
 
 // בדיקת שדות קריטיים
 $criticalFields = [
@@ -85,6 +114,7 @@ $criticalFields = [
     'burial_date' => $formData['burial_date'] ?? ''
 ];
 debugLog("CRITICAL FIELDS:", $criticalFields);
+debugToBrowser("CRITICAL FIELDS:", $criticalFields);
 
 try {
     debugLog("Creating DeceasedForm object for UUID: $formUuid");
@@ -96,6 +126,7 @@ try {
     if (!$existingData) {
         debugLog("Form does not exist - creating new form");
         debugLog("Data to be created:", $formData);
+        debugToBrowser("Creating new form");
         
         // יצירת טופס חדש
         $form = new DeceasedForm(null, $userPermissionLevel);
@@ -113,6 +144,7 @@ try {
         // ביצוע היצירה
         $createResult = $form->createForm($formData);
         debugLog("Create result: " . ($createResult ? "SUCCESS - UUID: $createResult" : "FAILED"));
+        debugToBrowser("Create result: " . ($createResult ? "SUCCESS" : "FAILED"));
         
         // טען מחדש את הטופס
         $form = new DeceasedForm($formUuid, $userPermissionLevel);
@@ -129,6 +161,7 @@ try {
         debugLog("Form exists - updating");
         debugLog("Existing form ID: " . ($existingData['id'] ?? 'N/A'));
         debugLog("Current status: " . ($existingData['status'] ?? 'N/A'));
+        debugToBrowser("Updating existing form");
         
         // השוואת שינויים
         $changes = [];
@@ -169,13 +202,14 @@ try {
         'status' => $updatedData['status'],
         'progress' => $updatedData['progress_percentage'],
         'message' => $updatedData['status'] === 'completed' ? 'הטופס הושלם!' : 'הטופס נשמר כטיוטה',
-        // הוסף מידע דיבוג בסביבת פיתוח
-        'debug' => DEBUG_MODE ? [
+        // הוסף מידע דיבוג
+        'debug' => [
             'form_id' => $updatedData['id'] ?? null,
             'form_uuid' => $formUuid,
             'fields_count' => count($formData),
-            'user_id' => $_SESSION['user_id']
-        ] : null
+            'user_id' => $_SESSION['user_id'],
+            'debug_session' => $_SESSION['debug_output'] ?? []
+        ]
     ];
     
     debugLog("RESPONSE:", $response);
@@ -185,20 +219,22 @@ try {
     debugLog("ERROR: Exception caught");
     debugLog("Exception message: " . $e->getMessage());
     debugLog("Exception trace: " . $e->getTraceAsString());
+    debugToBrowser("ERROR: " . $e->getMessage());
     
+    // תגובת שגיאה עם כל המידע
     $errorResponse = [
         'success' => false,
         'message' => $e->getMessage(),
-        // בסביבת פיתוח, הוסף מידע מפורט
-        'debug' => DEBUG_MODE ? [
-            'error' => $e->getMessage(),
+        'error_details' => [
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'trace' => $e->getTrace()
-        ] : null
+            'trace' => $e->getTraceAsString()
+        ],
+        'debug_session' => $_SESSION['debug_output'] ?? []
     ];
     
     echo json_encode($errorResponse);
+    exit;
 }
 
 debugLog("=== END AJAX SAVE REQUEST ===\n");
