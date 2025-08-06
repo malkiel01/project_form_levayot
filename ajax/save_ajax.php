@@ -141,6 +141,27 @@ try {
             debugLog("  - $field: $value");
         }
         
+        // לפני השורה: $createResult = $form->createForm($formData);
+        debugLog("=== BEFORE createForm ===");
+        debugLog("formData contents:", $formData);
+        debugLog("formData keys:", array_keys($formData));
+        debugLog("form_uuid in formData: " . ($formData['form_uuid'] ?? 'NOT SET'));
+
+        // בדוק אם form_uuid קיים ותקין
+        if (empty($formData['form_uuid'])) {
+            throw new Exception("form_uuid is empty in formData!");
+        }
+
+        // נסה ליצור את הטופס
+        try {
+            $createResult = $form->createForm($formData);
+            debugLog("createForm returned: " . var_export($createResult, true));
+        } catch (Exception $e) {
+            debugLog("createForm EXCEPTION: " . $e->getMessage());
+            debugLog("Exception trace: " . $e->getTraceAsString());
+            throw $e; // זרוק מחדש כדי שהקוד החיצוני יטפל
+        }
+
         // ביצוע היצירה
         $createResult = $form->createForm($formData);
         debugLog("Create result: " . ($createResult ? "SUCCESS - UUID: $createResult" : "FAILED"));
