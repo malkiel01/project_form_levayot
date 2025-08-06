@@ -19,8 +19,15 @@
     }
 
     $db = getDbConnection();
-    $params = ["%$search%", "%$search%", "%$search%"];
-    $whereClause = "(deceased_name LIKE ? OR identification_number LIKE ? OR form_uuid LIKE ?)";
+    $params = ["%$search%", "%$search%", "%$search%", "%$search%"];
+    $whereClause = "(
+        CONCAT(IFNULL(deceased_first_name, ''), ' ', IFNULL(deceased_last_name, '')) LIKE ? 
+        OR deceased_first_name LIKE ? 
+        OR deceased_last_name LIKE ? 
+        OR identification_number LIKE ? 
+        OR form_uuid LIKE ?
+    )";
+    $params[] = "%$search%"; // הוספת פרמטר נוסף עבור form_uuid
 
     if ($userPermissionLevel < 4) {
         $whereClause .= " AND created_by = ?";
@@ -28,7 +35,12 @@
     }
 
     $stmt = $db->prepare("
-        SELECT form_uuid, deceased_name, identification_number, death_date, status
+        SELECT 
+            form_uuid, 
+            CONCAT(IFNULL(deceased_first_name, ''), ' ', IFNULL(deceased_last_name, '')) as deceased_name,
+            identification_number, 
+            death_date, 
+            status
         FROM deceased_forms
         WHERE $whereClause
         ORDER BY created_at DESC

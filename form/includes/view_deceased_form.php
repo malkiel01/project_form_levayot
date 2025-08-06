@@ -56,7 +56,7 @@ if ($formData['cemetery_id']) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>צפייה בטופס - <?= htmlspecialchars($formData['deceased_name']) ?></title>
+    <title>צפייה בטופס - <?= htmlspecialchars(trim($formData['deceased_first_name'] . ' ' . $formData['deceased_last_name'])) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="../../css/dashboard-styles-optimized.css" rel="stylesheet">
@@ -179,8 +179,12 @@ if ($formData['cemetery_id']) {
                     </div>
                     <?php endif; ?>
                     <div class="info-row">
-                        <span class="info-label">שם הנפטר:</span>
-                        <strong><?= htmlspecialchars($formData['deceased_name']) ?></strong>
+                        <span class="info-label">שם פרטי:</span>
+                        <?= htmlspecialchars($formData['deceased_first_name']) ?>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">שם משפחה:</span>
+                        <?= htmlspecialchars($formData['deceased_last_name']) ?>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -391,9 +395,10 @@ if ($formData['cemetery_id']) {
     <script>
         function shareForm() {
             const formUrl = window.location.href;
+
             if (navigator.share) {
                 navigator.share({
-                    title: 'טופס נפטר - <?= htmlspecialchars($formData['deceased_name']) ?>',
+                    title: 'טופס נפטר - <?= htmlspecialchars(trim($formData['deceased_first_name'] . ' ' . $formData['deceased_last_name'])) ?>',
                     url: formUrl
                 }).catch(() => {
                     copyToClipboard(formUrl);

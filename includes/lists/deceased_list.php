@@ -90,11 +90,11 @@ function exportDeceasedList() {
         $whereClause .= ($whereClause ? ' AND ' : ' WHERE ') . 'df.created_by = ?';
         $params[] = $userId;
     }
-    
+
     $sql = "
         SELECT 
             df.form_uuid as 'מזהה טופס',
-            df.deceased_name as 'שם הנפטר',
+            CONCAT(IFNULL(df.deceased_first_name, ''), ' ', IFNULL(df.deceased_last_name, '')) as 'שם הנפטר',
             df.father_name as 'שם האב',
             df.mother_name as 'שם האם',
             df.identification_number as 'מספר זיהוי',
@@ -213,7 +213,7 @@ function exportDeceasedList() {
                             <?php foreach ($results as $row): ?>
                                 <tr onclick="window.location='../../view_deceased_form.php?id=<?= $row['form_uuid'] ?>'">
                                     <td><?= substr($row['form_uuid'], 0, 8) ?>...</td>
-                                    <td><strong><?= htmlspecialchars($row['deceased_name']) ?></strong></td>
+                                    <td><strong><?= htmlspecialchars(trim($row['deceased_first_name'] . ' ' . $row['deceased_last_name'])) ?></strong></td>
                                     <td><?= htmlspecialchars($row['identification_number'] ?? '-') ?></td>
                                     <td><?= $row['death_date'] ? date('d/m/Y', strtotime($row['death_date'])) : '-' ?></td>
                                     <td><?= $row['burial_date'] ? date('d/m/Y', strtotime($row['burial_date'])) : '-' ?></td>

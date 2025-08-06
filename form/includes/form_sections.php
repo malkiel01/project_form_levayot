@@ -29,19 +29,32 @@ function renderDeceasedSection($formData, $form, $requiredFields, $errors = [], 
                    <?= (!$form || !$form->canEditField('identification_number') || $viewOnly) ? 'disabled' : '' ?>>
         </div>
     </div>
-    
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label for="deceased_name" class="form-label <?= in_array('deceased_name', $requiredFields) ? 'required' : '' ?>">
-                שם הנפטר
+
+     <div class="row mb-3">
+        <div class="col-md-3">
+            <label for="deceased_first_name" class="form-label <?= in_array('deceased_first_name', $requiredFields) ? 'required' : '' ?>">
+                שם פרטי
             </label>
             <input type="text" class="form-control" 
-                   id="deceased_name" name="deceased_name" 
-                   data-required="<?= in_array('deceased_name', $requiredFields) ? 'true' : 'false' ?>"
-                   value="<?= $formData['deceased_name'] ?? '' ?>"
-                   <?= (!$form || !$form->canEditField('deceased_name') || $viewOnly) ? 'disabled' : '' ?>>
+                   id="deceased_first_name" name="deceased_first_name" 
+                   data-required="<?= in_array('deceased_first_name', $requiredFields) ? 'true' : 'false' ?>"
+                   value="<?= $formData['deceased_first_name'] ?? '' ?>"
+                   <?= (!$form || !$form->canEditField('deceased_first_name') || $viewOnly) ? 'disabled' : '' ?>>
         </div>
         
+        <div class="col-md-3">
+            <label for="deceased_last_name" class="form-label <?= in_array('deceased_last_name', $requiredFields) ? 'required' : '' ?>">
+                שם משפחה
+            </label>
+            <input type="text" class="form-control" 
+                   id="deceased_last_name" name="deceased_last_name" 
+                   data-required="<?= in_array('deceased_last_name', $requiredFields) ? 'true' : 'false' ?>"
+                   value="<?= $formData['deceased_last_name'] ?? '' ?>"
+                   <?= (!$form || !$form->canEditField('deceased_last_name') || $viewOnly) ? 'disabled' : '' ?>>
+        </div>
+    </div>
+    
+    <div class="row mb-3">        
         <div class="col-md-4">
             <label for="father_name" class="form-label">שם האב</label>
             <input type="text" class="form-control" id="father_name" name="father_name" 

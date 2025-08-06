@@ -73,7 +73,7 @@ $stmt = $db->prepare("
     SELECT 
         'deceased' as type, 
         df.form_uuid, 
-        df.deceased_name as name, 
+        CONCAT(IFNULL(df.deceased_first_name, ''), ' ', IFNULL(df.deceased_last_name, '')) as name, 
         df.created_at, 
         df.status, 
         df.death_date as event_date,

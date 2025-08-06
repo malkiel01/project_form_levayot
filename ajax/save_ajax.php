@@ -107,7 +107,8 @@ debugToBrowser("SANITIZED DATA:", array_keys($formData));
 
 // בדיקת שדות קריטיים
 $criticalFields = [
-    'deceased_name' => $formData['deceased_name'] ?? '',
+    'deceased_first_name' => $formData['deceased_first_name'] ?? '',
+    'deceased_last_name' => $formData['deceased_last_name'] ?? '',
     'identification_type' => $formData['identification_type'] ?? '',
     'identification_number' => $formData['identification_number'] ?? '',
     'death_date' => $formData['death_date'] ?? '',
@@ -135,7 +136,7 @@ try {
         debugLog("BEFORE CREATE - Form data structure:", array_keys($formData));
         debugLog("BEFORE CREATE - Required fields check:");
         
-        $requiredFields = ['deceased_name', 'death_date', 'burial_date'];
+        $requiredFields = ['deceased_first_name', 'death_date', 'burial_date'];
         foreach ($requiredFields as $field) {
             $value = $formData[$field] ?? 'NOT SET';
             debugLog("  - $field: $value");

@@ -43,7 +43,7 @@ $stmt = $db->prepare("
     SELECT 
         'deceased' as form_type,
         form_uuid,
-        deceased_name as name,
+        CONCAT(IFNULL(df.deceased_first_name, ''), ' ', IFNULL(df.deceased_last_name, '')) as name, 
         status,
         created_at
     FROM deceased_forms 

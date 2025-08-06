@@ -20,7 +20,11 @@ $db = getDbConnection();
 
 // שליפת טפסים אחרונים של המשתמש
 $stmt = $db->prepare("
-    SELECT form_uuid, deceased_name, identification_number, created_at, status
+    SELECT form_uuid, 
+           CONCAT(IFNULL(deceased_first_name, ''), ' ', IFNULL(deceased_last_name, '')) as deceased_name,
+           identification_number, 
+           created_at, 
+           status
     FROM deceased_forms
     WHERE created_by = ? OR permission_level >= ?
     ORDER BY updated_at DESC

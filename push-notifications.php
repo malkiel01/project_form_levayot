@@ -183,19 +183,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_GET['action'] === 'notify_new_for
         $_POST['deceased_name']
     );
 }
-
-// SQL ליצירת טבלת push_subscriptions:
-/*
-CREATE TABLE push_subscriptions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    endpoint VARCHAR(500) NOT NULL,
-    p256dh VARCHAR(255),
-    auth VARCHAR(255),
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at DATETIME,
-    updated_at DATETIME,
-    UNIQUE KEY unique_endpoint (endpoint),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-*/

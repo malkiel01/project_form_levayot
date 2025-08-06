@@ -26,10 +26,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_stats') {
         $whereClause
     ";
     $stats = $db->query($statsQuery)->fetch();
-    
+
     // רשומות אחרונות
     $recentQuery = "
-        SELECT form_uuid, deceased_name, death_date, status 
+        SELECT 
+            form_uuid, 
+            CONCAT(IFNULL(deceased_first_name, ''), ' ', IFNULL(deceased_last_name, '')) as deceased_name,
+            death_date, 
+            status 
         FROM deceased_forms 
         $whereClause
         ORDER BY created_at DESC 

@@ -1,75 +1,75 @@
 <?php
 // manage_links.php - ניהול קישורי שיתוף
 
-require_once 'config.php';
+// require_once 'config.php';
 
-// בדיקת התחברות
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ' . LOGIN_URL);
-    exit;
-}
+// // בדיקת התחברות
+// if (!isset($_SESSION['user_id'])) {
+//     header('Location: ' . LOGIN_URL);
+//     exit;
+// }
 
-$db = getDbConnection();
-$userPermissionLevel = $_SESSION['permission_level'] ?? 1;
+// $db = getDbConnection();
+// $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 
-// טיפול במחיקת קישור
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        die('Invalid CSRF token');
-    }
+// // טיפול במחיקת קישור
+// if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
+//     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+//         die('Invalid CSRF token');
+//     }
     
-    $linkUuid = $_POST['link_uuid'];
+//     $linkUuid = $_POST['link_uuid'];
     
-    // בדוק הרשאות - רק יוצר הקישור או מנהל יכולים למחוק
-    $checkStmt = $db->prepare("
-        SELECT created_by FROM form_links WHERE link_uuid = ?
-    ");
-    $checkStmt->execute([$linkUuid]);
-    $link = $checkStmt->fetch();
+//     // בדוק הרשאות - רק יוצר הקישור או מנהל יכולים למחוק
+//     $checkStmt = $db->prepare("
+//         SELECT created_by FROM form_links WHERE link_uuid = ?
+//     ");
+//     $checkStmt->execute([$linkUuid]);
+//     $link = $checkStmt->fetch();
     
-    if ($link && ($link['created_by'] == $_SESSION['user_id'] || $userPermissionLevel >= 4)) {
-        $deleteStmt = $db->prepare("DELETE FROM form_links WHERE link_uuid = ?");
-        $deleteStmt->execute([$linkUuid]);
-        $successMessage = "הקישור נמחק בהצלחה";
-    } else {
-        $errorMessage = "אין לך הרשאה למחוק קישור זה";
-    }
-}
+//     if ($link && ($link['created_by'] == $_SESSION['user_id'] || $userPermissionLevel >= 4)) {
+//         $deleteStmt = $db->prepare("DELETE FROM form_links WHERE link_uuid = ?");
+//         $deleteStmt->execute([$linkUuid]);
+//         $successMessage = "הקישור נמחק בהצלחה";
+//     } else {
+//         $errorMessage = "אין לך הרשאה למחוק קישור זה";
+//     }
+// }
 
-// קבלת רשימת קישורים
-$where = "1=1";
-$params = [];
+// // קבלת רשימת קישורים
+// $where = "1=1";
+// $params = [];
 
-// הגבל למשתמש הנוכחי אם לא מנהל
-if ($userPermissionLevel < 4) {
-    $where .= " AND fl.created_by = ?";
-    $params[] = $_SESSION['user_id'];
-}
+// // הגבל למשתמש הנוכחי אם לא מנהל
+// if ($userPermissionLevel < 4) {
+//     $where .= " AND fl.created_by = ?";
+//     $params[] = $_SESSION['user_id'];
+// }
 
-// סינון לפי טופס ספציפי אם נשלח
-$filterFormUuid = $_GET['form_uuid'] ?? null;
-if ($filterFormUuid) {
-    $where .= " AND fl.form_uuid = ?";
-    $params[] = $filterFormUuid;
-}
+// // סינון לפי טופס ספציפי אם נשלח
+// $filterFormUuid = $_GET['form_uuid'] ?? null;
+// if ($filterFormUuid) {
+//     $where .= " AND fl.form_uuid = ?";
+//     $params[] = $filterFormUuid;
+// }
 
-$stmt = $db->prepare("
-    SELECT 
-        fl.*,
-        df.deceased_name,
-        u.full_name as created_by_name,
-        (SELECT COUNT(*) FROM form_link_access_log WHERE link_uuid = fl.link_uuid) as total_views
-    FROM form_links fl
-    LEFT JOIN deceased_forms df ON fl.form_uuid = df.form_uuid
-    LEFT JOIN users u ON fl.created_by = u.id
-    WHERE $where
-    ORDER BY fl.created_at DESC
-");
-$stmt->execute($params);
-$links = $stmt->fetchAll();
+// $stmt = $db->prepare("
+//     SELECT 
+//         fl.*,
+//         df.deceased_name,
+//         u.full_name as created_by_name,
+//         (SELECT COUNT(*) FROM form_link_access_log WHERE link_uuid = fl.link_uuid) as total_views
+//     FROM form_links fl
+//     LEFT JOIN deceased_forms df ON fl.form_uuid = df.form_uuid
+//     LEFT JOIN users u ON fl.created_by = u.id
+//     WHERE $where
+//     ORDER BY fl.created_at DESC
+// ");
+// $stmt->execute($params);
+// $links = $stmt->fetchAll();
 
 ?>
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
@@ -103,10 +103,10 @@ $links = $stmt->fetchAll();
             background-color: #dc3545;
         }
     </style>
-</head>
+</head> -->
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <!-- <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="<?= DASHBOARD_FULL_URL ?>">
                 <i class="fas fa-home"></i> מערכת ניהול נפטרים
@@ -255,10 +255,10 @@ $links = $stmt->fetchAll();
             </div>
             <?php endif; ?>
         </div>
-    </div>
+    </div> -->
 
     <!-- Modal הצגת קישור -->
-    <div class="modal fade" id="showLinkModal" tabindex="-1">
+    <!-- <div class="modal fade" id="showLinkModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -296,6 +296,6 @@ $links = $stmt->fetchAll();
         function viewStats(linkUuid) {
             window.location.href = 'link_stats.php?uuid=' + linkUuid;
         }
-    </script>
-</body>
-</html>
+    </script> -->
+<!-- </body>
+</html> -->

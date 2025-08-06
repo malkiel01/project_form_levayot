@@ -126,10 +126,18 @@ function buildWhereClause2($filters, &$params) {
     // חיפוש טקסט
     if (!empty($filters['search_text'])) {
         $searchText = '%' . $filters['search_text'] . '%';
-        $conditions[] = "(deceased_name LIKE ? OR father_name LIKE ? OR mother_name LIKE ?)";
-        $params[] = $searchText;
-        $params[] = $searchText;
-        $params[] = $searchText;
+        $conditions[] = "(
+            CONCAT(IFNULL(deceased_first_name, ''), ' ', IFNULL(deceased_last_name, '')) LIKE ? 
+            OR deceased_first_name LIKE ? 
+            OR deceased_last_name LIKE ? 
+            OR father_name LIKE ? 
+            OR mother_name LIKE ?
+        )";
+        $params[] = $searchText; // לשם המלא
+        $params[] = $searchText; // לשם פרטי
+        $params[] = $searchText; // לשם משפחה
+        $params[] = $searchText; // לשם האב
+        $params[] = $searchText; // לשם האם
     }
     
     // פילטר מיקום
@@ -181,14 +189,22 @@ function buildWhereClause($filters, &$params, $tableAlias = 'df') {
                 break;
         }
     }
-    
+
     // חיפוש טקסט - הוסף את alias הטבלה
     if (!empty($filters['search_text'])) {
         $searchText = '%' . $filters['search_text'] . '%';
-        $conditions[] = "({$tableAlias}.deceased_name LIKE ? OR {$tableAlias}.father_name LIKE ? OR {$tableAlias}.mother_name LIKE ?)";
-        $params[] = $searchText;
-        $params[] = $searchText;
-        $params[] = $searchText;
+        $conditions[] = "(
+            CONCAT(IFNULL({$tableAlias}.deceased_first_name, ''), ' ', IFNULL({$tableAlias}.deceased_last_name, '')) LIKE ? 
+            OR {$tableAlias}.deceased_first_name LIKE ? 
+            OR {$tableAlias}.deceased_last_name LIKE ? 
+            OR {$tableAlias}.father_name LIKE ? 
+            OR {$tableAlias}.mother_name LIKE ?
+        )";
+        $params[] = $searchText; // לשם המלא
+        $params[] = $searchText; // לשם פרטי
+        $params[] = $searchText; // לשם משפחה
+        $params[] = $searchText; // לשם האב
+        $params[] = $searchText; // לשם האם
     }
     
     // פילטר מיקום - הוסף את alias הטבלה

@@ -84,7 +84,7 @@ class DeceasedForm {
         // רשימת השדות התקינים בטבלה
         $validFields = [
             'form_uuid', 'status', 'progress_percentage', 'identification_type',
-            'identification_number', 'deceased_name', 'father_name', 'mother_name',
+            'identification_number', 'deceased_first_name', 'deceased_last_name', 'father_name', 'mother_name',
             'birth_date', 'death_date', 'death_time', 'burial_date', 'burial_time',
             'burial_license', 'death_location', 'cemetery_id', 'block_id', 'section_id',
             'row_id', 'grave_id', 'plot_id', 'informant_name', 'informant_phone',
@@ -174,7 +174,7 @@ class DeceasedForm {
         // רשימת השדות התקינים בטבלה (ללא form_uuid)
         $validFields = [
             'status', 'progress_percentage', 'identification_type',
-            'identification_number', 'deceased_name', 'father_name', 'mother_name',
+            'identification_number', 'deceased_first_name', 'deceased_last_name', 'father_name', 'mother_name',
             'birth_date', 'death_date', 'death_time', 'burial_date', 'burial_time',
             'burial_license', 'death_location', 'cemetery_id', 'block_id', 'section_id',
             'row_id', 'grave_id', 'plot_id', 'informant_name', 'informant_phone',
@@ -236,7 +236,9 @@ class DeceasedForm {
         
         // קבלת נתוני הקישור
         $linkStmt = $db->prepare("
-            SELECT fl.*, df.deceased_name, u.full_name as created_by_name
+            SELECT fl.*, 
+                CONCAT(IFNULL(df.deceased_first_name, ''), ' ', IFNULL(df.deceased_last_name, '')) as deceased_name,
+                u.full_name as created_by_name
             FROM form_links fl
             LEFT JOIN deceased_forms df ON fl.form_uuid = df.form_uuid
             LEFT JOIN users u ON fl.created_by = u.id

@@ -249,16 +249,20 @@ function copyLink() {
 // שיתוף בוואטסאפ
 function shareViaWhatsApp() {
     const link = $('#generatedLink').val();
-    const deceasedName = formData.deceased_name || 'טופס חדש';
-    const text = 'טופס נפטר - ' + deceasedName + '\n' + link;
+    const firstName = formData.deceased_first_name || '';
+    const lastName = formData.deceased_last_name || '';
+    const fullName = (firstName + ' ' + lastName).trim() || 'טופס חדש';
+    const text = 'טופס נפטר - ' + fullName + '\n' + link;
     window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
 }
 
 // שיתוף במייל
 function shareViaEmail() {
     const link = $('#generatedLink').val();
-    const deceasedName = formData.deceased_name || 'טופס חדש';
-    const subject = 'טופס נפטר - ' + deceasedName;
+    const firstName = formData.deceased_first_name || '';
+    const lastName = formData.deceased_last_name || '';
+    const fullName = (firstName + ' ' + lastName).trim() || 'טופס חדש';
+    const subject = 'טופס נפטר - ' + fullName;
     const body = 'שלום,\n\nמצורף קישור לטופס נפטר:\n' + link + '\n\nבברכה';
     window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
 }
