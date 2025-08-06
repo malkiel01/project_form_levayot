@@ -72,6 +72,10 @@ define('DASHBOARD_FULL_URL', SITE_URL . '/includes/dashboard.php');
 define('DASHBOARD_DECEASED_URL', SITE_URL . '/includes/dashboard_deceased.php');
 define('DASHBOARD_PURCHASES_URL', SITE_URL . '/includes/dashboard_purchases.php');
 
+// נתיבי רשימות
+define('DECEASED_LIST_URL', SITE_URL . '/includes/lists/deceased_list.php');
+define('PURCHASE_LIST_URL', SITE_URL . '/includes/lists/purchase_list.php');
+
 
 define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip', 'rar']);
 

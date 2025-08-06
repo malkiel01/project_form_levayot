@@ -372,7 +372,7 @@ function renderActionButtons($isNewForm, $formUuid, $viewOnly, $isLinkAccess) {
             
             <!-- כפתורי ניווט -->
             <?php if (isset($_SESSION['user_id'])): ?>
-                <a href="../forms_list.php" class="btn action-btn outline"
+                <a href="<?= DECEASED_LIST_URL ?>" class="btn action-btn outline"
                    data-bs-toggle="tooltip" 
                    data-bs-placement="top" 
                    title="רשימת טפסים">
