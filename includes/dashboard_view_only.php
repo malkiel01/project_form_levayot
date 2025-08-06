@@ -177,46 +177,6 @@ $myRecentForms = array_slice($myRecentForms, 0, 10);
     </div>
 
     <div class="container">
-        <?php if (!empty($allowedDashboards)): ?>
-        <div class="available-dashboards">
-            <h5 class="mb-3">
-                <i class="fas fa-unlock-alt me-2"></i>
-                דשבורדים זמינים עבורך:
-            </h5>
-            <div class="d-flex gap-3">
-                <?php foreach ($allowedDashboards as $dashboard): ?>
-                    <?php
-                    $dashboardUrl = '';
-                    $dashboardName = '';
-                    $dashboardIcon = '';
-                    
-                    switch($dashboard) {
-                        case 'main':
-                            $dashboardUrl = DASHBOARD_FULL_URL;
-                            $dashboardName = 'דשבורד ראשי';
-                            $dashboardIcon = 'fas fa-home';
-                            break;
-                        case 'deceased':
-                            $dashboardUrl = DASHBOARD_DECEASED_URL;
-                            $dashboardName = 'דשבורד נפטרים';
-                            $dashboardIcon = 'fas fa-user-alt-slash';
-                            break;
-                        case 'purchases':
-                            $dashboardUrl = DASHBOARD_PURCHASES_URL;
-                            $dashboardName = 'דשבורד רכישות';
-                            $dashboardIcon = 'fas fa-shopping-cart';
-                            break;
-                    }
-                    ?>
-                    <a href="<?php echo $dashboardUrl; ?>" class="btn btn-primary">
-                        <i class="<?php echo $dashboardIcon; ?> me-2"></i>
-                        <?php echo $dashboardName; ?>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <?php endif; ?>
-
         <!-- סטטיסטיקות -->
         <div class="row">
             <div class="col-md-6">
