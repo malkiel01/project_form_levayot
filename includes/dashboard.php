@@ -350,6 +350,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                     <div class="p-3">
                         <h3 class="mb-0">
                             <i class="fas fa-cross text-primary"></i> נפטרים אחרונים
+                            <i class="fas fa-cross text-primary"></i> נפטרים אחרונים
                         </h3>
                     </div>
                     <div class="table-responsive">
