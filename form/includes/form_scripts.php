@@ -9,7 +9,7 @@ function renderFormScripts() {
     <script src="<?= SITE_URL ?>/form/js/form-signature.js?v=<?= time() ?>"></script>
     <script src="<?= SITE_URL ?>/form/js/form-share.js?v=<?= time() ?>"></script>
     <script src="<?= SITE_URL ?>/form/js/form-fields.js?v=<?= time() ?>"></script>
-    <script src="<?= SITE_URL ?>/form/js/form-autosave.js?v=<?= time() ?>"></script>
+    <!-- <script src="<?= SITE_URL ?>/form/js/form-autosave.js?v=<?= time() ?>"></script> -->
     <script src="<?= SITE_URL ?>/form/js/form-login-check.js?v=<?= time() ?>"></script>
     <script src="<?= SITE_URL ?>/form/js/file-manager.js?v=<?= time() ?>"></script>
     <script src="<?= SITE_URL ?>/js/pwa-init.js?v=<?= time() ?>"></script>
