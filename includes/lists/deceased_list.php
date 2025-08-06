@@ -126,12 +126,15 @@ function exportDeceasedList() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>רשימת טפסי נפטרים</title>
+    <title>רשימת טפסי נפטרים - מערכת קדישא</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
+        body {
+            padding-top: 0;
+        }
         .filters-container {
             background-color: #f8f9fa;
         }
@@ -151,24 +154,35 @@ function exportDeceasedList() {
             background-color: #6c757d;
             color: #fff;
         }
+        .main-content {
+            padding: 20px 0;
+        }
+        .page-header {
+            background-color: #f8f9fa;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #dee2e6;
+        }
     </style>
 </head>
 <body>
-    <div class="container-fluid mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- כלול את התפריט הראשי -->
+    <?php 
+    // עדכן את הנתיבים היחסיים בתפריט
+    $navBasePath = '../../';
+    include '../../includes/nav.php'; 
+    ?>
+    
+    <!-- כותרת הדף -->
+    <div class="page-header">
+        <div class="container-fluid">
             <h1>
                 <i class="fas fa-list"></i> רשימת טפסי נפטרים
             </h1>
-            <div>
-                <a href="../../form/" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> טופס חדש
-                </a>
-                <a href="../../dashboard.php" class="btn btn-outline-secondary">
-                    <i class="fas fa-home"></i> חזרה לדשבורד
-                </a>
-            </div>
         </div>
-        
+    </div>
+    
+    <div class="container-fluid main-content">
         <!-- פילטרים -->
         <?php renderListFilters('deceased', $currentFilters, $savedPreferences); ?>
         
