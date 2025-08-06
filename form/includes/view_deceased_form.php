@@ -378,7 +378,7 @@ if ($formData['cemetery_id']) {
                         <i class="fas fa-share"></i> שתף
                     </button>
                     <?php if ($isLoggedIn): ?>
-                    <a href="forms_list.php" class="btn btn-outline-secondary">
+                    <a href="../../includes/lists/deceased_list.php" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-right"></i> חזרה לרשימה
                     </a>
                     <?php endif; ?>
