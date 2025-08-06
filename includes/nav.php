@@ -48,17 +48,17 @@ $allowedDashboards = getUserAllowedDashboards($userId);
                         <i class="fas fa-file-alt"></i> טפסים
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="<?= SITE_URL . FORM_DECEASED_URL ?>">
+                        <li><a class="dropdown-item" href="<?= SITE_URL . '/' . FORM_DECEASED_URL ?>">
                             <i class="fas fa-plus"></i> טופס נפטר חדש
                         </a></li>
-                        <li><a class="dropdown-item" href="<?= SITE_URL . FORM_PURCHASE_URL ?>">
+                        <li><a class="dropdown-item" href="<?= SITE_URL . '/' . FORM_PURCHASE_URL ?>">
                             <i class="fas fa-plus"></i> טופס רכישה חדש
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="<?= SITE_URL . DECEASED_LIST_URL ?>">
+                        <li><a class="dropdown-item" href="<?= SITE_URL . '/' . DECEASED_LIST_URL ?>">
                             <i class="fas fa-list"></i> רשימת נפטרים
                         </a></li>
-                        <li><a class="dropdown-item" href="<?= SITE_URL . PURCHASE_LIST_URL ?>">
+                        <li><a class="dropdown-item" href="<?= SITE_URL . '/' . PURCHASE_LIST_URL ?>">
                             <i class="fas fa-list"></i> רשימת רכישות
                         </a></li>
                     </ul>
