@@ -49,7 +49,7 @@ if (is_dir($logsDir)) {
 $phpErrorsLog = __DIR__ . '/logs/php_errors.log';
 if (file_exists($phpErrorsLog)) {
     echo "<h3>PHP Errors Log:</h3>";
-    echo "<pre style='background: #ffe0e0; padding: 10px; max-height: 300px; overflow-y: auto;'>";
+    echo "<pre style='background: #ffe0e0; padding: 10px; max-height: 900px; overflow-y: auto;'>";
     echo htmlspecialchars(tail($phpErrorsLog, 50));
     echo "</pre>";
 }

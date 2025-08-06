@@ -32,7 +32,7 @@ class DeceasedForm {
     }
 
     // יצירת טופס חדש
-    public function createForm($data) {
+    public function createForm2($data) {
         // וודא שיש UUID תקין
         if (empty($data['form_uuid'])) {
             throw new Exception("UUID חסר");
@@ -83,6 +83,112 @@ class DeceasedForm {
         
         foreach ($data as $field => $value) {
             if ($this->canEditField($field) || $field === 'form_uuid' || $field === 'created_by' || $field === 'status' || $field === 'progress_percentage') {
+                $fields[] = $field;
+                $values[] = $value;
+                $placeholders[] = '?';
+            }
+        }
+        
+        if (empty($fields)) {
+            throw new Exception("אין שדות לשמירה");
+        }
+        
+        $sql = "INSERT INTO deceased_forms (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
+        
+        try {
+            error_log("Creating new form - UUID: " . $data['form_uuid']);
+            error_log("SQL: " . $sql);
+            error_log("Values: " . print_r($values, true));
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($values);
+            
+            $this->formId = $this->db->lastInsertId();
+            
+            // רישום בלוג
+            $logStmt = $this->db->prepare("
+                INSERT INTO activity_log (user_id, form_id, action, details, ip_address, user_agent) 
+                VALUES (?, ?, 'create_form', ?, ?, ?)
+            ");
+            $logStmt->execute([
+                $_SESSION['user_id'] ?? null,
+                $this->formId,
+                json_encode(['form_uuid' => $data['form_uuid'], 'status' => $data['status']]),
+                $_SERVER['REMOTE_ADDR'] ?? '',
+                $_SERVER['HTTP_USER_AGENT'] ?? ''
+            ]);
+            
+            error_log("Form created successfully - UUID: " . $data['form_uuid'] . ", ID: " . $this->formId . ", Status: " . $data['status']);
+            
+            return $data['form_uuid'];
+        } catch (PDOException $e) {
+            error_log("Error creating form: " . $e->getMessage());
+            throw new Exception("שגיאה ביצירת הטופס: " . $e->getMessage());
+        }
+    }
+    // יצירת טופס חדש
+    public function createForm($data) {
+        // וודא שיש UUID תקין
+        if (empty($data['form_uuid'])) {
+            throw new Exception("UUID חסר");
+        }
+        
+        // וודא שה-UUID לא ריק
+        if (trim($data['form_uuid']) === '') {
+            throw new Exception("UUID ריק");
+        }
+        
+        // בדוק שה-UUID לא קיים כבר
+        $checkStmt = $this->db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE form_uuid = ?");
+        $checkStmt->execute([$data['form_uuid']]);
+        if ($checkStmt->fetchColumn() > 0) {
+            throw new Exception("UUID כבר קיים במערכת");
+        }
+        
+        // הסר שדות שלא שייכים לטבלה
+        unset($data['csrf_token']);
+        unset($data['save']);
+        unset($data['save_and_view']);
+        
+        $data['created_by'] = $_SESSION['user_id'] ?? null;
+        
+        // תמיד התחל כטיוטה
+        $data['status'] = 'draft';
+        
+        // חישוב אחוז התקדמות
+        $data['progress_percentage'] = $this->calculateProgress($data);
+        
+        // בדוק אם כל שדות החובה מלאים
+        if ($this->areAllRequiredFieldsFilled($data)) {
+            $data['status'] = 'completed';
+        }
+        
+        // נקה שדות ריקים שעלולים לגרום לבעיות Foreign Key
+        $fieldsToClean = ['cemetery_id', 'block_id', 'section_id', 'row_id', 'grave_id', 'plot_id'];
+        foreach ($fieldsToClean as $field) {
+            if (isset($data[$field]) && ($data[$field] === '' || $data[$field] === null)) {
+                unset($data[$field]);
+            }
+        }
+        
+        // בניית שאילתת INSERT
+        $fields = [];
+        $values = [];
+        $placeholders = [];
+        
+        // רשימת השדות התקינים בטבלה
+        $validFields = [
+            'form_uuid', 'status', 'progress_percentage', 'identification_type',
+            'identification_number', 'deceased_name', 'father_name', 'mother_name',
+            'birth_date', 'death_date', 'death_time', 'burial_date', 'burial_time',
+            'burial_license', 'death_location', 'cemetery_id', 'block_id', 'section_id',
+            'row_id', 'grave_id', 'plot_id', 'informant_name', 'informant_phone',
+            'informant_relationship', 'notes', 'client_signature', 'created_by', 'updated_by'
+        ];
+        
+        // סנן רק שדות תקינים
+        foreach ($data as $field => $value) {
+            if (in_array($field, $validFields)) {
                 $fields[] = $field;
                 $values[] = $value;
                 $placeholders[] = '?';
