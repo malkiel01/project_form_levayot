@@ -161,7 +161,7 @@ $stmt = $db->prepare("
         pf.created_at, 
         pf.status, 
         pf.purchase_date as event_date,
-        pf.total_amount,  // הוסף את השורה הזו
+        pf.total_amount,
         NULL as cemetery_name,
         NULL as block_name,
         pf.created_by,
