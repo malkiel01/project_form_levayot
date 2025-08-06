@@ -123,12 +123,12 @@ if ($formData['cemetery_id']) {
 </head>
 <body>
     <?php 
-    // // טעינת התפריט המתאים
-    // if (!$isLoggedIn || $userPermissionLevel == 1) {
-    //     require_once '../../includes/nav_view_only.php';
-    // } else {
-    //     require_once '../../includes/nav.php';
-    // }
+     // טעינת התפריט המתאים
+     if (!$isLoggedIn || $userPermissionLevel == 1) {
+         require_once '../../includes/nav_view_only.php';
+     } else {
+         require_once '../../includes/nav.php';
+     }
     ?>
 
     <div class="container-fluid py-4">
