@@ -397,7 +397,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <a href="../form/includes/view_form.php?id=<?= $activity['form_uuid'] ?>&view=1" 
+                                                <a href="../form/includes/view_deceased_form.php?id=<?= $activity['form_uuid'] ?>&view=1" 
                                                 class="btn btn-sm btn-view-gradient" 
                                                 title="צפייה">
                                                     <i class="fas fa-eye"></i>
@@ -485,7 +485,7 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <a href="../form/purchase_form.php?uuid=<?= $activity['form_uuid'] ?>&view=1" 
+                                                <a href="../form/view_purchase_form.php?uuid=<?= $activity['form_uuid'] ?>&view=1" 
                                                 class="btn btn-sm btn-view-gradient" 
                                                 title="צפייה">
                                                     <i class="fas fa-eye"></i>
@@ -851,95 +851,6 @@ $recentActivity = array_slice($recentActivity, 0, 10);
                 });
             });
         });
-    </script>
-
-    <!-- סקריפט למחיקת טפסים -->
-    <script>
-        // document.addEventListener('DOMContentLoaded', function() {
-        //     // טיפול במחיקת טפסים
-        //     document.querySelectorAll('.delete-form-btn').forEach(btn => {
-        //         btn.addEventListener('click', function() {
-        //             const formUuid = this.dataset.formUuid;
-        //             const formType = this.dataset.formType;
-        //             const formName = this.dataset.formName;
-
-                    
-        //             Swal.fire({
-        //                 title: 'האם אתה בטוח?',
-        //                 html: `האם למחוק את הטופס של <strong>${formName}</strong>?<br>פעולה זו אינה ניתנת לביטול!`,
-        //                 icon: 'warning',
-        //                 showCancelButton: true,
-        //                 confirmButtonColor: '#d33',
-        //                 cancelButtonColor: '#3085d6',
-        //                 confirmButtonText: 'כן, מחק',
-        //                 cancelButtonText: 'ביטול'
-        //             })
-        //             .then(response => {
-        //                 console.log('Response status:', response.status);
-        //                 console.log('Response headers:', response.headers);
-        //                 return response.text(); // במקום response.json()
-        //             })
-        //             .then(text => {
-        //                 console.log('Raw response:', text);
-        //                 try {
-        //                     const data = JSON.parse(text);
-        //                     // המשך הקוד...
-        //                 } catch (e) {
-        //                     console.error('Failed to parse JSON:', e);
-        //                     Swal.fire({
-        //                         icon: 'error',
-        //                         title: 'שגיאה',
-        //                         text: 'תגובה לא תקינה מהשרת'
-        //                     });
-        //                 }
-        //             })
-        //             .then((result) => {
-        //                 if (result.isConfirmed) {
-        //                     // שליחת בקשת מחיקה
-        //                     fetch('../form/ajax/delete_form.php', {
-        //                         method: 'POST',
-        //                         headers: {
-        //                             'Content-Type': 'application/json',
-        //                         },
-        //                         body: JSON.stringify({
-        //                             form_uuid: formUuid,
-        //                             form_type: formType,
-        //                             csrf_token: '<?= $_SESSION['csrf_token'] ?>'
-        //                         })
-        //                     })
-        //                     .then(response => response.json())
-        //                     .then(data => {
-        //                         if (data.success) {
-        //                             Swal.fire({
-        //                                 icon: 'success',
-        //                                 title: 'נמחק!',
-        //                                 text: 'הטופס נמחק בהצלחה',
-        //                                 timer: 1500,
-        //                                 showConfirmButton: false
-        //                             }).then(() => {
-        //                                 location.reload();
-        //                             });
-        //                         } else {
-        //                             Swal.fire({
-        //                                 icon: 'error',
-        //                                 title: 'שגיאה',
-        //                                 text: data.message || 'אירעה שגיאה במחיקת הטופס'
-        //                             });
-        //                         }
-        //                     })
-        //                     .catch(error => {
-        //                         console.error('Error:', error);
-        //                         Swal.fire({
-        //                             icon: 'error',
-        //                             title: 'שגיאה',
-        //                             text: 'אירעה שגיאה בתקשורת עם השרת'
-        //                         });
-        //                     });
-        //                 }
-        //             });
-        //         });
-        //     });
-        // });
     </script>
 </body>
 </html>
