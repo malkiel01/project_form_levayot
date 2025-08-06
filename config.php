@@ -129,6 +129,8 @@ function revokeUserPermission($fieldName, $userId, $action = 'view') {
 }
 // -----------
 
+
+
 // <?php
 // // dashboard_router.php - הוסף את הפונקציות האלה לקובץ config.php
 
@@ -458,8 +460,39 @@ function canDeleteForms($userId, $permissionLevel) {
     return userHasPermission($userId, 'delete_forms');
 }
 
+
+// -----
+
+// הוספה לקובץ config.php
+define('DEBUG_MODE', true); // שנה ל-false בייצור
+
+// פונקציית סניטציה משופרת עם דיבוג
+function sanitizeInput($data) {
+    if (is_array($data)) {
+        $sanitized = [];
+        foreach ($data as $key => $value) {
+            // דיבוג של שדות בעייתיים
+            if (in_array($key, ['cemetery_id', 'block_id', 'section_id', 'row_id', 'grave_id', 'plot_id'])) {
+                error_log("Sanitizing field $key: " . print_r($value, true));
+            }
+            $sanitized[$key] = sanitizeInput($value);
+        }
+        return $sanitized;
+    }
+    
+    // טיפול בערכים ריקים
+    if ($data === '' || $data === null) {
+        return null;
+    }
+    
+    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
+}
+
+
+// -----
+
 // פונקציה לסניטציה של קלט
-function sanitizeInput($input) {
+function sanitizeInput2($input) {
     if (is_array($input)) {
         return array_map('sanitizeInput', $input);
     }
@@ -540,3 +573,5 @@ if (!is_dir($logsPath)) {
 
 // הגדרת קובץ לוג
 ini_set('error_log', $logsPath . 'php_errors.log');
+
+
