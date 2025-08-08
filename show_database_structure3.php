@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['permission_level'] < 4) {
 }
 
 $db = getDbConnection();
+$dbName = $db->query("SELECT DATABASE()")->fetchColumn();
 
 ?>
 <!DOCTYPE html>
@@ -18,6 +19,7 @@ $db = getDbConnection();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מבנה מסד הנתונים - מתקדם</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <style>
         body {
             background-color: #f8f9fa;
@@ -137,12 +139,10 @@ $db = getDbConnection();
             <div id="structure" class="tab-pane fade show active">
                 <?php
                 try {
-                    // קבלת שם מסד הנתונים
-                    $dbName = $db->query("SELECT DATABASE()")->fetchColumn();
-                    echo "<div class='alert alert-info'>מסד נתונים: <strong>$dbName</strong></div>";
-                    
                     // קבלת רשימת כל הטבלאות
                     $tables = $db->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+                    
+                    echo "<div class='alert alert-info'>מסד נתונים: <strong>$dbName</strong></div>";
                     
                     echo "<div class='stats'>";
                     echo "<h5>סטטיסטיקות:</h5>";
@@ -285,7 +285,179 @@ $db = getDbConnection();
                     echo "<div class='alert alert-danger'>שגיאה: " . htmlspecialchars($e->getMessage()) . "</div>";
                 }
                 ?>
-                <!-- כרטיסיית גיבוי -->
+            </div>
+            
+            <!-- כרטיסיית קשרים -->
+            <div id="relations" class="tab-pane fade">
+                <div class="table-container">
+                    <h3 class="table-name">מפת קשרים מלאה</h3>
+                    <?php
+                    // קבלת כל הקשרים
+                    $allRelations = $db->query("
+                        SELECT 
+                            TABLE_NAME,
+                            COLUMN_NAME,
+                            CONSTRAINT_NAME,
+                            REFERENCED_TABLE_NAME,
+                            REFERENCED_COLUMN_NAME
+                        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+                        WHERE REFERENCED_TABLE_NAME IS NOT NULL
+                        AND TABLE_SCHEMA = '$dbName'
+                        ORDER BY TABLE_NAME, COLUMN_NAME
+                    ")->fetchAll();
+                    
+                    if ($allRelations) {
+                        // יצירת גרף קשרים
+                        echo "<div class='relation-graph'>";
+                        echo "<h5>תרשים קשרים:</h5>";
+                        $relationMap = [];
+                        foreach ($allRelations as $rel) {
+                            if (!isset($relationMap[$rel['REFERENCED_TABLE_NAME']])) {
+                                $relationMap[$rel['REFERENCED_TABLE_NAME']] = [];
+                            }
+                            $relationMap[$rel['REFERENCED_TABLE_NAME']][] = $rel['TABLE_NAME'];
+                        }
+                        
+                        foreach ($relationMap as $parent => $children) {
+                            echo "<div style='margin-bottom: 15px;'>";
+                            echo "<strong>$parent</strong><br>";
+                            foreach (array_unique($children) as $child) {
+                                echo "&nbsp;&nbsp;&nbsp;└─ $child<br>";
+                            }
+                            echo "</div>";
+                        }
+                        echo "</div>";
+                        
+                        // טבלה מפורטת
+                        echo "<h5 class='mt-4'>פרטי קשרים:</h5>";
+                        echo "<table class='table table-bordered'>";
+                        echo "<thead class='table-light'>";
+                        echo "<tr>";
+                        echo "<th>טבלה</th>";
+                        echo "<th>עמודה</th>";
+                        echo "<th>סוג קשר</th>";
+                        echo "<th>טבלת יעד</th>";
+                        echo "<th>עמודת יעד</th>";
+                        echo "<th>שם אילוץ</th>";
+                        echo "</tr>";
+                        echo "</thead>";
+                        echo "<tbody>";
+                        
+                        foreach ($allRelations as $rel) {
+                            echo "<tr>";
+                            echo "<td><strong>{$rel['TABLE_NAME']}</strong></td>";
+                            echo "<td>{$rel['COLUMN_NAME']}</td>";
+                            echo "<td><span class='badge bg-primary'>FOREIGN KEY</span></td>";
+                            echo "<td><strong>{$rel['REFERENCED_TABLE_NAME']}</strong></td>";
+                            echo "<td>{$rel['REFERENCED_COLUMN_NAME']}</td>";
+                            echo "<td><code>{$rel['CONSTRAINT_NAME']}</code></td>";
+                            echo "</tr>";
+                        }
+                        
+                        echo "</tbody>";
+                        echo "</table>";
+                    } else {
+                        echo "<p class='alert alert-info'>לא נמצאו קשרי Foreign Key במסד הנתונים</p>";
+                    }
+                    ?>
+                </div>
+            </div>
+            
+            <!-- כרטיסיית תלויות -->
+            <div id="dependencies" class="tab-pane fade">
+                <div class="table-container">
+                    <h3 class="table-name">בדיקת תלויות ובעיות</h3>
+                    
+                    <?php
+                    // בדיקת טבלאות ללא Primary Key
+                    echo "<div class='dependencies'>";
+                    echo "<h5>טבלאות ללא Primary Key:</h5>";
+                    $noPK = $db->query("
+                        SELECT TABLE_NAME
+                        FROM INFORMATION_SCHEMA.TABLES
+                        WHERE TABLE_SCHEMA = '$dbName'
+                        AND TABLE_NAME NOT IN (
+                            SELECT DISTINCT TABLE_NAME
+                            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+                            WHERE CONSTRAINT_NAME = 'PRIMARY'
+                            AND TABLE_SCHEMA = '$dbName'
+                        )
+                    ")->fetchAll(PDO::FETCH_COLUMN);
+                    
+                    if ($noPK) {
+                        echo "<ul>";
+                        foreach ($noPK as $table) {
+                            echo "<li class='text-danger'>$table</li>";
+                        }
+                        echo "</ul>";
+                    } else {
+                        echo "<p class='text-success'>✓ כל הטבלאות מכילות Primary Key</p>";
+                    }
+                    echo "</div>";
+                    
+                    // בדיקת קשרים שבורים
+                    echo "<div class='dependencies'>";
+                    echo "<h5>בדיקת קשרים שבורים:</h5>";
+                    foreach ($tables as $table) {
+                        $brokenLinks = checkBrokenLinks($db, $table, $dbName);
+                        if ($brokenLinks) {
+                            echo "<div class='alert alert-dependency'>";
+                            echo "<strong>$table:</strong><br>";
+                            foreach ($brokenLinks as $issue) {
+                                echo "- {$issue}<br>";
+                            }
+                            echo "</div>";
+                        }
+                    }
+                    echo "<p class='text-muted'>הבדיקה מחפשת ערכים שלא קיימים בטבלאות המקושרות</p>";
+                    echo "</div>";
+                    
+                    // טבלאות שאי אפשר למחוק
+                    echo "<div class='dependencies'>";
+                    echo "<h5>סדר מחיקת טבלאות (בגלל תלויות):</h5>";
+                    $deletionOrder = calculateDeletionOrder($db, $tables, $dbName);
+                    echo "<ol>";
+                    foreach ($deletionOrder as $table) {
+                        echo "<li>$table</li>";
+                    }
+                    echo "</ol>";
+                    echo "</div>";
+                    ?>
+                </div>
+            </div>
+            
+            <!-- כרטיסיית כלי ניקוי -->
+            <div id="cleanup" class="tab-pane fade">
+                <div class="table-container">
+                    <h3 class="table-name">כלי ניקוי וניהול</h3>
+                    
+                    <div class="alert alert-warning">
+                        <strong>אזהרה!</strong> הפעולות בחלק זה יכולות למחוק נתונים. השתמש בזהירות!
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>הסרת מפתחות זרים</h5>
+                            <p>הסר את כל המפתחות הזרים כדי לאפשר מחיקת טבלאות</p>
+                            <button class="btn btn-warning" onclick="showRemoveFKScript()">
+                                הצג סקריפט הסרת FK
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>ניקוי מסד נתונים</h5>
+                            <p>מחיקת כל הטבלאות בסדר הנכון</p>
+                            <button class="btn btn-danger" onclick="showCleanupScript()">
+                                הצג סקריפט ניקוי
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="scriptOutput" class="mt-4"></div>
+                </div>
+            </div>
+            
+            <!-- כרטיסיית גיבוי -->
             <div id="backup" class="tab-pane fade">
                 <div class="table-container">
                     <h3 class="table-name">גיבוי ושחזור מסד נתונים</h3>
@@ -485,177 +657,6 @@ $db = getDbConnection();
                 </div>
             </div>
         </div>
-            
-            <!-- כרטיסיית קשרים -->
-            <div id="relations" class="tab-pane fade">
-                <div class="table-container">
-                    <h3 class="table-name">מפת קשרים מלאה</h3>
-                    <?php
-                    // קבלת כל הקשרים
-                    $allRelations = $db->query("
-                        SELECT 
-                            TABLE_NAME,
-                            COLUMN_NAME,
-                            CONSTRAINT_NAME,
-                            REFERENCED_TABLE_NAME,
-                            REFERENCED_COLUMN_NAME
-                        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-                        WHERE REFERENCED_TABLE_NAME IS NOT NULL
-                        AND TABLE_SCHEMA = '$dbName'
-                        ORDER BY TABLE_NAME, COLUMN_NAME
-                    ")->fetchAll();
-                    
-                    if ($allRelations) {
-                        // יצירת גרף קשרים
-                        echo "<div class='relation-graph'>";
-                        echo "<h5>תרשים קשרים:</h5>";
-                        $relationMap = [];
-                        foreach ($allRelations as $rel) {
-                            if (!isset($relationMap[$rel['REFERENCED_TABLE_NAME']])) {
-                                $relationMap[$rel['REFERENCED_TABLE_NAME']] = [];
-                            }
-                            $relationMap[$rel['REFERENCED_TABLE_NAME']][] = $rel['TABLE_NAME'];
-                        }
-                        
-                        foreach ($relationMap as $parent => $children) {
-                            echo "<div style='margin-bottom: 15px;'>";
-                            echo "<strong>$parent</strong><br>";
-                            foreach (array_unique($children) as $child) {
-                                echo "&nbsp;&nbsp;&nbsp;└─ $child<br>";
-                            }
-                            echo "</div>";
-                        }
-                        echo "</div>";
-                        
-                        // טבלה מפורטת
-                        echo "<h5 class='mt-4'>פרטי קשרים:</h5>";
-                        echo "<table class='table table-bordered'>";
-                        echo "<thead class='table-light'>";
-                        echo "<tr>";
-                        echo "<th>טבלה</th>";
-                        echo "<th>עמודה</th>";
-                        echo "<th>סוג קשר</th>";
-                        echo "<th>טבלת יעד</th>";
-                        echo "<th>עמודת יעד</th>";
-                        echo "<th>שם אילוץ</th>";
-                        echo "</tr>";
-                        echo "</thead>";
-                        echo "<tbody>";
-                        
-                        foreach ($allRelations as $rel) {
-                            echo "<tr>";
-                            echo "<td><strong>{$rel['TABLE_NAME']}</strong></td>";
-                            echo "<td>{$rel['COLUMN_NAME']}</td>";
-                            echo "<td><span class='badge bg-primary'>FOREIGN KEY</span></td>";
-                            echo "<td><strong>{$rel['REFERENCED_TABLE_NAME']}</strong></td>";
-                            echo "<td>{$rel['REFERENCED_COLUMN_NAME']}</td>";
-                            echo "<td><code>{$rel['CONSTRAINT_NAME']}</code></td>";
-                            echo "</tr>";
-                        }
-                        
-                        echo "</tbody>";
-                        echo "</table>";
-                    } else {
-                        echo "<p class='alert alert-info'>לא נמצאו קשרי Foreign Key במסד הנתונים</p>";
-                    }
-                    ?>
-                </div>
-            </div>
-            
-            <!-- כרטיסיית תלויות -->
-            <div id="dependencies" class="tab-pane fade">
-                <div class="table-container">
-                    <h3 class="table-name">בדיקת תלויות ובעיות</h3>
-                    
-                    <?php
-                    // בדיקת טבלאות ללא Primary Key
-                    echo "<div class='dependencies'>";
-                    echo "<h5>טבלאות ללא Primary Key:</h5>";
-                    $noPK = $db->query("
-                        SELECT TABLE_NAME
-                        FROM INFORMATION_SCHEMA.TABLES
-                        WHERE TABLE_SCHEMA = '$dbName'
-                        AND TABLE_NAME NOT IN (
-                            SELECT DISTINCT TABLE_NAME
-                            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-                            WHERE CONSTRAINT_NAME = 'PRIMARY'
-                            AND TABLE_SCHEMA = '$dbName'
-                        )
-                    ")->fetchAll(PDO::FETCH_COLUMN);
-                    
-                    if ($noPK) {
-                        echo "<ul>";
-                        foreach ($noPK as $table) {
-                            echo "<li class='text-danger'>$table</li>";
-                        }
-                        echo "</ul>";
-                    } else {
-                        echo "<p class='text-success'>✓ כל הטבלאות מכילות Primary Key</p>";
-                    }
-                    echo "</div>";
-                    
-                    // בדיקת קשרים שבורים
-                    echo "<div class='dependencies'>";
-                    echo "<h5>בדיקת קשרים שבורים:</h5>";
-                    foreach ($tables as $table) {
-                        $brokenLinks = checkBrokenLinks($db, $table, $dbName);
-                        if ($brokenLinks) {
-                            echo "<div class='alert alert-dependency'>";
-                            echo "<strong>$table:</strong><br>";
-                            foreach ($brokenLinks as $issue) {
-                                echo "- {$issue}<br>";
-                            }
-                            echo "</div>";
-                        }
-                    }
-                    echo "<p class='text-muted'>הבדיקה מחפשת ערכים שלא קיימים בטבלאות המקושרות</p>";
-                    echo "</div>";
-                    
-                    // טבלאות שאי אפשר למחוק
-                    echo "<div class='dependencies'>";
-                    echo "<h5>סדר מחיקת טבלאות (בגלל תלויות):</h5>";
-                    $deletionOrder = calculateDeletionOrder($db, $tables, $dbName);
-                    echo "<ol>";
-                    foreach ($deletionOrder as $table) {
-                        echo "<li>$table</li>";
-                    }
-                    echo "</ol>";
-                    echo "</div>";
-                    ?>
-                </div>
-            </div>
-            
-            <!-- כרטיסיית כלי ניקוי -->
-            <div id="cleanup" class="tab-pane fade">
-                <div class="table-container">
-                    <h3 class="table-name">כלי ניקוי וניהול</h3>
-                    
-                    <div class="alert alert-warning">
-                        <strong>אזהרה!</strong> הפעולות בחלק זה יכולות למחוק נתונים. השתמש בזהירות!
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>הסרת מפתחות זרים</h5>
-                            <p>הסר את כל המפתחות הזרים כדי לאפשר מחיקת טבלאות</p>
-                            <button class="btn btn-warning" onclick="showRemoveFKScript()">
-                                הצג סקריפט הסרת FK
-                            </button>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <h5>ניקוי מסד נתונים</h5>
-                            <p>מחיקת כל הטבלאות בסדר הנכון</p>
-                            <button class="btn btn-danger" onclick="showCleanupScript()">
-                                הצג סקריפט ניקוי
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="scriptOutput" class="mt-4"></div>
-                </div>
-            </div>
-        </div>
     </div>
     
     <!-- Bootstrap JS -->
@@ -754,18 +755,23 @@ function checkBrokenLinks($db, $table, $dbName) {
     ")->fetchAll();
     
     foreach ($fks as $fk) {
-        // בדיקה אם יש ערכים שלא קיימים בטבלה המקושרת
-        $brokenCount = $db->query("
-            SELECT COUNT(*) 
-            FROM `$table` t1
-            LEFT JOIN `{$fk['REFERENCED_TABLE_NAME']}` t2 
-                ON t1.`{$fk['COLUMN_NAME']}` = t2.`{$fk['REFERENCED_COLUMN_NAME']}`
-            WHERE t1.`{$fk['COLUMN_NAME']}` IS NOT NULL 
-            AND t2.`{$fk['REFERENCED_COLUMN_NAME']}` IS NULL
-        ")->fetchColumn();
-        
-        if ($brokenCount > 0) {
-            $issues[] = "$brokenCount רשומות עם {$fk['COLUMN_NAME']} שמצביע לערך לא קיים ב-{$fk['REFERENCED_TABLE_NAME']}";
+        try {
+            // בדיקה אם יש ערכים שלא קיימים בטבלה המקושרת
+            $brokenCount = $db->query("
+                SELECT COUNT(*) 
+                FROM `$table` t1
+                LEFT JOIN `{$fk['REFERENCED_TABLE_NAME']}` t2 
+                    ON t1.`{$fk['COLUMN_NAME']}` = t2.`{$fk['REFERENCED_COLUMN_NAME']}`
+                WHERE t1.`{$fk['COLUMN_NAME']}` IS NOT NULL 
+                AND t2.`{$fk['REFERENCED_COLUMN_NAME']}` IS NULL
+            ")->fetchColumn();
+            
+            if ($brokenCount > 0) {
+                $issues[] = "$brokenCount רשומות עם {$fk['COLUMN_NAME']} שמצביע לערך לא קיים ב-{$fk['REFERENCED_TABLE_NAME']}";
+            }
+        } catch (Exception $e) {
+            // במקרה של שגיאה, נמשיך לבדיקה הבאה
+            continue;
         }
     }
     
