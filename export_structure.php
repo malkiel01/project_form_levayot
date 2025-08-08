@@ -1,129 +1,81 @@
 <?php
-// export_structure.php - הכנס את הקוד הזה לקובץ PHP והרץ אותו
+// export_structure.php - ייצוא מבנה הטבלאות בלבד
 
-// הגדרות מסד נתונים - עדכן לפי הפרטים שלך
-$host = 'mbe-plus.com';
-$username = 'mbeplusc_test'; // שם המשתמש שלך
-$password = 'Gxfv16be'; // הכנס את הסיסמה
-$database = 'mbeplusc_kadisha_v7';
+require_once 'config.php';
+
+// בדיקת הרשאות
+if (!isset($_SESSION['user_id']) || $_SESSION['permission_level'] < 4) {
+    die('Access denied - Admins only');
+}
+
+$db = getDbConnection();
+$dbName = $db->query("SELECT DATABASE()")->fetchColumn();
+
+// הגדרת headers להורדת קובץ
+$filename = "structure_" . $dbName . "_" . date('Y-m-d_H-i-s') . ".sql";
+header('Content-Type: application/sql');
+header('Content-Disposition: attachment; filename="' . $filename . '"');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+// פתיחת output
+echo "-- Database Structure Export\n";
+echo "-- Database: $dbName\n";
+echo "-- Generated: " . date('Y-m-d H:i:s') . "\n";
+echo "-- PHP Version: " . phpversion() . "\n";
+echo "-- --------------------------------------------------------\n\n";
+
+echo "SET SQL_MODE = \"NO_AUTO_VALUE_ON_ZERO\";\n";
+echo "START TRANSACTION;\n";
+echo "SET time_zone = \"+00:00\";\n\n";
+
+echo "/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;\n";
+echo "/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;\n";
+echo "/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;\n";
+echo "/*!40101 SET NAMES utf8mb4 */;\n\n";
+
+echo "-- --------------------------------------------------------\n\n";
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$database;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // קבלת רשימת כל הטבלאות
+    $tables = $db->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
     
-    echo "<!DOCTYPE html><html><head><meta charset='utf-8'><title>מבנה מסד נתונים</title>";
-    echo "<style>body{font-family:Arial;direction:rtl;} pre{background:#f5f5f5;padding:10px;} .table{border:1px solid #ccc;margin:10px 0;padding:10px;}</style></head><body>";
-    
-    echo "<h1>מבנה מסד נתונים: $database</h1>";
-    echo "<p>תאריך: " . date('Y-m-d H:i:s') . "</p>";
-    
-    // קבלת רשימת טבלאות
-    $stmt = $pdo->query("SHOW TABLES");
-    $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    
-    echo "<h2>רשימת טבלאות (" . count($tables) . "):</h2><ul>";
     foreach ($tables as $table) {
-        echo "<li><a href='#$table'>$table</a></li>";
-    }
-    echo "</ul>";
-    
-    // מעבר על כל טבלה
-    foreach ($tables as $table) {
-        echo "<div class='table'>";
-        echo "<h2 id='$table'>טבלה: $table</h2>";
+        echo "-- --------------------------------------------------------\n";
+        echo "-- Table structure for table `$table`\n";
+        echo "-- --------------------------------------------------------\n\n";
         
-        // SHOW CREATE TABLE
-        $stmt = $pdo->query("SHOW CREATE TABLE `$table`");
-        $create = $stmt->fetch(PDO::FETCH_ASSOC);
-        echo "<h3>CREATE TABLE:</h3>";
-        echo "<pre>" . htmlspecialchars($create['Create Table']) . "</pre>";
+        // הוספת DROP TABLE אם קיימת
+        echo "DROP TABLE IF EXISTS `$table`;\n";
         
-        // פרטי עמודות
-        $stmt = $pdo->query("DESCRIBE `$table`");
-        $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo "<h3>עמודות:</h3>";
-        echo "<table border='1' style='border-collapse:collapse;width:100%'>";
-        echo "<tr><th>שם</th><th>סוג</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr>";
-        foreach ($columns as $col) {
-            echo "<tr>";
-            echo "<td>{$col['Field']}</td>";
-            echo "<td>{$col['Type']}</td>";
-            echo "<td>{$col['Null']}</td>";
-            echo "<td>{$col['Key']}</td>";
-            echo "<td>{$col['Default']}</td>";
-            echo "<td>{$col['Extra']}</td>";
-            echo "</tr>";
-        }
-        echo "</table>";
-        
-        // ספירת שורות
-        try {
-            $stmt = $pdo->query("SELECT COUNT(*) as count FROM `$table`");
-            $count = $stmt->fetch(PDO::FETCH_ASSOC);
-            echo "<p><strong>מספר שורות:</strong> {$count['count']}</p>";
-        } catch (Exception $e) {
-            echo "<p><strong>מספר שורות:</strong> לא ניתן לספור</p>";
-        }
-        
-        // אם זה field_permissions, הצג את הנתונים
-        if ($table === 'field_permissions') {
-            echo "<h3>נתונים בטבלה:</h3>";
-            try {
-                $stmt = $pdo->query("SELECT * FROM `field_permissions` ORDER BY id");
-                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                if ($data) {
-                    echo "<table border='1' style='border-collapse:collapse;width:100%'>";
-                    // כותרות
-                    echo "<tr>";
-                    foreach (array_keys($data[0]) as $header) {
-                        echo "<th>$header</th>";
-                    }
-                    echo "</tr>";
-                    // נתונים
-                    foreach ($data as $row) {
-                        echo "<tr>";
-                        foreach ($row as $value) {
-                            echo "<td>" . htmlspecialchars($value ?? '') . "</td>";
-                        }
-                        echo "</tr>";
-                    }
-                    echo "</table>";
-                    
-                    // בדיקת כפילויות
-                    echo "<h3>בדיקת כפילויות בfield_permissions:</h3>";
-                    $stmt = $pdo->query("
-                        SELECT field_name, COUNT(*) as count, GROUP_CONCAT(id) as ids
-                        FROM field_permissions 
-                        GROUP BY field_name 
-                        HAVING COUNT(*) > 1
-                    ");
-                    $duplicates = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                    if ($duplicates) {
-                        echo "<table border='1' style='border-collapse:collapse'>";
-                        echo "<tr><th>שדה</th><th>כמות</th><th>IDs</th></tr>";
-                        foreach ($duplicates as $dup) {
-                            echo "<tr style='background:#ffcccc'>";
-                            echo "<td>{$dup['field_name']}</td>";
-                            echo "<td>{$dup['count']}</td>";
-                            echo "<td>{$dup['ids']}</td>";
-                            echo "</tr>";
-                        }
-                        echo "</table>";
-                    } else {
-                        echo "<p style='color:green'>אין כפילויות!</p>";
-                    }
-                }
-            } catch (Exception $e) {
-                echo "<p>שגיאה בקריאת נתונים: " . $e->getMessage() . "</p>";
-            }
-        }
-        
-        echo "</div><hr>";
+        // קבלת CREATE TABLE statement
+        $createTable = $db->query("SHOW CREATE TABLE `$table`")->fetch();
+        echo $createTable['Create Table'] . ";\n\n";
     }
     
-    echo "</body></html>";
+    // ייצוא Views אם קיימים
+    $views = $db->query("SHOW FULL TABLES WHERE Table_type = 'VIEW'")->fetchAll();
+    if ($views) {
+        echo "-- --------------------------------------------------------\n";
+        echo "-- Views\n";
+        echo "-- --------------------------------------------------------\n\n";
+        
+        foreach ($views as $view) {
+            $viewName = $view[0];
+            echo "-- View structure for `$viewName`\n\n";
+            echo "DROP VIEW IF EXISTS `$viewName`;\n";
+            
+            $createView = $db->query("SHOW CREATE VIEW `$viewName`")->fetch();
+            echo $createView['Create View'] . ";\n\n";
+        }
+    }
     
-} catch (PDOException $e) {
-    echo "שגיאת חיבור: " . $e->getMessage();
+} catch (Exception $e) {
+    echo "-- Error: " . $e->getMessage() . "\n";
 }
+
+echo "COMMIT;\n\n";
+echo "/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;\n";
+echo "/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;\n";
+echo "/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;\n";
 ?>
