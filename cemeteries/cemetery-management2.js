@@ -55,7 +55,7 @@ $(document).ready(function() {
     // Load Overview
     function loadOverview() {
         $.ajax({
-            url: 'api/cemetery-api.php',
+            url: 'api/cemetery-api2.php',
             method: 'GET',
             data: { action: 'getStats' },
             success: function(response) {
