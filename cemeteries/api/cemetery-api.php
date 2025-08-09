@@ -1,6 +1,6 @@
 <?php
 // api/cemetery-api.php
-require_once '../config.php';
+require_once '../../config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
