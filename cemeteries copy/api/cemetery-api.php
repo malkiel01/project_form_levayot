@@ -1,6 +1,5 @@
 <?php
-// api/cemetery-api2.php
-// גירסה שהציגה- ללא יכולת הוספה
+// api/cemetery-api.php
 require_once '../../config.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -60,8 +59,24 @@ try {
             echo json_encode(deleteItem());
             break;
             
-        case 'getHierarchy':
-            echo json_encode(getHierarchy());
+        case 'getBlocksByCemetery':
+            $cemetery_id = $_GET['cemetery_id'] ?? 0;
+            echo json_encode(getBlocksByCemetery($cemetery_id));
+            break;
+            
+        case 'getPlotsByBlock':
+            $block_id = $_GET['block_id'] ?? 0;
+            echo json_encode(getPlotsByBlock($block_id));
+            break;
+            
+        case 'getRowsByPlot':
+            $plot_id = $_GET['plot_id'] ?? 0;
+            echo json_encode(getRowsByPlot($plot_id));
+            break;
+            
+        case 'getAreaGravesByRow':
+            $row_id = $_GET['row_id'] ?? 0;
+            echo json_encode(getAreaGravesByRow($row_id));
             break;
             
         default:
@@ -378,4 +393,61 @@ function getHierarchy() {
     
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+function getBlocksByCemetery($cemetery_id) {
+    global $pdo;
+    
+    $stmt = $pdo->prepare("
+        SELECT id, name 
+        FROM blocks 
+        WHERE cemetery_id = ? AND is_active = 1 
+        ORDER BY name
+    ");
+    $stmt->execute([$cemetery_id]);
+    
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getPlotsByBlock($block_id) {
+    global $pdo;
+    
+    $stmt = $pdo->prepare("
+        SELECT id, name 
+        FROM plots 
+        WHERE block_id = ? AND is_active = 1 
+        ORDER BY name
+    ");
+    $stmt->execute([$block_id]);
+    
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getRowsByPlot($plot_id) {
+    global $pdo;
+    
+    $stmt = $pdo->prepare("
+        SELECT id, name 
+        FROM rows 
+        WHERE plot_id = ? AND is_active = 1 
+        ORDER BY name
+    ");
+    $stmt->execute([$plot_id]);
+    
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getAreaGravesByRow($row_id) {
+    global $pdo;
+    
+    $stmt = $pdo->prepare("
+        SELECT id, name 
+        FROM areaGraves 
+        WHERE row_id = ? AND is_active = 1 
+        ORDER BY name
+    ");
+    $stmt->execute([$row_id]);
+    
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 ?>

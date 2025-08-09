@@ -1,4 +1,5 @@
-// cemetery-management.js
+// cemetery-management2.js
+// גירסה שהציגה- ללא יכולת הוספה
 $(document).ready(function() {
     let currentPage = 'overview';
     let currentData = {};
