@@ -283,24 +283,429 @@ $(document).ready(function() {
             </tr>`;
     }
     
-    // Show/hide loader
-    function showLoader() {
-        $('.loader').show();
-    }
-    
-    function hideLoader() {
-        $('.loader').hide();
-    }
-    
-    // Show error message
-    function showError(message) {
-        hideLoader();
-        Swal.fire({
-            icon: 'error',
-            title: 'שגיאה',
-            text: message
+    // Load Plots
+    function loadPlots() {
+        $.ajax({
+            url: 'api/cemetery-api.php',
+            method: 'GET',
+            data: { action: 'getPlots' },
+            success: function(response) {
+                let html = `
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>ניהול חלקות</h2>
+                        <button class="btn btn-add" onclick="addItem('plot')">
+                            <i class="fas fa-plus"></i> הוסף חלקה
+                        </button>
+                    </div>
+                    
+                    <div class="hierarchy-card">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>מס׳</th>
+                                    <th>בית עלמין</th>
+                                    <th>גוש</th>
+                                    <th>שם חלקה</th>
+                                    <th>קוד</th>
+                                    <th>מספר שורות</th>
+                                    <th>סטטוס</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                response.forEach(plot => {
+                    html += `
+                        <tr>
+                            <td>${plot.id}</td>
+                            <td>${plot.cemetery_name}</td>
+                            <td>${plot.block_name}</td>
+                            <td>${plot.name}</td>
+                            <td>${plot.code || '-'}</td>
+                            <td>${plot.rows_count || 0}</td>
+                            <td>
+                                <span class="status-badge ${plot.is_active == 1 ? 'status-active' : 'status-inactive'}">
+                                    ${plot.is_active == 1 ? 'פעיל' : 'לא פעיל'}
+                                </span>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-primary" onclick="editItem('plot', ${plot.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteItem('plot', ${plot.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>`;
+                
+                $('#content-area').html(html);
+                hideLoader();
+            }
         });
     }
+    
+    // Load Rows
+    function loadRows() {
+        $.ajax({
+            url: 'api/cemetery-api.php',
+            method: 'GET',
+            data: { action: 'getRows' },
+            success: function(response) {
+                let html = `
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>ניהול שורות</h2>
+                        <button class="btn btn-add" onclick="addItem('row')">
+                            <i class="fas fa-plus"></i> הוסף שורה
+                        </button>
+                    </div>
+                    
+                    <div class="hierarchy-card">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>מס׳</th>
+                                    <th>בית עלמין</th>
+                                    <th>גוש</th>
+                                    <th>חלקה</th>
+                                    <th>שם שורה</th>
+                                    <th>קוד</th>
+                                    <th>אחוזות קבר</th>
+                                    <th>סטטוס</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                response.forEach(row => {
+                    html += `
+                        <tr>
+                            <td>${row.id}</td>
+                            <td>${row.cemetery_name}</td>
+                            <td>${row.block_name}</td>
+                            <td>${row.plot_name}</td>
+                            <td>${row.name}</td>
+                            <td>${row.code || '-'}</td>
+                            <td>${row.area_graves_count || 0}</td>
+                            <td>
+                                <span class="status-badge ${row.is_active == 1 ? 'status-active' : 'status-inactive'}">
+                                    ${row.is_active == 1 ? 'פעיל' : 'לא פעיל'}
+                                </span>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-primary" onclick="editItem('row', ${row.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteItem('row', ${row.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>`;
+                
+                $('#content-area').html(html);
+                hideLoader();
+            }
+        });
+    }
+    
+    // Load Area Graves
+    function loadAreaGraves() {
+        $.ajax({
+            url: 'api/cemetery-api.php',
+            method: 'GET',
+            data: { action: 'getAreaGraves' },
+            success: function(response) {
+                let html = `
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>ניהול אחוזות קבר</h2>
+                        <button class="btn btn-add" onclick="addItem('areaGrave')">
+                            <i class="fas fa-plus"></i> הוסף אחוזת קבר
+                        </button>
+                    </div>
+                    
+                    <div class="hierarchy-card">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>מס׳</th>
+                                    <th>בית עלמין</th>
+                                    <th>גוש</th>
+                                    <th>חלקה</th>
+                                    <th>שורה</th>
+                                    <th>שם אחוזה</th>
+                                    <th>קוד</th>
+                                    <th>סה"כ קברים</th>
+                                    <th>פנויים</th>
+                                    <th>סטטוס</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                response.forEach(ag => {
+                    html += `
+                        <tr>
+                            <td>${ag.id}</td>
+                            <td>${ag.cemetery_name}</td>
+                            <td>${ag.block_name}</td>
+                            <td>${ag.plot_name}</td>
+                            <td>${ag.row_name}</td>
+                            <td>${ag.name}</td>
+                            <td>${ag.code || '-'}</td>
+                            <td>${ag.graves_count || 0}</td>
+                            <td>${ag.available_count || 0}</td>
+                            <td>
+                                <span class="status-badge ${ag.is_active == 1 ? 'status-active' : 'status-inactive'}">
+                                    ${ag.is_active == 1 ? 'פעיל' : 'לא פעיל'}
+                                </span>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-primary" onclick="editItem('areaGrave', ${ag.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteItem('areaGrave', ${ag.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>`;
+                
+                $('#content-area').html(html);
+                hideLoader();
+            }
+        });
+    }
+    
+    // Load Graves
+    function loadGraves() {
+        $.ajax({
+            url: 'api/cemetery-api.php',
+            method: 'GET',
+            data: { action: 'getGraves' },
+            success: function(response) {
+                let html = `
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>ניהול קברים</h2>
+                        <button class="btn btn-add" onclick="addItem('grave')">
+                            <i class="fas fa-plus"></i> הוסף קבר
+                        </button>
+                    </div>
+                    
+                    <div class="hierarchy-card">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>מס׳</th>
+                                    <th>בית עלמין</th>
+                                    <th>גוש</th>
+                                    <th>חלקה</th>
+                                    <th>שורה</th>
+                                    <th>אחוזה</th>
+                                    <th>שם קבר</th>
+                                    <th>מספר</th>
+                                    <th>קוד</th>
+                                    <th>סטטוס</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                response.forEach(grave => {
+                    html += `
+                        <tr>
+                            <td>${grave.id}</td>
+                            <td>${grave.cemetery_name}</td>
+                            <td>${grave.block_name}</td>
+                            <td>${grave.plot_name}</td>
+                            <td>${grave.row_name}</td>
+                            <td>${grave.area_grave_name}</td>
+                            <td>${grave.name}</td>
+                            <td>${grave.grave_number || '-'}</td>
+                            <td>${grave.code || '-'}</td>
+                            <td>
+                                <span class="status-badge ${grave.is_available == 1 ? 'status-active' : 'status-inactive'}">
+                                    ${grave.is_available == 1 ? 'פנוי' : 'תפוס'}
+                                </span>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-primary" onclick="editItem('grave', ${grave.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteItem('grave', ${grave.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>`;
+                
+                $('#content-area').html(html);
+                hideLoader();
+            }
+        });
+    }
+    
+    // Load Reports
+    function loadReports() {
+        let html = `
+            <h2>דוחות</h2>
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="hierarchy-card">
+                        <h4>דוח קברים פנויים</h4>
+                        <p>הצג את כל הקברים הפנויים במערכת</p>
+                        <button class="btn btn-primary" onclick="generateReport('available_graves')">
+                            <i class="fas fa-file-pdf"></i> הפק דוח
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="hierarchy-card">
+                        <h4>דוח מלאי לפי בית עלמין</h4>
+                        <p>סיכום מצב המלאי בכל בית עלמין</p>
+                        <button class="btn btn-primary" onclick="generateReport('inventory')">
+                            <i class="fas fa-file-excel"></i> הפק דוח
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="hierarchy-card">
+                        <h4>דוח היררכיה מלא</h4>
+                        <p>הצג את כל ההיררכיה של המערכת</p>
+                        <button class="btn btn-primary" onclick="generateReport('hierarchy')">
+                            <i class="fas fa-sitemap"></i> הפק דוח
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        
+        $('#content-area').html(html);
+        hideLoader();
+    }
+    
+    // Load Import
+    function loadImport() {
+        let html = `
+            <h2>ייבוא נתונים</h2>
+            <div class="hierarchy-card">
+                <h4>ייבוא מקובץ Excel</h4>
+                <p>ניתן לייבא נתונים של בתי עלמין, גושים, חלקות, שורות, אחוזות קבר וקברים מקובץ Excel</p>
+                
+                <div class="mb-3">
+                    <label class="form-label">בחר סוג נתונים לייבוא:</label>
+                    <select class="form-select" id="importType">
+                        <option value="">בחר סוג</option>
+                        <option value="cemeteries">בתי עלמין</option>
+                        <option value="blocks">גושים</option>
+                        <option value="plots">חלקות</option>
+                        <option value="rows">שורות</option>
+                        <option value="areaGraves">אחוזות קבר</option>
+                        <option value="graves">קברים</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">בחר קובץ:</label>
+                    <input type="file" class="form-control" id="importFile" accept=".xlsx,.xls,.csv">
+                </div>
+                
+                <button class="btn btn-primary" onclick="importData()">
+                    <i class="fas fa-upload"></i> התחל ייבוא
+                </button>
+                
+                <hr class="my-4">
+                
+                <h5>הורד תבניות לדוגמה:</h5>
+                <div class="btn-group">
+                    <button class="btn btn-outline-secondary" onclick="downloadTemplate('cemeteries')">
+                        <i class="fas fa-download"></i> בתי עלמין
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="downloadTemplate('blocks')">
+                        <i class="fas fa-download"></i> גושים
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="downloadTemplate('plots')">
+                        <i class="fas fa-download"></i> חלקות
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="downloadTemplate('rows')">
+                        <i class="fas fa-download"></i> שורות
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="downloadTemplate('areaGraves')">
+                        <i class="fas fa-download"></i> אחוזות קבר
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="downloadTemplate('graves')">
+                        <i class="fas fa-download"></i> קברים
+                    </button>
+                </div>
+            </div>`;
+        
+        $('#content-area').html(html);
+        hideLoader();
+    }
+    
+    // Additional global functions
+    window.generateReport = function(type) {
+        window.open(`api/cemetery-api.php?action=generateReport&type=${type}`, '_blank');
+    };
+    
+    window.downloadTemplate = function(type) {
+        window.open(`api/cemetery-api.php?action=downloadTemplate&type=${type}`, '_blank');
+    };
+    
+    window.importData = function() {
+        const type = $('#importType').val();
+        const file = $('#importFile')[0].files[0];
+        
+        if (!type || !file) {
+            showError('יש לבחור סוג נתונים וקובץ');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('action', 'import');
+        formData.append('type', type);
+        formData.append('file', file);
+        
+        showLoader();
+        
+        $.ajax({
+            url: 'api/cemetery-api.php',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                hideLoader();
+                if (response.success) {
+                    Swal.fire('הצלחה', response.message, 'success');
+                } else {
+                    showError(response.message || 'שגיאה בייבוא');
+                }
+            },
+            error: function() {
+                showError('שגיאה בייבוא הקובץ');
+            }
+        });
+    };
     
     // Global functions for actions
     window.addItem = function(type) {
@@ -439,10 +844,232 @@ $(document).ready(function() {
                     </div>`;
                 break;
                 
-            // Add more cases for other types
+            case 'plot':
+                fields = `
+                    <div class="mb-3">
+                        <label class="form-label">בית עלמין *</label>
+                        <select class="form-select" id="select_cemetery" required>
+                            <option value="">בחר בית עלמין</option>`;
+                
+                // Load cemeteries
+                $.ajax({
+                    url: 'api/cemetery-api.php',
+                    method: 'GET',
+                    data: { action: 'getCemeteries' },
+                    async: false,
+                    success: function(cemeteries) {
+                        cemeteries.forEach(cemetery => {
+                            fields += `<option value="${cemetery.id}">${cemetery.name}</option>`;
+                        });
+                    }
+                });
+                
+                fields += `
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">גוש *</label>
+                        <select class="form-select" name="block_id" id="select_block" required>
+                            <option value="">בחר קודם בית עלמין</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">שם החלקה *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">קוד</label>
+                        <input type="text" class="form-control" name="code">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">סטטוס</label>
+                        <select class="form-select" name="is_active">
+                            <option value="1">פעיל</option>
+                            <option value="0">לא פעיל</option>
+                        </select>
+                    </div>`;
+                break;
+                
+            case 'row':
+                fields = `
+                    <div class="mb-3">
+                        <label class="form-label">בית עלמין *</label>
+                        <select class="form-select" id="select_cemetery" required>
+                            <option value="">בחר בית עלמין</option>`;
+                
+                $.ajax({
+                    url: 'api/cemetery-api.php',
+                    method: 'GET',
+                    data: { action: 'getCemeteries' },
+                    async: false,
+                    success: function(cemeteries) {
+                        cemeteries.forEach(cemetery => {
+                            fields += `<option value="${cemetery.id}">${cemetery.name}</option>`;
+                        });
+                    }
+                });
+                
+                fields += `
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">גוש *</label>
+                        <select class="form-select" id="select_block" required>
+                            <option value="">בחר קודם בית עלמין</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">חלקה *</label>
+                        <select class="form-select" name="plot_id" id="select_plot" required>
+                            <option value="">בחר קודם גוש</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">שם השורה *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">קוד</label>
+                        <input type="text" class="form-control" name="code">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">סטטוס</label>
+                        <select class="form-select" name="is_active">
+                            <option value="1">פעיל</option>
+                            <option value="0">לא פעיל</option>
+                        </select>
+                    </div>`;
+                break;
+                
+            case 'areaGrave':
+                fields = `
+                    <div class="mb-3">
+                        <label class="form-label">בית עלמין *</label>
+                        <select class="form-select" id="select_cemetery" required>
+                            <option value="">בחר בית עלמין</option>`;
+                
+                $.ajax({
+                    url: 'api/cemetery-api.php',
+                    method: 'GET',
+                    data: { action: 'getCemeteries' },
+                    async: false,
+                    success: function(cemeteries) {
+                        cemeteries.forEach(cemetery => {
+                            fields += `<option value="${cemetery.id}">${cemetery.name}</option>`;
+                        });
+                    }
+                });
+                
+                fields += `
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">גוש *</label>
+                        <select class="form-select" id="select_block" required>
+                            <option value="">בחר קודם בית עלמין</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">חלקה *</label>
+                        <select class="form-select" id="select_plot" required>
+                            <option value="">בחר קודם גוש</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">שורה *</label>
+                        <select class="form-select" name="row_id" id="select_row" required>
+                            <option value="">בחר קודם חלקה</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">שם אחוזת הקבר *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">קוד</label>
+                        <input type="text" class="form-control" name="code">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">סטטוס</label>
+                        <select class="form-select" name="is_active">
+                            <option value="1">פעיל</option>
+                            <option value="0">לא פעיל</option>
+                        </select>
+                    </div>`;
+                break;
+                
+            case 'grave':
+                fields = `
+                    <div class="mb-3">
+                        <label class="form-label">בית עלמין *</label>
+                        <select class="form-select" id="select_cemetery" required>
+                            <option value="">בחר בית עלמין</option>`;
+                
+                $.ajax({
+                    url: 'api/cemetery-api.php',
+                    method: 'GET',
+                    data: { action: 'getCemeteries' },
+                    async: false,
+                    success: function(cemeteries) {
+                        cemeteries.forEach(cemetery => {
+                            fields += `<option value="${cemetery.id}">${cemetery.name}</option>`;
+                        });
+                    }
+                });
+                
+                fields += `
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">גוש *</label>
+                        <select class="form-select" id="select_block" required>
+                            <option value="">בחר קודם בית עלמין</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">חלקה *</label>
+                        <select class="form-select" id="select_plot" required>
+                            <option value="">בחר קודם גוש</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">שורה *</label>
+                        <select class="form-select" id="select_row" required>
+                            <option value="">בחר קודם חלקה</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">אחוזת קבר *</label>
+                        <select class="form-select" name="areaGrave_id" id="select_areaGrave" required>
+                            <option value="">בחר קודם שורה</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">שם הקבר *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">מספר קבר</label>
+                        <input type="text" class="form-control" name="grave_number">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">קוד</label>
+                        <input type="text" class="form-control" name="code">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">סטטוס</label>
+                        <select class="form-select" name="is_available">
+                            <option value="1">פנוי</option>
+                            <option value="0">תפוס</option>
+                        </select>
+                    </div>`;
+                break;
         }
         
         $('#formFields').html(fields);
+        
+        // Setup dynamic selects
+        setupDynamicSelects();
         
         // If editing, load existing data
         if (id) {
@@ -461,6 +1088,109 @@ $(document).ready(function() {
                 }
             });
         }
+    }
+    
+    // Setup dynamic select handlers
+    function setupDynamicSelects() {
+        $('#select_cemetery').on('change', function() {
+            const cemeteryId = $(this).val();
+            $('#select_block').html('<option value="">טוען...</option>');
+            
+            if (cemeteryId) {
+                $.ajax({
+                    url: 'api/cemetery-api.php',
+                    method: 'GET',
+                    data: { 
+                        action: 'getBlocksByCemetery',
+                        cemetery_id: cemeteryId
+                    },
+                    success: function(blocks) {
+                        let options = '<option value="">בחר גוש</option>';
+                        blocks.forEach(block => {
+                            options += `<option value="${block.id}">${block.name}</option>`;
+                        });
+                        $('#select_block').html(options);
+                    }
+                });
+            } else {
+                $('#select_block').html('<option value="">בחר קודם בית עלמין</option>');
+            }
+        });
+        
+        $('#select_block').on('change', function() {
+            const blockId = $(this).val();
+            $('#select_plot').html('<option value="">טוען...</option>');
+            
+            if (blockId) {
+                $.ajax({
+                    url: 'api/cemetery-api.php',
+                    method: 'GET',
+                    data: { 
+                        action: 'getPlotsByBlock',
+                        block_id: blockId
+                    },
+                    success: function(plots) {
+                        let options = '<option value="">בחר חלקה</option>';
+                        plots.forEach(plot => {
+                            options += `<option value="${plot.id}">${plot.name}</option>`;
+                        });
+                        $('#select_plot').html(options);
+                    }
+                });
+            } else {
+                $('#select_plot').html('<option value="">בחר קודם גוש</option>');
+            }
+        });
+        
+        $('#select_plot').on('change', function() {
+            const plotId = $(this).val();
+            $('#select_row').html('<option value="">טוען...</option>');
+            
+            if (plotId) {
+                $.ajax({
+                    url: 'api/cemetery-api.php',
+                    method: 'GET',
+                    data: { 
+                        action: 'getRowsByPlot',
+                        plot_id: plotId
+                    },
+                    success: function(rows) {
+                        let options = '<option value="">בחר שורה</option>';
+                        rows.forEach(row => {
+                            options += `<option value="${row.id}">${row.name}</option>`;
+                        });
+                        $('#select_row').html(options);
+                    }
+                });
+            } else {
+                $('#select_row').html('<option value="">בחר קודם חלקה</option>');
+            }
+        });
+        
+        $('#select_row').on('change', function() {
+            const rowId = $(this).val();
+            $('#select_areaGrave').html('<option value="">טוען...</option>');
+            
+            if (rowId) {
+                $.ajax({
+                    url: 'api/cemetery-api.php',
+                    method: 'GET',
+                    data: { 
+                        action: 'getAreaGravesByRow',
+                        row_id: rowId
+                    },
+                    success: function(areaGraves) {
+                        let options = '<option value="">בחר אחוזת קבר</option>';
+                        areaGraves.forEach(areaGrave => {
+                            options += `<option value="${areaGrave.id}">${areaGrave.name}</option>`;
+                        });
+                        $('#select_areaGrave').html(options);
+                    }
+                });
+            } else {
+                $('#select_areaGrave').html('<option value="">בחר קודם שורה</option>');
+            }
+        });
     }
     
     // Save button handler
