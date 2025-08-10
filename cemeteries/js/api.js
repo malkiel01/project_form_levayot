@@ -74,6 +74,11 @@ const API = {
     async getCemeteries() {
         return this.get('getCemeteries');
     },
+
+    // הוסף את הפונקציה הזו לקובץ api.js
+    async getCemeteryDetails(id) {
+        return this.get('getCemeteryDetails', { id });
+    },
     
     async getBlocks() {
         return this.get('getBlocks');
