@@ -75,11 +75,6 @@ const API = {
         return this.get('getCemeteries');
     },
 
-    // הוסף את הפונקציה הזו לקובץ api.js
-    async getCemeteryDetails(id) {
-        return this.get('getCemeteryDetails', { id });
-    },
-    
     async getBlocks() {
         return this.get('getBlocks');
     },
@@ -99,7 +94,27 @@ const API = {
     async getGraves() {
         return this.get('getGraves');
     },
-    
+    // הוסף את הפונקציות האלה
+    async getCemeteryDetails(id) {
+        return this.get('getCemeteryDetails', { id });
+    },
+
+    async getBlockDetails(id) {
+        return this.get('getBlockDetails', { id });
+    },
+
+    async getPlotDetails(id) {
+        return this.get('getPlotDetails', { id });
+    },
+
+    async getAreaGraveDetails(id) {
+        return this.get('getAreaGraveDetails', { id });
+    },
+
+    async getGraveDetails(id) {
+        return this.get('getGraveDetails', { id });
+    },
+      
     async getItem(type, id) {
         return this.get('getItem', { type, id });
     },

@@ -69,14 +69,15 @@ Views.Cemeteries = {
         });
     },
     
-    // פונקציה להצגת פרטי בית עלמין
+    // פונקציה להצגת פרטי בית עלמין מורחבת
     async showDetails(cemeteryId) {
         try {
             const response = await API.getCemeteryDetails(cemeteryId);
+            const stats = response.stats || {};
             
             let modalContent = `
                 <div class="modal fade" id="cemeteryDetailsModal" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
+                    <div class="modal-dialog modal-xl">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title">פרטי בית עלמין: ${response.cemetery.name}</h5>
@@ -84,10 +85,11 @@ Views.Cemeteries = {
                             </div>
                             <div class="modal-body">
                                 <div class="cemetery-details">
+                                    <!-- מידע כללי -->
                                     <div class="info-section mb-4">
                                         <h6 class="text-primary">מידע כללי</h6>
                                         <div class="row">
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <p><strong>קוד:</strong> ${response.cemetery.code || 'לא הוגדר'}</p>
                                                 <p><strong>סטטוס:</strong> 
                                                     <span class="status-badge ${response.cemetery.is_active == 1 ? 'status-active' : 'status-inactive'}">
@@ -95,41 +97,115 @@ Views.Cemeteries = {
                                                     </span>
                                                 </p>
                                             </div>
-                                            <div class="col-md-6">
-                                                <p><strong>מספר גושים:</strong> ${response.blocks.length}</p>
-                                                <p><strong>מספר חלקות:</strong> ${response.plots.length}</p>
+                                            <div class="col-md-4">
+                                                <p><strong>גושים:</strong> ${response.blocks.length}</p>
+                                                <p><strong>חלקות:</strong> ${response.plots.length}</p>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <p><strong>אחוזות קבר:</strong> ${stats.total_area_graves || 0}</p>
+                                                <p><strong>קברים סה"כ:</strong> ${stats.total_graves || 0}</p>
                                             </div>
                                         </div>
                                     </div>
                                     
+                                    <!-- סטטיסטיקת קברים -->
+                                    <div class="stats-section mb-4">
+                                        <h6 class="text-primary">סטטיסטיקת קברים</h6>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="stat-card bg-success text-white p-3 rounded">
+                                                    <h4>${stats.available_graves || 0}</h4>
+                                                    <p class="mb-0">קברים פנויים</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="stat-card bg-info text-white p-3 rounded">
+                                                    <h4>${stats.purchased_graves || 0}</h4>
+                                                    <p class="mb-0">קברים שנרכשו</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="stat-card bg-secondary text-white p-3 rounded">
+                                                    <h4>${stats.buried_graves || 0}</h4>
+                                                    <p class="mb-0">קברים שנקברו</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="stat-card bg-warning text-white p-3 rounded">
+                                                    <h4>${stats.reserved_graves || 0}</h4>
+                                                    <p class="mb-0">קברים שמורים</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- גושים -->
                                     <div class="blocks-section mb-4">
                                         <h6 class="text-primary">גושים</h6>
                                         ${response.blocks.length > 0 ? `
-                                            <div class="list-group">
-                                                ${response.blocks.map(block => `
-                                                    <div class="list-group-item">
-                                                        <div class="d-flex justify-content-between align-items-center">
-                                                            <span>${block.name}</span>
-                                                            <span class="badge bg-secondary">${block.sections_count || 0} חלקות</span>
-                                                        </div>
-                                                    </div>
-                                                `).join('')}
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>שם</th>
+                                                            <th>חלקות</th>
+                                                            <th>קברים</th>
+                                                            <th>פנויים</th>
+                                                            <th>תפוסה</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        ${response.blocks.map(block => {
+                                                            const occupancy = block.total_graves > 0 
+                                                                ? Math.round((block.total_graves - (block.available_graves || 0)) / block.total_graves * 100)
+                                                                : 0;
+                                                            return `
+                                                                <tr>
+                                                                    <td>${block.name}</td>
+                                                                    <td>${block.plots_count || 0}</td>
+                                                                    <td>${block.total_graves || 0}</td>
+                                                                    <td>${block.available_graves || 0}</td>
+                                                                    <td>
+                                                                        <div class="progress" style="height: 20px;">
+                                                                            <div class="progress-bar" style="width: ${occupancy}%">${occupancy}%</div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            `;
+                                                        }).join('')}
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         ` : '<p class="text-muted">אין גושים</p>'}
                                     </div>
                                     
+                                    <!-- חלקות -->
                                     <div class="plots-section">
                                         <h6 class="text-primary">חלקות</h6>
                                         ${response.plots.length > 0 ? `
-                                            <div class="list-group">
-                                                ${response.plots.map(plot => `
-                                                    <div class="list-group-item">
-                                                        <div class="d-flex justify-content-between align-items-center">
-                                                            <span>${plot.name} ${plot.block_name ? `(${plot.block_name})` : ''}</span>
-                                                            <span class="badge bg-secondary">${plot.rows_count || 0} שורות</span>
-                                                        </div>
-                                                    </div>
-                                                `).join('')}
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>שם</th>
+                                                            <th>גוש</th>
+                                                            <th>שורות</th>
+                                                            <th>קברים</th>
+                                                            <th>פנויים</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        ${response.plots.map(plot => `
+                                                            <tr>
+                                                                <td>${plot.name}</td>
+                                                                <td>${plot.block_name}</td>
+                                                                <td>${plot.rows_count || 0}</td>
+                                                                <td>${plot.total_graves || 0}</td>
+                                                                <td>${plot.available_graves || 0}</td>
+                                                            </tr>
+                                                        `).join('')}
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         ` : '<p class="text-muted">אין חלקות</p>'}
                                     </div>
