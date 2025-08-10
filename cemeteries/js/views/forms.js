@@ -228,7 +228,7 @@ const Forms = {
             </div>`;
     },
     
-    async getGraveFields2() {
+    async getGraveFields() {
         const cemeteries = await API.getCemeteries();
         let cemeteryOptions = '<option value="">בחר בית עלמין</option>';
         
@@ -288,64 +288,6 @@ const Forms = {
                     <option value="0">תפוס</option>
                 </select>
             </div>`;
-    },
-
-    async getGraveFields() {
-        const cemeteries = await API.getCemeteries();
-        let cemeteryOptions = '<option value="">בחר בית עלמ22ין</option>';
-        
-        if (cemeteries) {
-            cemeteries.forEach(cemetery => {
-                cemeteryOptions += `<option value="${cemetery.id}">${cemetery.name}</option>`;
-            });
-        }
-        
-        return `
-            <div class="mb-3">
-                <label class="form-label">בית עלמין *</label>
-                <select class="form-select" id="select_cemetery" required>
-                    ${cemeteryOptions}
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">גוש *</label>
-                <select class="form-select" id="select_block" required>
-                    <option value="">בחר קודם בית עלמין</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">חלקה *</label>
-                <select class="form-select" id="select_plot" required>
-                    <option value="">בחר קודם גוש</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">שורה *</label>
-                <select class="form-select" id="select_row" required>
-                    <option value="">בחר קודם חלקה</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">אחוזת קבר *</label>
-                <select class="form-select" name="areaGrave_id" id="select_areaGrave" required>
-                    <option value="">בחר קודם שורה</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">שם הקבר *</label>
-                <input type="text" class="form-control" name="name" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">מספר קבר</label>
-                <input type="text" class="form-control" name="grave_number">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">קוד</label>
-                <input type="text" class="form-control" name="code">
-            </div>
-            <!-- הסרנו את שדה הסטטוס - קברים חדשים תמיד פנויים -->
-            <!-- אין צורך להציג את זה למשתמש -->
-        `;
     },
     
     setupDynamicSelects() {
