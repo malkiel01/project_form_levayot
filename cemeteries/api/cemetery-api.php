@@ -646,7 +646,7 @@ function getAreaGraves() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getGraves() {
+function getGraves2() {
     global $pdo;
     
     $stmt = $pdo->query("
@@ -656,6 +656,39 @@ function getGraves() {
                p.name as plot_name,
                b.name as block_name,
                c.name as cemetery_name
+        FROM graves g
+        LEFT JOIN areaGraves ag ON ag.id = g.areaGrave_id
+        LEFT JOIN rows r ON r.id = ag.row_id
+        LEFT JOIN plots p ON p.id = r.plot_id
+        LEFT JOIN blocks b ON b.id = p.block_id
+        LEFT JOIN cemeteries c ON c.id = b.cemetery_id
+        ORDER BY c.name, b.name, p.name, r.name, ag.name, g.grave_number
+    ");
+    
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+function getGraves() {
+    global $pdo;
+    
+    $stmt = $pdo->query("
+        SELECT g.*, 
+               ag.name as area_grave_name,
+               r.name as row_name,
+               p.name as plot_name,
+               b.name as block_name,
+               c.name as cemetery_name,
+               CASE 
+                   WHEN EXISTS(SELECT 1 FROM deceased_forms df 
+                              WHERE df.grave_id = g.id 
+                              AND df.status = 'completed') THEN 1 
+                   ELSE 0 
+               END as has_burial,
+               CASE 
+                   WHEN EXISTS(SELECT 1 FROM purchase_forms pf 
+                              WHERE pf.grave_id = g.id 
+                              AND pf.status != 'cancelled') THEN 1 
+                   ELSE 0 
+               END as has_purchase
         FROM graves g
         LEFT JOIN areaGraves ag ON ag.id = g.areaGrave_id
         LEFT JOIN rows r ON r.id = ag.row_id
@@ -682,7 +715,7 @@ function getItem($type, $id) {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-function createItem() {
+function createItem2() {
     global $pdo;
     
     $type = $_POST['type'] ?? '';
@@ -743,6 +776,115 @@ function createItem() {
                 $data[$field] = $value;
             }
         }
+    }
+    
+    // בדיקה שיש נתונים
+    if (empty($data)) {
+        return ['success' => false, 'message' => 'אין נתונים לשמירה'];
+    }
+    
+    // בדיקת תלויות - וודא שההורה קיים
+    if (!validateParentExists($table, $data)) {
+        return ['success' => false, 'message' => 'הרשומה האב לא קיימת'];
+    }
+    
+    // בניית השאילתה עם prepared statements
+    $fields = array_keys($data);
+    $placeholders = array_map(function($field) { return ":$field"; }, $fields);
+    
+    $sql = "INSERT INTO $table (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
+    
+    try {
+        $stmt = $pdo->prepare($sql);
+        
+        foreach ($data as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+        
+        if ($stmt->execute()) {
+            return [
+                'success' => true,
+                'message' => 'הרשומה נוספה בהצלחה',
+                'id' => $pdo->lastInsertId()
+            ];
+        }
+    } catch (PDOException $e) {
+        // בדוק אם זו שגיאת מפתח כפול
+        if ($e->getCode() == 23000) {
+            return ['success' => false, 'message' => 'קוד זה כבר קיים במערכת'];
+        }
+        error_log('Database error in createItem: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'שגיאה בהוספת הרשומה'];
+    }
+    
+    return ['success' => false, 'message' => 'שגיאה בהוספת הרשומה'];
+}
+function createItem() {
+    global $pdo;
+    
+    $type = $_POST['type'] ?? '';
+    $table = getTableName($type);
+    
+    if (!$table) {
+        return ['success' => false, 'message' => 'סוג רשומה לא תקין'];
+    }
+    
+    // רשימת שדות מותרים לכל טבלה
+    $allowedFields = [
+        'cemeteries' => ['name', 'code', 'is_active'],
+        'blocks' => ['cemetery_id', 'name', 'code', 'is_active'],
+        'plots' => ['block_id', 'name', 'code', 'is_active'],
+        'rows' => ['plot_id', 'name', 'code', 'is_active'],
+        'areaGraves' => ['row_id', 'name', 'code', 'is_active'],
+        'graves' => ['areaGrave_id', 'name', 'grave_number', 'code'] // הסרנו את is_available
+    ];
+    
+    if (!isset($allowedFields[$table])) {
+        return ['success' => false, 'message' => 'טבלה לא מוכרת'];
+    }
+    
+    // סנן רק שדות מותרים
+    $data = [];
+    foreach ($allowedFields[$table] as $field) {
+        if (isset($_POST[$field])) {
+            // סינון וולידציה לפי סוג השדה
+            $value = $_POST[$field];
+            
+            // וולידציה לשדות מספריים
+            if (in_array($field, ['cemetery_id', 'block_id', 'plot_id', 'row_id', 'areaGrave_id'])) {
+                if (!is_numeric($value) || $value <= 0) {
+                    return ['success' => false, 'message' => "ערך לא תקין בשדה $field"];
+                }
+                $data[$field] = (int)$value;
+            }
+            // וולידציה לשדות בוליאניים
+            elseif (in_array($field, ['is_active', 'is_available'])) {
+                $data[$field] = in_array($value, ['1', '0']) ? (int)$value : 1;
+            }
+            // וולידציה לשדות טקסט
+            else {
+                $value = trim($value);
+                if ($field === 'name' && empty($value)) {
+                    return ['success' => false, 'message' => 'שם הוא שדה חובה'];
+                }
+                // הגבלת אורך
+                if (strlen($value) > 255) {
+                    return ['success' => false, 'message' => "השדה $field ארוך מדי"];
+                }
+                // סינון תווים מיוחדים בקוד
+                if ($field === 'code' && !empty($value)) {
+                    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $value)) {
+                        return ['success' => false, 'message' => 'קוד יכול להכיל רק אותיות, מספרים, מקף וקו תחתון'];
+                    }
+                }
+                $data[$field] = $value;
+            }
+        }
+    }
+    
+    // הוספה מיוחדת לקברים - תמיד פנויים ביצירה
+    if ($table === 'graves') {
+        $data['is_available'] = 1;
     }
     
     // בדיקה שיש נתונים
