@@ -1,7 +1,7 @@
 <?php
 // test-session.php - בדיקת SESSION
 // חשוב! טען את הקונפיג כדי להשתמש באותו SESSION
-require_once '../config.php';
+require_once './config.php';
 ?>
 <!DOCTYPE html>
 <html dir="rtl">
