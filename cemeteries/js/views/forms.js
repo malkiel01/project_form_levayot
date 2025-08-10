@@ -292,7 +292,7 @@ const Forms = {
 
     async getGraveFields() {
         const cemeteries = await API.getCemeteries();
-        let cemeteryOptions = '<option value="">בחר בית עלמין</option>';
+        let cemeteryOptions = '<option value="">בחר בית עלמ22ין</option>';
         
         if (cemeteries) {
             cemeteries.forEach(cemetery => {
