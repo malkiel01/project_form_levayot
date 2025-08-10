@@ -3,6 +3,9 @@ const App = {
     currentPage: 'overview',
     
     init() {
+        // Check authentication first
+        Auth.checkSession();
+        
         this.bindEvents();
         this.loadPage('overview');
     },
@@ -60,11 +63,11 @@ const App = {
         }
     },
     
-    addItem(type) {
+    async addItem(type) {
         $('#itemId').val('');
         $('#itemType').val(type);
         $('#modalTitle').text(`הוספת ${Utils.getTypeName(type)}`);
-        Forms.loadFields(type);
+        await Forms.loadFields(type);
         $('#editModal').modal('show');
     },
     

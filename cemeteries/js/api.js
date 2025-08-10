@@ -6,12 +6,17 @@ const API = {
             const response = await $.ajax({
                 url: Config.API_URL,
                 method: 'GET',
-                data: { action, ...params }
+                data: { action, ...params },
+                dataType: 'json'
             });
             return response;
         } catch (error) {
             console.error('API Error:', error);
-            Utils.showError('שגיאה בטעינת הנתונים');
+            if (error.responseJSON && error.responseJSON.error) {
+                Utils.showError(error.responseJSON.error);
+            } else {
+                Utils.showError('שגיאה בטעינת הנתונים');
+            }
             throw error;
         }
     },
@@ -22,12 +27,17 @@ const API = {
             const response = await $.ajax({
                 url: Config.API_URL,
                 method: 'POST',
-                data: data
+                data: data,
+                dataType: 'json'
             });
             return response;
         } catch (error) {
             console.error('API Error:', error);
-            Utils.showError('שגיאה בשמירת הנתונים');
+            if (error.responseJSON && error.responseJSON.error) {
+                Utils.showError(error.responseJSON.error);
+            } else {
+                Utils.showError('שגיאה בשמירת הנתונים');
+            }
             throw error;
         }
     },

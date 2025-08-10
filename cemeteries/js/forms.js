@@ -1,39 +1,48 @@
 // js/forms.js
 const Forms = {
     async loadFields(type, id = null) {
+        console.log('Loading fields for type:', type, 'id:', id);
         let fields = '';
         
-        switch(type) {
-            case 'cemetery':
-                fields = this.getCemeteryFields();
-                break;
-            case 'block':
-                fields = await this.getBlockFields();
-                break;
-            case 'plot':
-                fields = await this.getPlotFields();
-                break;
-            case 'row':
-                fields = await this.getRowFields();
-                break;
-            case 'areaGrave':
-                fields = await this.getAreaGraveFields();
-                break;
-            case 'grave':
-                fields = await this.getGraveFields();
-                break;
-        }
-        
-        $('#formFields').html(fields);
-        
-        // Setup dynamic selects if needed
-        if (type !== 'cemetery') {
-            this.setupDynamicSelects();
-        }
-        
-        // Load existing data if editing
-        if (id) {
-            await this.loadItemData(type, id);
+        try {
+            switch(type) {
+                case 'cemetery':
+                    fields = this.getCemeteryFields();
+                    break;
+                case 'block':
+                    fields = await this.getBlockFields();
+                    break;
+                case 'plot':
+                    fields = await this.getPlotFields();
+                    break;
+                case 'row':
+                    fields = await this.getRowFields();
+                    break;
+                case 'areaGrave':
+                    fields = await this.getAreaGraveFields();
+                    break;
+                case 'grave':
+                    fields = await this.getGraveFields();
+                    break;
+                default:
+                    console.error('Unknown type:', type);
+                    fields = '<div class="alert alert-danger">סוג רשומה לא מזוהה</div>';
+            }
+            
+            $('#formFields').html(fields);
+            
+            // Setup dynamic selects if needed
+            if (type !== 'cemetery') {
+                this.setupDynamicSelects();
+            }
+            
+            // Load existing data if editing
+            if (id) {
+                await this.loadItemData(type, id);
+            }
+        } catch (error) {
+            console.error('Error loading fields:', error);
+            $('#formFields').html('<div class="alert alert-danger">שגיאה בטעינת הטופס</div>');
         }
     },
     
@@ -519,8 +528,12 @@ const Forms = {
         const formData = $('#editForm').serialize();
         const isUpdate = $('#itemId').val() ? true : false;
         
+        console.log('Saving form data:', formData);
+        
         try {
             const response = await API.saveItem(formData, isUpdate);
+            
+            console.log('Save response:', response);
             
             if (response.success) {
                 $('#editModal').modal('hide');
