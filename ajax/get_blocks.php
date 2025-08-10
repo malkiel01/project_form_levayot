@@ -1,5 +1,5 @@
 <?php
-ajax/get_blocks.php - קבלת רשימת גושים
+// ajax/get_blocks.php - קבלת רשימת גושים
 require_once '../config.php';
 require_once '../DeceasedForm.php';
 
