@@ -1,5 +1,12 @@
 <?php
 // בדיקת הרשאות בצד השרת
+// התחל את ה-session עם אותו שם לפני טעינת config
+session_name('deceased_forms_session');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// כעת טען את הקונפיג
 require_once '../config.php';
 
 // בדיקה פשוטה - האם המשתמש מחובר
