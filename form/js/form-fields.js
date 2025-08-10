@@ -15,7 +15,7 @@ $(document).ready(function() {
             $('#grave_id').html('<option value="">בחר קודם אחוזת קבר</option>');
             
             if (cemeteryId) {
-                $.get('ajax/get_blocks.php', {cemetery_id: cemeteryId}, function(data) {  // ✅ תוקן הנתיב
+                $.get('../../ajax/get_blocks.php', {cemetery_id: cemeteryId}, function(data) {  // ✅ תוקן הנתיב
                     $('#block_id').html(data);
                     // אם יש ערך קיים, בחר אותו
                     if (formData.block_id) {
@@ -36,7 +36,7 @@ $(document).ready(function() {
             $('#grave_id').html('<option value="">בחר קודם אחוזת קבר</option>');
             
             if (blockId) {
-                $.get('ajax/get_plots.php', {block_id: blockId}, function(data) {  // ✅ תוקן הנתיב
+                $.get('../../ajax/get_plots.php', {block_id: blockId}, function(data) {  // ✅ תוקן הנתיב
                     $('#plot_id').html(data);
                     if (formData.plot_id) {
                         $('#plot_id').val(formData.plot_id).trigger('change');
@@ -55,7 +55,7 @@ $(document).ready(function() {
             $('#grave_id').html('<option value="">בחר קודם אחוזת קבר</option>');
             
             if (plotId) {
-                $.get('ajax/get_rows.php', {plot_id: plotId}, function(data) {  // ✅ תוקן הנתיב
+                $.get('../../ajax/get_rows.php', {plot_id: plotId}, function(data) {  // ✅ תוקן הנתיב
                     $('#row_id').html(data);
                     if (formData.row_id) {
                         $('#row_id').val(formData.row_id).trigger('change');
@@ -73,7 +73,7 @@ $(document).ready(function() {
             $('#grave_id').html('<option value="">בחר קודם אחוזת קבר</option>');
             
             if (rowId) {
-                $.get('ajax/get_area_graves.php', {row_id: rowId}, function(data) {  // ✅ תוקן הנתיב
+                $.get('../../ajax/get_area_graves.php', {row_id: rowId}, function(data) {  // ✅ תוקן הנתיב
                     $('#areaGrave_id').html(data);
                     if (formData.areaGrave_id) {
                         $('#areaGrave_id').val(formData.areaGrave_id).trigger('change');
@@ -90,7 +90,7 @@ $(document).ready(function() {
             $('#grave_id').html('<option value="">בחר קודם אחוזת קבר</option>');
             
             if (areaGraveId) {
-                $.get('ajax/get_graves.php', {area_grave_id: areaGraveId}, function(data) {  // ✅ תוקן הנתיב
+                $.get('../../ajax/get_graves.php', {area_grave_id: areaGraveId}, function(data) {  // ✅ תוקן הנתיב
                     $('#grave_id').html(data);
                     if (formData.grave_id) {
                         $('#grave_id').val(formData.grave_id);
