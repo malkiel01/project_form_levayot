@@ -1,6 +1,6 @@
 <?php
 // api/check_grave_status.php
-require_once '../config.php';
+require_once '../../config.php';
 
 header('Content-Type: application/json');
 
