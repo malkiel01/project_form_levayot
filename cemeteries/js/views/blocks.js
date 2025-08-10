@@ -238,9 +238,12 @@ Views.Blocks = {
             
             const modal = new bootstrap.Modal(document.getElementById('blockDetailsModal'));
             modal.show();
-            
+
             $('#blockDetailsModal').on('hidden.bs.modal', function () {
                 $(this).remove();
+                $('.modal-backdrop').remove(); // הוסף את השורה הזו!
+                $('body').removeClass('modal-open'); // ואת השורה הזו!
+                $('body').css('padding-right', ''); // ואת השורה הזו!
             });
             
         } catch (error) {

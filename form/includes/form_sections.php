@@ -187,13 +187,13 @@ function renderCemeterySection($formData, $form, $cemeteries, $blocks, $sections
         </div>
         
         <div class="col-md-4">
-            <label for="section_id" class="form-label">חלקה</label>
-            <select class="form-select" id="section_id" name="section_id" 
-                    <?= (!$form->canEditField('section_id') || $viewOnly) ? 'disabled' : '' ?>>
+            <label for="plot_id" class="form-label">חלקה</label>
+            <select class="form-select" id="plot_id" name="plot_id" 
+                    <?= (!$form->canEditField('plot_id') || $viewOnly) ? 'disabled' : '' ?>>
                 <option value="">בחר קודם גוש</option>
                 <?php foreach ($sections as $section): ?>
                     <option value="<?= $section['id'] ?>" 
-                            <?= ($formData['section_id'] ?? '') == $section['id'] ? 'selected' : '' ?>>
+                            <?= ($formData['plot_id'] ?? '') == $section['id'] ? 'selected' : '' ?>>
                         <?= htmlspecialchars($section['name']) ?>
                     </option>
                 <?php endforeach; ?>

@@ -260,9 +260,12 @@ Views.Plots = {
             
             const modal = new bootstrap.Modal(document.getElementById('plotDetailsModal'));
             modal.show();
-            
+
             $('#plotDetailsModal').on('hidden.bs.modal', function () {
                 $(this).remove();
+                $('.modal-backdrop').remove(); // הוסף את השורה הזו!
+                $('body').removeClass('modal-open'); // ואת השורה הזו!
+                $('body').css('padding-right', ''); // ואת השורה הזו!
             });
             
         } catch (error) {
