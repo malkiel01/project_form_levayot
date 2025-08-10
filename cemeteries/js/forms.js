@@ -237,63 +237,63 @@ const Forms = {
             </div>`;
     },
     
-    async getGraveFields() {
-        const cemeteries = await API.getCemeteries();
-        let cemeteryOptions = '<option value="">בחר בית עלמין</option>';
+    // async getGraveFields() {
+    //     const cemeteries = await API.getCemeteries();
+    //     let cemeteryOptions = '<option value="">בחר בית עלמין</option>';
         
-        if (cemeteries) {
-            cemeteries.forEach(cemetery => {
-                cemeteryOptions += `<option value="${cemetery.id}">${cemetery.name}</option>`;
-            });
-        }
+    //     if (cemeteries) {
+    //         cemeteries.forEach(cemetery => {
+    //             cemeteryOptions += `<option value="${cemetery.id}">${cemetery.name}</option>`;
+    //         });
+    //     }
         
-        return `
-            <div class="mb-3">
-                <label class="form-label">בית עלמין *</label>
-                <select class="form-select" id="select_cemetery" required>
-                    ${cemeteryOptions}
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">גוש *</label>
-                <select class="form-select" id="select_block" required>
-                    <option value="">בחר קודם בית עלמין</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">חלקה *</label>
-                <select class="form-select" id="select_plot" required>
-                    <option value="">בחר קודם גוש</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">שורה *</label>
-                <select class="form-select" id="select_row" required>
-                    <option value="">בחר קודם חלקה</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">אחוזת קבר *</label>
-                <select class="form-select" name="areaGrave_id" id="select_areaGrave" required>
-                    <option value="">בחר קודם שורה</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">שם הקבר *</label>
-                <input type="text" class="form-control" name="name" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">מספר קבר</label>
-                <input type="text" class="form-control" name="grave_number">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">קוד</label>
-                <input type="text" class="form-control" name="code">
-            </div>
-            <!-- הסרנו את שדה הסטטוס - קברים חדשים תמיד פנויים -->
-            <!-- אין צורך להציג את זה למשתמש -->
-        `;
-    },
+    //     return `
+    //         <div class="mb-3">
+    //             <label class="form-label">בית עלמין *</label>
+    //             <select class="form-select" id="select_cemetery" required>
+    //                 ${cemeteryOptions}
+    //             </select>
+    //         </div>
+    //         <div class="mb-3">
+    //             <label class="form-label">גוש *</label>
+    //             <select class="form-select" id="select_block" required>
+    //                 <option value="">בחר קודם בית עלמין</option>
+    //             </select>
+    //         </div>
+    //         <div class="mb-3">
+    //             <label class="form-label">חלקה *</label>
+    //             <select class="form-select" id="select_plot" required>
+    //                 <option value="">בחר קודם גוש</option>
+    //             </select>
+    //         </div>
+    //         <div class="mb-3">
+    //             <label class="form-label">שורה *</label>
+    //             <select class="form-select" id="select_row" required>
+    //                 <option value="">בחר קודם חלקה</option>
+    //             </select>
+    //         </div>
+    //         <div class="mb-3">
+    //             <label class="form-label">אחוזת קבר *</label>
+    //             <select class="form-select" name="areaGrave_id" id="select_areaGrave" required>
+    //                 <option value="">בחר קודם שורה</option>
+    //             </select>
+    //         </div>
+    //         <div class="mb-3">
+    //             <label class="form-label">שם הקבר *</label>
+    //             <input type="text" class="form-control" name="name" required>
+    //         </div>
+    //         <div class="mb-3">
+    //             <label class="form-label">מספר קבר</label>
+    //             <input type="text" class="form-control" name="grave_number">
+    //         </div>
+    //         <div class="mb-3">
+    //             <label class="form-label">קוד</label>
+    //             <input type="text" class="form-control" name="code">
+    //         </div>
+    //         <!-- הסרנו את שדה הסטטוס - קברים חדשים תמיד פנויים -->
+    //         <!-- אין צורך להציג את זה למשתמש -->
+    //     `;
+    // },
 
     setupDynamicSelects() {
         $('#select_cemetery').on('change', async function() {
@@ -457,7 +457,7 @@ const Forms = {
                 }
                 break;
                 
-            case 'grave':
+            case 'grave2':
                 if (data.areaGrave_id) {
                     const areaGrave = await API.getItem('areaGrave', data.areaGrave_id);
                     if (areaGrave && areaGrave.row_id) {
@@ -498,6 +498,96 @@ const Forms = {
                     }
                 }
                 break;
+
+            case 'grave':
+                // בעריכת קבר - טען את כל ההיררכיה בצורה מלאה
+                if (data.areaGrave_id) {
+                    console.log('Loading grave hierarchy...');
+                    
+                    try {
+                        // שלב 1: טען את אחוזת הקבר
+                        const areaGrave = await API.getItem('areaGrave', data.areaGrave_id);
+                        if (!areaGrave || !areaGrave.row_id) {
+                            throw new Error('Failed to load areaGrave');
+                        }
+                        console.log('AreaGrave loaded:', areaGrave);
+                        
+                        // שלב 2: טען את השורה
+                        const row = await API.getItem('row', areaGrave.row_id);
+                        if (!row || !row.plot_id) {
+                            throw new Error('Failed to load row');
+                        }
+                        console.log('Row loaded:', row);
+                        
+                        // שלב 3: טען את החלקה
+                        const plot = await API.getItem('plot', row.plot_id);
+                        if (!plot || !plot.block_id) {
+                            throw new Error('Failed to load plot');
+                        }
+                        console.log('Plot loaded:', plot);
+                        
+                        // שלב 4: טען את הגוש
+                        const block = await API.getItem('block', plot.block_id);
+                        if (!block || !block.cemetery_id) {
+                            throw new Error('Failed to load block');
+                        }
+                        console.log('Block loaded:', block);
+                        
+                        // שלב 5: הגדר את בית העלמין
+                        $('#select_cemetery').val(block.cemetery_id);
+                        await $('#select_cemetery').trigger('change');
+                        
+                        // המתן לטעינת הגושים
+                        await this.waitForOptions('#select_block', 3000);
+                        $('#select_block').val(block.id);
+                        await $('#select_block').trigger('change');
+                        
+                        // המתן לטעינת החלקות
+                        await this.waitForOptions('#select_plot', 3000);
+                        $('#select_plot').val(plot.id);
+                        await $('#select_plot').trigger('change');
+                        
+                        // המתן לטעינת השורות
+                        await this.waitForOptions('#select_row', 3000);
+                        $('#select_row').val(row.id);
+                        await $('#select_row').trigger('change');
+                        
+                        // המתן לטעינת אחוזות הקבר
+                        await this.waitForOptions('#select_areaGrave', 3000);
+                        $('#select_areaGrave').val(data.areaGrave_id);
+                        
+                        // מלא את שאר השדות
+                        $('[name="name"]').val(data.name);
+                        $('[name="grave_number"]').val(data.grave_number);
+                        $('[name="code"]').val(data.code);
+                        
+                        // נעל את כל שדות ההיררכיה בעריכה
+                        $('#select_cemetery').prop('disabled', true);
+                        $('#select_block').prop('disabled', true);
+                        $('#select_plot').prop('disabled', true);
+                        $('#select_row').prop('disabled', true);
+                        $('#select_areaGrave').prop('disabled', true);
+                        
+                        // הוסף הודעה למשתמש
+                        $('#formFields').prepend(`
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>שים לב:</strong> לא ניתן לשנות את מיקום הקבר (בית עלמין, גוש, חלקה, שורה ואחוזת קבר) לאחר יצירתו.
+                                למחיקה והעברה, יש למחוק את הקבר וליצור חדש במיקום הרצוי.
+                            </div>
+                        `);
+                        
+                    } catch (error) {
+                        console.error('Error loading grave hierarchy:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'שגיאה בטעינת נתונים',
+                            text: 'לא ניתן לטעון את כל הנתונים הנדרשים. אנא נסה שנית.',
+                            confirmButtonText: 'סגור'
+                        });
+                    }
+                }
+                break;
                 
             default:
                 // For cemetery or any other simple type
@@ -508,6 +598,90 @@ const Forms = {
                     }
                 }
         }
+    },
+
+    // פונקציית עזר להמתנה לטעינת אופציות
+    async waitForOptions(selector, timeout = 5000) {
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < timeout) {
+            const $select = $(selector);
+            const options = $select.find('option').length;
+            
+            // בדוק אם יש יותר מאופציה אחת (שהיא ה"בחר...")
+            if (options > 1) {
+                console.log(`Options loaded for ${selector}: ${options} options`);
+                return true;
+            }
+            
+            // המתן 100ms לפני הבדיקה הבאה
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        throw new Error(`Timeout waiting for options in ${selector}`);
+    },
+
+    // עדכון הפונקציה getGraveFields כדי לזהות מצב עריכה:
+    async getGraveFields(isEdit = false) {
+        const cemeteries = await API.getCemeteries();
+        let cemeteryOptions = '<option value="">בחר בית עלמין</option>';
+        
+        if (cemeteries) {
+            cemeteries.forEach(cemetery => {
+                cemeteryOptions += `<option value="${cemetery.id}">${cemetery.name}</option>`;
+            });
+        }
+        
+        return `
+            ${isEdit ? '' : '<!-- מצב יצירה -->'}
+            <div class="mb-3">
+                <label class="form-label">בית עלמין *</label>
+                <select class="form-select" id="select_cemetery" required ${isEdit ? 'disabled' : ''}>
+                    ${cemeteryOptions}
+                </select>
+                ${isEdit ? '<small class="text-muted">לא ניתן לשנות בעריכה</small>' : ''}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">גוש *</label>
+                <select class="form-select" id="select_block" required ${isEdit ? 'disabled' : ''}>
+                    <option value="">בחר קודם בית עלמין</option>
+                </select>
+                ${isEdit ? '<small class="text-muted">לא ניתן לשנות בעריכה</small>' : ''}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">חלקה *</label>
+                <select class="form-select" id="select_plot" required ${isEdit ? 'disabled' : ''}>
+                    <option value="">בחר קודם גוש</option>
+                </select>
+                ${isEdit ? '<small class="text-muted">לא ניתן לשנות בעריכה</small>' : ''}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">שורה *</label>
+                <select class="form-select" id="select_row" required ${isEdit ? 'disabled' : ''}>
+                    <option value="">בחר קודם חלקה</option>
+                </select>
+                ${isEdit ? '<small class="text-muted">לא ניתן לשנות בעריכה</small>' : ''}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">אחוזת קבר *</label>
+                <select class="form-select" name="areaGrave_id" id="select_areaGrave" required ${isEdit ? 'disabled' : ''}>
+                    <option value="">בחר קודם שורה</option>
+                </select>
+                ${isEdit ? '<small class="text-muted">לא ניתן לשנות בעריכה</small>' : ''}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">שם הקבר *</label>
+                <input type="text" class="form-control" name="name" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">מספר קבר</label>
+                <input type="text" class="form-control" name="grave_number">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">קוד</label>
+                <input type="text" class="form-control" name="code">
+            </div>
+        `;
     },
     
     async save() {
