@@ -1,7 +1,7 @@
 <?php
 // ajax/get_area_graves.php - קבלת רשימת אחוזות קבר
-require_once '../../config.php';
-require_once '../../DeceasedForm.php';
+require_once '../config.php';
+require_once '../DeceasedForm.php';
 
 session_start();
 $rowId = $_GET['row_id'] ?? 0;
