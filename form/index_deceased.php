@@ -18,7 +18,7 @@ extract($formHandler); // מחלץ: $isNewForm, $formData, $form, $successMessag
 
 // קבלת נתוני עזר
 $formHelpers = getFormHelpers($form, $formData, $userPermissionLevel);
-extract($formHelpers); // מחלץ: $requiredFields, $cemeteries, $blocks, $rows, $graves, $plots
+extract($formHelpers); // מחלץ: $requiredFields, $cemeteries, $blocks, $plots, $rows, $areaGraves, $graves
 
 // טיפול בשליחת הטופס
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$viewOnly) {

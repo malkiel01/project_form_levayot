@@ -357,17 +357,6 @@ class DeceasedForm {
         return $totalFields > 0 ? round(($filledFields / $totalFields) * 100) : 0;
     }
     
-    // קבלת שדות חובה לפי הרשאה
-    private function getRequiredFields2() {
-        $stmt = $this->db->prepare("
-            SELECT field_name 
-            FROM field_permissions 
-            WHERE permission_level = ? AND is_required = 1
-        ");
-        $stmt->execute([$this->userPermissionLevel]);
-        
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
-    }
     private function getRequiredFields() {
         // שלב 1: קבל את כל השדות המוגדרים כחובה
         $stmt = $this->db->prepare("
@@ -443,18 +432,17 @@ class DeceasedForm {
         $stmt->execute([$cemeteryId]);
         return $stmt->fetchAll();
     }
-    
     // קבלת רשימת חלקות לפי גוש
-    public function getSections($blockId) {
+    public function getPlots($blockId) {  // ✓ תוקן
         if (!$this->canViewField('plot_id')) {
             return [];
         }
         
-        $stmt = $this->db->prepare("SELECT id, name FROM plots WHERE block_id = ? AND is_active = 1 ORDER BY name");
-        $stmt->execute([$blockId]);
+        $stmt = $this->db->prepare("SELECT id, name FROM plots WHERE block_id = ? AND is_active = 1 ORDER BY name");  // ✓ תוקן
+        $stmt->execute([$blockId]);  // ✓ תוקן
         return $stmt->fetchAll();
     }
-    
+
     // קבלת רשימת שורות לפי חלקה
     public function getRows($plotId) {
         if (!$this->canViewField('row_id')) {
@@ -465,29 +453,29 @@ class DeceasedForm {
         $stmt->execute([$plotId]);
         return $stmt->fetchAll();
     }
-    
-    // קבלת רשימת קברים לפי שורה
-    public function getGraves($rowId) {
+
+    // קבלת רשימת אחוזות קבר לפי שורה
+    public function getAreaGraves($rowId) {
+        if (!$this->canViewField('areaGrave_id')) {
+            return [];
+        }
+        
+        $stmt = $this->db->prepare("SELECT id, name FROM areaGraves WHERE row_id = ? AND is_active = 1 ORDER BY name");
+        $stmt->execute([$rowId]);
+        return $stmt->fetchAll();
+    }
+
+    // קבלת רשימת קברים לפי אחוזת קבר
+    public function getGraves($areaGraveId) {  // ✓ תוקן
         if (!$this->canViewField('grave_id')) {
             return [];
         }
         
-        $stmt = $this->db->prepare("SELECT id, name FROM graves WHERE row_id = ? AND is_available = 1 ORDER BY name");
-        $stmt->execute([$rowId]);
+        $stmt = $this->db->prepare("SELECT id, name FROM graves WHERE areaGrave_id = ? AND is_available = 1 ORDER BY name");  // ✓ תוקן
+        $stmt->execute([$areaGraveId]);  // ✓ תוקן
         return $stmt->fetchAll();
     }
-    
-    // קבלת רשימת אחוזות קבר לפי בית עלמין
-    public function getPlots($cemeteryId) {
-        if (!$this->canViewField('plot_id')) {
-            return [];
-        }
-        
-        $stmt = $this->db->prepare("SELECT id, name FROM plots WHERE cemetery_id = ? AND is_active = 1 ORDER BY name");
-        $stmt->execute([$cemeteryId]);
-        return $stmt->fetchAll();
-    }
-    
+
     // העלאת מסמך
     public function uploadDocument($file, $documentType = null) {
         if (!$this->formId) {

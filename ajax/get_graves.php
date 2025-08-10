@@ -1,15 +1,19 @@
 <?php
 // ajax/get_graves.php - קבלת רשימת קברים
-require_once '../config.php';
-require_once '../DeceasedForm.php';
+require_once '../../config.php';
+require_once '../../DeceasedForm.php';
 
-$rowId = $_GET['row_id'] ?? 0;
+$areaGraveId = $_GET['area_grave_id'] ?? 0;  // ✅ תוקן מ-row_id ל-area_grave_id
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 
 $form = new DeceasedForm(null, $userPermissionLevel);
-$graves = $form->getGraves($rowId);
+$graves = $form->getGraves($areaGraveId);  // ✅ תוקן
 
 echo '<option value="">בחר...</option>';
 foreach ($graves as $grave) {
-    echo '<option value="' . $grave['id'] . '">' . htmlspecialchars($grave['name']) . '</option>';
+    $graveName = htmlspecialchars($grave['name']);
+    if (!empty($grave['grave_number'])) {
+        $graveName .= ' (' . htmlspecialchars($grave['grave_number']) . ')';
+    }
+    echo '<option value="' . $grave['id'] . '">' . $graveName . '</option>';
 }

@@ -1,5 +1,5 @@
 <?php
-// form/includes/form_auth.php - תיקון לתמיכה בשני מבני הטבלה
+// form/includes/form_auth.php - תיקון לתמיכה במבנה ההיררכיה הנכון
 
 function isUserLoggedIn() {
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
@@ -158,40 +158,51 @@ function getFormHelpers($form, $formData, $userPermissionLevel) {
         }
     }
     
-    // קבלת רשימות לשדות תלויים
+    // אתחול כל המשתנים
     $cemeteries = $form ? $db->query("SELECT id, name FROM cemeteries WHERE is_active = 1 ORDER BY name")->fetchAll() : [];
     $blocks = [];
-    $sections = [];
+    $plots = [];
     $rows = [];
+    $areaGraves = [];
     $graves = [];
-    $plots = $form ? $db->query("SELECT id, name FROM plots WHERE is_active = 1 ORDER BY name")->fetchAll() : [];
     
-    // אם יש בית עלמין נבחר, טען את הנתונים התלויים
+    // טעינה היררכית לפי המבנה הנכון
     if (!empty($formData['cemetery_id'])) {
+        // טען גושים לפי בית עלמין
         $blocksStmt = $db->prepare("SELECT id, name FROM blocks WHERE cemetery_id = ? AND is_active = 1 ORDER BY name");
         $blocksStmt->execute([$formData['cemetery_id']]);
         $blocks = $blocksStmt->fetchAll();
         
         if (!empty($formData['block_id'])) {
-            $sectionsStmt = $db->prepare("SELECT id, name FROM sections WHERE block_id = ? AND is_active = 1 ORDER BY name");
-            $sectionsStmt->execute([$formData['block_id']]);
-            $sections = $sectionsStmt->fetchAll();
+            // טען חלקות לפי גוש
+            $plotsStmt = $db->prepare("SELECT id, name FROM plots WHERE block_id = ? AND is_active = 1 ORDER BY name");
+            $plotsStmt->execute([$formData['block_id']]);
+            $plots = $plotsStmt->fetchAll();
             
-            if (!empty($formData['section_id'])) {
-                $rowsStmt = $db->prepare("SELECT id, name FROM rows WHERE section_id = ? AND is_active = 1 ORDER BY name");
-                $rowsStmt->execute([$formData['section_id']]);
+            if (!empty($formData['plot_id'])) {
+                // טען שורות לפי חלקה
+                $rowsStmt = $db->prepare("SELECT id, name FROM rows WHERE plot_id = ? AND is_active = 1 ORDER BY name");
+                $rowsStmt->execute([$formData['plot_id']]);
                 $rows = $rowsStmt->fetchAll();
                 
                 if (!empty($formData['row_id'])) {
-                    $gravesStmt = $db->prepare("SELECT id, name FROM graves WHERE row_id = ? AND is_available = 1 ORDER BY name");
-                    $gravesStmt->execute([$formData['row_id']]);
-                    $graves = $gravesStmt->fetchAll();
+                    // טען אחוזות קבר לפי שורה
+                    $areaGravesStmt = $db->prepare("SELECT id, name FROM areaGraves WHERE row_id = ? AND is_active = 1 ORDER BY name");
+                    $areaGravesStmt->execute([$formData['row_id']]);
+                    $areaGraves = $areaGravesStmt->fetchAll();
+                    
+                    if (!empty($formData['areaGrave_id'])) {
+                        // טען קברים לפי אחוזת קבר
+                        $gravesStmt = $db->prepare("SELECT id, name FROM graves WHERE areaGrave_id = ? AND is_available = 1 ORDER BY name");
+                        $gravesStmt->execute([$formData['areaGrave_id']]);
+                        $graves = $gravesStmt->fetchAll();
+                    }
                 }
             }
         }
     }
     
-    return compact('requiredFields', 'cemeteries', 'blocks', 'sections', 'rows', 'graves', 'plots');
+    return compact('requiredFields', 'cemeteries', 'blocks', 'plots', 'rows', 'areaGraves', 'graves');
 }
 
 function handleFormSubmit($form, $formUuid, $isNewForm, $userPermissionLevel) {
@@ -207,10 +218,7 @@ function handleFormSubmit($form, $formUuid, $isNewForm, $userPermissionLevel) {
             // הוסף את ה-UUID לנתונים
             $_POST['form_uuid'] = $formUuid;
             
-            // שנה את השורה הזו מ:
-            // $newFormId = $form->createForm($_POST);
-            // ל:
-            $newFormId = $form->createForm($_POST);  // עכשיו ה-UUID כבר ב-$_POST
+            $newFormId = $form->createForm($_POST);
             
             if ($newFormId) {
                 $_SESSION['form_saved_message'] = 'הטופס נוצר בהצלחה!';

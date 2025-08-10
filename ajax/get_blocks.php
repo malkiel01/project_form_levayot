@@ -1,9 +1,9 @@
 <?php
 // ajax/get_blocks.php - קבלת רשימת גושים
-require_once '../config.php';
-require_once '../DeceasedForm.php';
+require_once '../../config.php';
+require_once '../../DeceasedForm.php';
 
-$cemeteryId = $_GET['cemetery_id'] ?? 0;
+$cemeteryId = $_GET['cemetery_id'] ?? 0;  // ✅ נכון
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 
 $form = new DeceasedForm(null, $userPermissionLevel);
