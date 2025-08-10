@@ -3,17 +3,41 @@ const API = {
     // GET requests
     async get(action, params = {}) {
         try {
+            console.log('API GET:', action, params);
+            
             const response = await $.ajax({
                 url: Config.API_URL,
                 method: 'GET',
                 data: { action, ...params },
                 dataType: 'json'
             });
+            
+            console.log('API Response:', response);
             return response;
         } catch (error) {
-            console.error('API Error:', error);
+            console.error('API Error Details:', {
+                status: error.status,
+                statusText: error.statusText,
+                responseText: error.responseText,
+                responseJSON: error.responseJSON
+            });
+            
+            if (error.status === 401) {
+                window.location.href = '../auth/login.php';
+                return;
+            }
+            
+            if (error.status === 403) {
+                window.location.href = '../';
+                return;
+            }
+            
             if (error.responseJSON && error.responseJSON.error) {
                 Utils.showError(error.responseJSON.error);
+            } else if (error.responseText) {
+                // נסה לראות אם יש הודעת שגיאה בטקסט
+                console.error('Response Text:', error.responseText);
+                Utils.showError('שגיאה בטעינת הנתונים - בדוק את הקונסול');
             } else {
                 Utils.showError('שגיאה בטעינת הנתונים');
             }

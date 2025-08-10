@@ -1,6 +1,23 @@
 <?php
 // api/cemetery-api.php
-require_once '../../config.php';
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // אל תציג שגיאות ישירות
+ini_set('log_errors', 1);
+
+// נסה לטעון את הקונפיג
+$configPath = __DIR__ . '/../../config.php';
+if (!file_exists($configPath)) {
+    http_response_code(500);
+    die(json_encode(['error' => 'קובץ הגדרות לא נמצא']));
+}
+
+require_once $configPath;
+
+// וודא שיש חיבור למסד נתונים
+if (!isset($pdo)) {
+    http_response_code(500);
+    die(json_encode(['error' => 'אין חיבור למסד נתונים']));
+}
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -16,15 +33,20 @@ if ($_SESSION['permission_level'] >= 4) {
     $hasAccess = true;
 } else {
     // בדוק הרשאה ספציפית למודול
-    $stmt = $pdo->prepare("
-        SELECT COUNT(*) 
-        FROM user_permissions 
-        WHERE user_id = ? 
-        AND module_name = 'cemeteries' 
-        AND can_access = 1
-    ");
-    $stmt->execute([$_SESSION['user_id']]);
-    $hasAccess = $stmt->fetchColumn() > 0;
+    try {
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) 
+            FROM user_permissions 
+            WHERE user_id = ? 
+            AND module_name = 'cemeteries' 
+            AND can_access = 1
+        ");
+        $stmt->execute([$_SESSION['user_id']]);
+        $hasAccess = $stmt->fetchColumn() > 0;
+    } catch (PDOException $e) {
+        // אם אין טבלת הרשאות, תן גישה רק למנהלים
+        $hasAccess = false;
+    }
 }
 
 if (!$hasAccess) {
