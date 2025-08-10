@@ -84,7 +84,64 @@ try {
         case 'getCemeteries':
             echo json_encode(getCemeteries());
             break;
+        case 'getCemeteryDetails':
+            if (!isset($_GET['id'])) {
+                echo json_encode(['success' => false, 'message' => 'מזהה בית עלמין חסר']);
+                exit;
+            }
             
+            $cemeteryId = intval($_GET['id']);
+            
+            try {
+                // Get cemetery details
+                $stmt = $pdo->prepare("SELECT * FROM cemeteries WHERE id = ?");
+                $stmt->execute([$cemeteryId]);
+                $cemetery = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$cemetery) {
+                    echo json_encode(['success' => false, 'message' => 'בית עלמין לא נמצא']);
+                    exit;
+                }
+                
+                // Get blocks for this cemetery
+                $stmt = $pdo->prepare("
+                    SELECT b.*, 
+                        COUNT(DISTINCT p.id) as sections_count
+                    FROM blocks b
+                    LEFT JOIN plots p ON b.id = p.block_id
+                    WHERE b.cemetery_id = ?
+                    GROUP BY b.id
+                    ORDER BY b.name
+                ");
+                $stmt->execute([$cemeteryId]);
+                $blocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Get all sections (plots) for this cemetery
+                $stmt = $pdo->prepare("
+                    SELECT p.*, 
+                        b.name as block_name,
+                        COUNT(DISTINCT r.id) as rows_count
+                    FROM plots p
+                    LEFT JOIN blocks b ON p.block_id = b.id
+                    LEFT JOIN rows r ON p.id = r.plot_id
+                    WHERE b.cemetery_id = ?
+                    GROUP BY p.id
+                    ORDER BY b.name, p.name
+                ");
+                $stmt->execute([$cemeteryId]);
+                $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                echo json_encode([
+                    'success' => true,
+                    'cemetery' => $cemetery,
+                    'blocks' => $blocks,
+                    'plots' => $plots
+                ]);
+                
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי בית עלמין']);
+            }
+            break;  
         case 'getBlocks':
             echo json_encode(getBlocks());
             break;

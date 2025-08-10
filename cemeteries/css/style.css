@@ -242,3 +242,34 @@ body {
         border: 1px solid #dee2e6;
     }
 }
+
+/* Clickable rows */
+.clickable-row {
+    transition: background-color 0.2s;
+}
+
+.clickable-row:hover {
+    background-color: #f1f3f5;
+}
+
+/* Cemetery details modal */
+.cemetery-details .info-section {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.cemetery-details h6 {
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.cemetery-details .list-group-item {
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+.cemetery-details .list-group-item:hover {
+    background-color: #f8f9fa;
+}
