@@ -184,7 +184,7 @@ function renderListFilters($listType, $currentFilters = [], $savedPreferences = 
             return;
         }
         
-        fetch(`../ajax/get_blocks.php?cemetery_id=${cemeteryId}`)
+        fetch(`../../ajax/get_blocks.php?cemetery_id=${cemeteryId}`)
             .then(response => response.json())
             .then(data => {
                 let options = '<option value="">כל הגושים</option>';
