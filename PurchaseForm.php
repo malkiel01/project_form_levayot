@@ -90,7 +90,7 @@ class PurchaseForm {
                        u.username as created_by_name,
                        c.name as cemetery_name,
                        b.name as block_name,
-                       s.name as section_name,
+                       s.name as plot_name,
                        r.row_number,
                        g.grave_number,
                        p.plot_number
@@ -98,10 +98,10 @@ class PurchaseForm {
                 LEFT JOIN users u ON pf.user_id = u.id
                 LEFT JOIN cemeteries c ON pf.cemetery_id = c.id
                 LEFT JOIN blocks b ON pf.block_id = b.id
-                LEFT JOIN sections s ON pf.section_id = s.id
+                LEFT JOIN plots s ON pf.plot_id = s.id
                 LEFT JOIN rows r ON pf.row_id = r.id
-                LEFT JOIN graves g ON pf.grave_id = g.id
-                LEFT JOIN plots p ON pf.plot_id = p.id
+                LEFT JOIN areaGraves g ON pf.areaGrave_id = g.id
+                LEFT JOIN graves p ON pf.grave_id = p.id
                 WHERE pf.form_uuid = ?
             ");
             
@@ -171,10 +171,10 @@ class PurchaseForm {
                     purchase_price = ?,
                     cemetery_id = ?,
                     block_id = ?,
-                    section_id = ?,
-                    row_id = ?,
-                    grave_id = ?,
                     plot_id = ?,
+                    row_id = ?,
+                    areaGrave_id = ?,
+                    grave_id = ?,
                     payment_method = ?,
                     payment_amount = ?,
                     payment_date = ?,
@@ -200,10 +200,10 @@ class PurchaseForm {
                 $data['purchase_price'] ?? null,
                 $data['cemetery_id'] ?? null,
                 $data['block_id'] ?? null,
-                $data['section_id'] ?? null,
-                $data['row_id'] ?? null,
-                $data['grave_id'] ?? null,
                 $data['plot_id'] ?? null,
+                $data['row_id'] ?? null,
+                $data['areaGrave_id'] ?? null,
+                $data['grave_id'] ?? null,
                 $data['payment_method'] ?? null,
                 $data['payment_amount'] ?? null,
                 $data['payment_date'] ?? null,

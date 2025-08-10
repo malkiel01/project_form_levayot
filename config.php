@@ -476,7 +476,7 @@ function sanitizeInput($data) {
         $sanitized = [];
         foreach ($data as $key => $value) {
             // דיבוג של שדות בעייתיים
-            if (in_array($key, ['cemetery_id', 'block_id', 'section_id', 'row_id', 'grave_id', 'plot_id'])) {
+            if (in_array($key, ['cemetery_id', 'block_id', 'plot_id', 'row_id', 'areaGrave_id', 'grave_id'])) {
                 error_log("Sanitizing field $key: " . print_r($value, true));
             }
             $sanitized[$key] = sanitizeInput($value);

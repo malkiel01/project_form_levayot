@@ -7,9 +7,9 @@ $blockId = $_GET['block_id'] ?? 0;
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
 
 $form = new DeceasedForm(null, $userPermissionLevel);
-$sections = $form->getSections($blockId);
+$plots = $form->getSections($blockId);
 
 echo '<option value="">בחר...</option>';
-foreach ($sections as $section) {
-    echo '<option value="' . $section['id'] . '">' . htmlspecialchars($section['name']) . '</option>';
+foreach ($plots as $plot) {
+    echo '<option value="' . $plot['id'] . '">' . htmlspecialchars($plot['name']) . '</option>';
 }

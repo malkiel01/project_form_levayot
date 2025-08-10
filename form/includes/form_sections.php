@@ -153,7 +153,7 @@ function renderDeathSection($formData, $form, $requiredFields, $errors = [], $vi
     <?php
 }
 
-function renderCemeterySection($formData, $form, $cemeteries, $blocks, $sections, $rows, $graves, $plots, $viewOnly = false) {
+function renderCemeterySection($formData, $form, $cemeteries, $blocks, $plots, $rows, $areaGraves, $graves, $viewOnly = false) {
     if (!$form || !$form->canViewField('cemetery_id')) return;
     ?>
     <div class="section-title">מקום הקבורה</div>
@@ -191,10 +191,10 @@ function renderCemeterySection($formData, $form, $cemeteries, $blocks, $sections
             <select class="form-select" id="plot_id" name="plot_id" 
                     <?= (!$form->canEditField('plot_id') || $viewOnly) ? 'disabled' : '' ?>>
                 <option value="">בחר קודם גוש</option>
-                <?php foreach ($sections as $section): ?>
-                    <option value="<?= $section['id'] ?>" 
-                            <?= ($formData['plot_id'] ?? '') == $section['id'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($section['name']) ?>
+                <?php foreach ($plots as $plot): ?>
+                    <option value="<?= $plot['id'] ?>" 
+                            <?= ($formData['plot_id'] ?? '') == $plot['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($plot['name']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -231,14 +231,14 @@ function renderCemeterySection($formData, $form, $cemeteries, $blocks, $sections
         </div>
         
         <div class="col-md-4">
-            <label for="plot_id" class="form-label">אחוזת קבר</label>
-            <select class="form-select" id="plot_id" name="plot_id" 
-                    <?= (!$form->canEditField('plot_id') || $viewOnly) ? 'disabled' : '' ?>>
+            <label for="areaGrave_id" class="form-label">אחוזת קבר</label>
+            <select class="form-select" id="areaGrave_id" name="areaGrave_id" 
+                    <?= (!$form->canEditField('areaGrave_id') || $viewOnly) ? 'disabled' : '' ?>>
                 <option value="">בחר...</option>
-                <?php foreach ($plots as $plot): ?>
-                    <option value="<?= $plot['id'] ?>" 
-                            <?= ($formData['plot_id'] ?? '') == $plot['id'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($plot['name']) ?>
+                <?php foreach ($areaGraves as $areaGrave): ?>
+                    <option value="<?= $areaGrave['id'] ?>" 
+                            <?= ($formData['areaGrave_id'] ?? '') == $areaGrave['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($areaGrave['name']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>

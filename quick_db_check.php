@@ -275,10 +275,10 @@ CREATE TABLE IF NOT EXISTS `purchase_forms` (
   -- מיקום הקבר/חלקה
   `cemetery_id` INT(11),
   `block_id` INT(11),
-  `section_id` INT(11),
-  `row_id` INT(11),
-  `grave_id` INT(11),
   `plot_id` INT(11),
+  `row_id` INT(11),
+  `areaGrave_id` INT(11),
+  `grave_id` INT(11),
   
   -- פרטים נוספים
   `contract_number` VARCHAR(100),
@@ -343,10 +343,10 @@ INSERT INTO `field_permissions` (`form_type`, `field_name`, `permission_level`, 
 -- הרשאות למנהל (רמה 4) - טפסי רכישות
 ('purchase', 'cemetery_id', 4, TRUE, TRUE, FALSE),
 ('purchase', 'block_id', 4, TRUE, TRUE, FALSE),
-('purchase', 'section_id', 4, TRUE, TRUE, FALSE),
+('purchase', 'plot_id', 4, TRUE, TRUE, FALSE),
 ('purchase', 'row_id', 4, TRUE, TRUE, FALSE),
-('purchase', 'grave_id', 4, TRUE, TRUE, FALSE),
-('purchase', 'plot_id', 4, TRUE, TRUE, FALSE);
+('purchase', 'areaGrave_id', 4, TRUE, TRUE, FALSE),
+('purchase', 'grave_id', 4, TRUE, TRUE, FALSE);
 
 ";
 }

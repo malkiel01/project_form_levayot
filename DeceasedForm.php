@@ -69,7 +69,7 @@ class DeceasedForm {
         }
         
         // נקה שדות ריקים שעלולים לגרום לבעיות Foreign Key
-        $fieldsToClean = ['cemetery_id', 'block_id', 'section_id', 'row_id', 'grave_id', 'plot_id'];
+        $fieldsToClean = ['cemetery_id', 'block_id', 'plot_id', 'row_id', 'areaGrave_id', 'grave_id'];
         foreach ($fieldsToClean as $field) {
             if (isset($data[$field]) && ($data[$field] === '' || $data[$field] === null)) {
                 unset($data[$field]);
@@ -86,8 +86,8 @@ class DeceasedForm {
             'form_uuid', 'status', 'progress_percentage', 'identification_type',
             'identification_number', 'deceased_first_name', 'deceased_last_name', 'father_name', 'mother_name',
             'birth_date', 'death_date', 'death_time', 'burial_date', 'burial_time',
-            'burial_license', 'death_location', 'cemetery_id', 'block_id', 'section_id',
-            'row_id', 'grave_id', 'plot_id', 'informant_name', 'informant_phone',
+            'burial_license', 'death_location', 'cemetery_id', 'block_id', 'plot_id',
+            'row_id', 'areaGrave_id', 'grave_id', 'informant_name', 'informant_phone',
             'informant_relationship', 'notes', 'client_signature', 'created_by', 'updated_by'
         ];
         
@@ -153,7 +153,7 @@ class DeceasedForm {
         $data['updated_by'] = $_SESSION['user_id'] ?? null;
         
         // נקה שדות ריקים שעלולים לגרום לבעיות Foreign Key
-        $fieldsToClean = ['cemetery_id', 'block_id', 'section_id', 'row_id', 'grave_id', 'plot_id'];
+        $fieldsToClean = ['cemetery_id', 'block_id', 'plot_id', 'row_id', 'areaGrave_id', 'grave_id'];
         foreach ($fieldsToClean as $field) {
             if (isset($data[$field]) && ($data[$field] === '' || $data[$field] === null)) {
                 $data[$field] = null; // המר לNULL במקום מחרוזת ריקה
@@ -176,8 +176,8 @@ class DeceasedForm {
             'status', 'progress_percentage', 'identification_type',
             'identification_number', 'deceased_first_name', 'deceased_last_name', 'father_name', 'mother_name',
             'birth_date', 'death_date', 'death_time', 'burial_date', 'burial_time',
-            'burial_license', 'death_location', 'cemetery_id', 'block_id', 'section_id',
-            'row_id', 'grave_id', 'plot_id', 'informant_name', 'informant_phone',
+            'burial_license', 'death_location', 'cemetery_id', 'block_id', 'plot_id',
+            'row_id', 'areaGrave_id', 'grave_id', 'informant_name', 'informant_phone',
             'informant_relationship', 'notes', 'client_signature', 'updated_by'
         ];
         
@@ -446,23 +446,23 @@ class DeceasedForm {
     
     // קבלת רשימת חלקות לפי גוש
     public function getSections($blockId) {
-        if (!$this->canViewField('section_id')) {
+        if (!$this->canViewField('plot_id')) {
             return [];
         }
         
-        $stmt = $this->db->prepare("SELECT id, name FROM sections WHERE block_id = ? AND is_active = 1 ORDER BY name");
+        $stmt = $this->db->prepare("SELECT id, name FROM plots WHERE block_id = ? AND is_active = 1 ORDER BY name");
         $stmt->execute([$blockId]);
         return $stmt->fetchAll();
     }
     
     // קבלת רשימת שורות לפי חלקה
-    public function getRows($sectionId) {
+    public function getRows($plotId) {
         if (!$this->canViewField('row_id')) {
             return [];
         }
         
-        $stmt = $this->db->prepare("SELECT id, name FROM rows WHERE section_id = ? AND is_active = 1 ORDER BY name");
-        $stmt->execute([$sectionId]);
+        $stmt = $this->db->prepare("SELECT id, name FROM rows WHERE plot_id = ? AND is_active = 1 ORDER BY name");
+        $stmt->execute([$plotId]);
         return $stmt->fetchAll();
     }
     

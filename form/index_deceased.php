@@ -18,7 +18,7 @@ extract($formHandler); // מחלץ: $isNewForm, $formData, $form, $successMessag
 
 // קבלת נתוני עזר
 $formHelpers = getFormHelpers($form, $formData, $userPermissionLevel);
-extract($formHelpers); // מחלץ: $requiredFields, $cemeteries, $blocks, $sections, $rows, $graves, $plots
+extract($formHelpers); // מחלץ: $requiredFields, $cemeteries, $blocks, $rows, $graves, $plots
 
 // טיפול בשליחת הטופס
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$viewOnly) {
@@ -92,7 +92,7 @@ if (isset($_SESSION['form_saved_message'])) {
                 
                 <?php renderDeceasedSection($formData, $form, $requiredFields, $errors ?? [], $viewOnly); ?>
                 <?php renderDeathSection($formData, $form, $requiredFields, $errors ?? [], $viewOnly); ?>
-                <?php renderCemeterySection($formData, $form, $cemeteries, $blocks, $sections, $rows, $graves, $plots, $viewOnly); ?>
+                <?php renderCemeterySection($formData, $form, $cemeteries, $blocks, $plots, $rows, $areaGraves, $graves, $viewOnly); ?>
                 <?php renderInformantSection($formData, $form, $requiredFields, $errors ?? [], $viewOnly); ?>
                 <!-- הוסף את מנהל הקבצים רק אם לא טופס חדש -->
                 <?php 
