@@ -322,11 +322,71 @@ function createItem() {
         return ['success' => false, 'message' => 'סוג רשומה לא תקין'];
     }
     
-    // הסרת שדות מיותרים
-    unset($_POST['action'], $_POST['type'], $_POST['id']);
+    // רשימת שדות מותרים לכל טבלה
+    $allowedFields = [
+        'cemeteries' => ['name', 'code', 'is_active'],
+        'blocks' => ['cemetery_id', 'name', 'code', 'is_active'],
+        'plots' => ['block_id', 'name', 'code', 'is_active'],
+        'rows' => ['plot_id', 'name', 'code', 'is_active'],
+        'areaGraves' => ['row_id', 'name', 'code', 'is_active'],
+        'graves' => ['areaGrave_id', 'name', 'grave_number', 'code', 'is_available']
+    ];
     
-    // בניית השאילתה
-    $fields = array_keys($_POST);
+    if (!isset($allowedFields[$table])) {
+        return ['success' => false, 'message' => 'טבלה לא מוכרת'];
+    }
+    
+    // סנן רק שדות מותרים
+    $data = [];
+    foreach ($allowedFields[$table] as $field) {
+        if (isset($_POST[$field])) {
+            // סינון וולידציה לפי סוג השדה
+            $value = $_POST[$field];
+            
+            // וולידציה לשדות מספריים
+            if (in_array($field, ['cemetery_id', 'block_id', 'plot_id', 'row_id', 'areaGrave_id'])) {
+                if (!is_numeric($value) || $value <= 0) {
+                    return ['success' => false, 'message' => "ערך לא תקין בשדה $field"];
+                }
+                $data[$field] = (int)$value;
+            }
+            // וולידציה לשדות בוליאניים
+            elseif (in_array($field, ['is_active', 'is_available'])) {
+                $data[$field] = in_array($value, ['1', '0']) ? (int)$value : 1;
+            }
+            // וולידציה לשדות טקסט
+            else {
+                $value = trim($value);
+                if ($field === 'name' && empty($value)) {
+                    return ['success' => false, 'message' => 'שם הוא שדה חובה'];
+                }
+                // הגבלת אורך
+                if (strlen($value) > 255) {
+                    return ['success' => false, 'message' => "השדה $field ארוך מדי"];
+                }
+                // סינון תווים מיוחדים בקוד
+                if ($field === 'code' && !empty($value)) {
+                    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $value)) {
+                        return ['success' => false, 'message' => 'קוד יכול להכיל רק אותיות, מספרים, מקף וקו תחתון'];
+                    }
+                }
+                $data[$field] = $value;
+            }
+        }
+    }
+    
+    // בדיקה שיש נתונים
+    if (empty($data)) {
+        return ['success' => false, 'message' => 'אין נתונים לשמירה'];
+    }
+    
+    // בדיקת תלויות - וודא שההורה קיים
+    if (!validateParentExists($table, $data)) {
+        return ['success' => false, 'message' => 'הרשומה האב לא קיימת'];
+    }
+    
+    // בניית השאילתה עם prepared statements
+    $fields = array_keys($data);
     $placeholders = array_map(function($field) { return ":$field"; }, $fields);
     
     $sql = "INSERT INTO $table (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
@@ -334,7 +394,7 @@ function createItem() {
     try {
         $stmt = $pdo->prepare($sql);
         
-        foreach ($_POST as $key => $value) {
+        foreach ($data as $key => $value) {
             $stmt->bindValue(":$key", $value);
         }
         
@@ -346,7 +406,12 @@ function createItem() {
             ];
         }
     } catch (PDOException $e) {
-        return ['success' => false, 'message' => 'שגיאה בהוספת הרשומה: ' . $e->getMessage()];
+        // בדוק אם זו שגיאת מפתח כפול
+        if ($e->getCode() == 23000) {
+            return ['success' => false, 'message' => 'קוד זה כבר קיים במערכת'];
+        }
+        error_log('Database error in createItem: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'שגיאה בהוספת הרשומה'];
     }
     
     return ['success' => false, 'message' => 'שגיאה בהוספת הרשומה'];
@@ -359,16 +424,82 @@ function updateItem() {
     $id = $_POST['id'] ?? 0;
     $table = getTableName($type);
     
-    if (!$table || !$id) {
+    // וולידציה בסיסית
+    if (!$table || !is_numeric($id) || $id <= 0) {
         return ['success' => false, 'message' => 'נתונים לא תקינים'];
     }
     
-    // הסרת שדות מיותרים
-    unset($_POST['action'], $_POST['type'], $_POST['id']);
+    $id = (int)$id;
+    
+    // בדוק שהרשומה קיימת
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE id = ?");
+    $stmt->execute([$id]);
+    if ($stmt->fetchColumn() == 0) {
+        return ['success' => false, 'message' => 'הרשומה לא נמצאה'];
+    }
+    
+    // רשימת שדות מותרים לכל טבלה
+    $allowedFields = [
+        'cemeteries' => ['name', 'code', 'is_active'],
+        'blocks' => ['cemetery_id', 'name', 'code', 'is_active'],
+        'plots' => ['block_id', 'name', 'code', 'is_active'],
+        'rows' => ['plot_id', 'name', 'code', 'is_active'],
+        'areaGraves' => ['row_id', 'name', 'code', 'is_active'],
+        'graves' => ['areaGrave_id', 'name', 'grave_number', 'code', 'is_available']
+    ];
+    
+    if (!isset($allowedFields[$table])) {
+        return ['success' => false, 'message' => 'טבלה לא מוכרת'];
+    }
+    
+    // סנן רק שדות מותרים
+    $data = [];
+    foreach ($allowedFields[$table] as $field) {
+        if (isset($_POST[$field])) {
+            $value = $_POST[$field];
+            
+            // וולידציה לשדות מספריים
+            if (in_array($field, ['cemetery_id', 'block_id', 'plot_id', 'row_id', 'areaGrave_id'])) {
+                if (!is_numeric($value) || $value <= 0) {
+                    return ['success' => false, 'message' => "ערך לא תקין בשדה $field"];
+                }
+                $data[$field] = (int)$value;
+            }
+            // וולידציה לשדות בוליאניים
+            elseif (in_array($field, ['is_active', 'is_available'])) {
+                $data[$field] = in_array($value, ['1', '0']) ? (int)$value : 1;
+            }
+            // וולידציה לשדות טקסט
+            else {
+                $value = trim($value);
+                if ($field === 'name' && empty($value)) {
+                    return ['success' => false, 'message' => 'שם הוא שדה חובה'];
+                }
+                if (strlen($value) > 255) {
+                    return ['success' => false, 'message' => "השדה $field ארוך מדי"];
+                }
+                if ($field === 'code' && !empty($value)) {
+                    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $value)) {
+                        return ['success' => false, 'message' => 'קוד יכול להכיל רק אותיות, מספרים, מקף וקו תחתון'];
+                    }
+                }
+                $data[$field] = $value;
+            }
+        }
+    }
+    
+    if (empty($data)) {
+        return ['success' => false, 'message' => 'אין נתונים לעדכון'];
+    }
+    
+    // בדיקת תלויות
+    if (!validateParentExists($table, $data)) {
+        return ['success' => false, 'message' => 'הרשומה האב לא קיימת'];
+    }
     
     // בניית השאילתה
     $sets = [];
-    foreach ($_POST as $key => $value) {
+    foreach ($data as $key => $value) {
         $sets[] = "$key = :$key";
     }
     
@@ -377,16 +508,20 @@ function updateItem() {
     try {
         $stmt = $pdo->prepare($sql);
         
-        foreach ($_POST as $key => $value) {
+        foreach ($data as $key => $value) {
             $stmt->bindValue(":$key", $value);
         }
-        $stmt->bindValue(":id", $id);
+        $stmt->bindValue(":id", $id, PDO::PARAM_INT);
         
         if ($stmt->execute()) {
             return ['success' => true, 'message' => 'הרשומה עודכנה בהצלחה'];
         }
     } catch (PDOException $e) {
-        return ['success' => false, 'message' => 'שגיאה בעדכון הרשומה: ' . $e->getMessage()];
+        if ($e->getCode() == 23000) {
+            return ['success' => false, 'message' => 'קוד זה כבר קיים במערכת'];
+        }
+        error_log('Database error in updateItem: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'שגיאה בעדכון הרשומה'];
     }
     
     return ['success' => false, 'message' => 'שגיאה בעדכון הרשומה'];
@@ -399,9 +534,12 @@ function deleteItem() {
     $id = $_POST['id'] ?? 0;
     $table = getTableName($type);
     
-    if (!$table || !$id) {
+    // וולידציה בסיסית
+    if (!$table || !is_numeric($id) || $id <= 0) {
         return ['success' => false, 'message' => 'נתונים לא תקינים'];
     }
+    
+    $id = (int)$id;
     
     // בדיקה אם יש רשומות תלויות
     if (hasChildren($type, $id)) {
@@ -414,10 +552,35 @@ function deleteItem() {
             return ['success' => true, 'message' => 'הרשומה נמחקה בהצלחה'];
         }
     } catch (PDOException $e) {
-        return ['success' => false, 'message' => 'שגיאה במחיקת הרשומה: ' . $e->getMessage()];
+        error_log('Database error in deleteItem: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'שגיאה במחיקת הרשומה'];
     }
     
     return ['success' => false, 'message' => 'שגיאה במחיקת הרשומה'];
+}
+
+// פונקציה לבדיקת קיום רשומת אב
+function validateParentExists($table, $data) {
+    global $pdo;
+    
+    $parentChecks = [
+        'blocks' => ['field' => 'cemetery_id', 'table' => 'cemeteries'],
+        'plots' => ['field' => 'block_id', 'table' => 'blocks'],
+        'rows' => ['field' => 'plot_id', 'table' => 'plots'],
+        'areaGraves' => ['field' => 'row_id', 'table' => 'rows'],
+        'graves' => ['field' => 'areaGrave_id', 'table' => 'areaGraves']
+    ];
+    
+    if (isset($parentChecks[$table])) {
+        $check = $parentChecks[$table];
+        if (isset($data[$check['field']])) {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM {$check['table']} WHERE id = ?");
+            $stmt->execute([$data[$check['field']]]);
+            return $stmt->fetchColumn() > 0;
+        }
+    }
+    
+    return true;
 }
 
 function getTableName($type) {

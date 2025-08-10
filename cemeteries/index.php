@@ -1,9 +1,17 @@
+<?php
+// בדיקת הרשאות בצד השרת
+require_once '../config.php';
+require_once '../includes/auth_check.php';
+
+// בדיקת הרשאה לדף - רמה 4 (מנהל) או הרשאה ספציפית למודול cemeteries
+checkPageAccess('cemeteries', 4, true);
+?>
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ניהול בתי עלמין</title>
+    <title>ניהול בתי עלמין - <?php echo SITE_NAME; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
@@ -38,6 +46,10 @@
                     <a class="nav-link" href="#" data-page="graves">
                         <i class="fas fa-cross"></i> קברים
                     </a>
+                    <hr class="my-3">
+                    <a class="nav-link" href="../">
+                        <i class="fas fa-arrow-right"></i> חזרה לדשבורד
+                    </a>
                 </nav>
             </div>
 
@@ -46,7 +58,8 @@
                 <!-- Breadcrumb -->
                 <nav class="breadcrumb-custom">
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="#">דף הבית</a></li>
+                        <li class="breadcrumb-item"><a href="../">דף הבית</a></li>
+                        <li class="breadcrumb-item">בתי עלמין</li>
                         <li class="breadcrumb-item active" id="current-page">סקירה כללית</li>
                     </ol>
                 </nav>
@@ -94,9 +107,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- App Scripts -->
-    <script src="js/auth.js"></script>
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/validation.js"></script>
     <script src="js/api.js"></script>
     <script src="js/views/overview.js"></script>
     <script src="js/views/cemeteries.js"></script>

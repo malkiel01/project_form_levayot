@@ -515,23 +515,48 @@ const Forms = {
     },
     
     async save() {
-        // Validate form
-        const form = document.getElementById('editForm');
-        if (!form.checkValidity()) {
-            form.reportValidity();
+        // אסוף את הנתונים מהטופס
+        const formElement = document.getElementById('editForm');
+        const formData = new FormData(formElement);
+        const data = Object.fromEntries(formData);
+        
+        // בצע וולידציה
+        const type = $('#itemType').val();
+        const validation = Validation.validateForm(type, data);
+        
+        if (!validation.valid) {
+            Validation.showFormErrors(validation.errors);
+            return;
+        }
+        
+        // בדוק ולידציה HTML5
+        if (!formElement.checkValidity()) {
+            formElement.reportValidity();
             return;
         }
         
         // Show loading
         $('#saveBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> שומר...');
         
-        const formData = $('#editForm').serialize();
+        // בנה את הנתונים לשליחה
         const isUpdate = $('#itemId').val() ? true : false;
+        const params = new URLSearchParams();
         
-        console.log('Saving form data:', formData);
+        // הוסף את הנתונים המסוננים
+        for (let key in validation.data) {
+            params.append(key, validation.data[key]);
+        }
+        
+        // הוסף מטא-נתונים
+        params.append('type', type);
+        if (isUpdate) {
+            params.append('id', $('#itemId').val());
+        }
+        
+        console.log('Saving validated data:', validation.data);
         
         try {
-            const response = await API.saveItem(formData, isUpdate);
+            const response = await API.saveItem(params.toString(), isUpdate);
             
             console.log('Save response:', response);
             
