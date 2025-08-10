@@ -92,10 +92,10 @@ Views.Graves = {
         let status = 'available';
         let statusBadge = '<span class="badge bg-success">פנוי</span>';
         
-        if (grave.has_burial) {
+        if (grave.has_burial == 1) {
             status = 'occupied';
             statusBadge = '<span class="badge bg-danger">תפוס</span>';
-        } else if (grave.has_purchase) {
+        } else if (grave.has_purchase == 1) {
             status = 'reserved';
             statusBadge = '<span class="badge bg-warning">שמור</span>';
         }
@@ -119,7 +119,14 @@ Views.Graves = {
                             title="הצג פרטים">
                         <i class="fas fa-eye"></i>
                     </button>
-                    ${Utils.createActionButtons('grave', grave.id)}
+                    ${window.Utils && Utils.createActionButtons ? Utils.createActionButtons('grave', grave.id) : `
+                        <button class="btn btn-sm btn-warning" onclick="App.editItem('grave', ${grave.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="App.deleteItem('grave', ${grave.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `}
                 </td>
             </tr>`;
     },
@@ -147,7 +154,7 @@ Views.Graves = {
         
         // Update count
         const visibleRows = $('#gravesTable tr:visible').length;
-        if (visibleRows === 0) {
+        if (visibleRows === 0 && $('#gravesTable tr').length > 0) {
             $('#gravesTable').html(`
                 <tr>
                     <td colspan="11" class="text-center">לא נמצאו תוצאות מתאימות</td>
@@ -156,10 +163,46 @@ Views.Graves = {
         }
     },
     
+    // פונקציות עזר פנימיות
+    showLoading() {
+        // הצג אינדיקטור טעינה
+        const loadingHtml = `
+            <div class="loading-overlay" id="loadingOverlay" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;">
+                <div class="spinner-border text-light" role="status">
+                    <span class="visually-hidden">טוען...</span>
+                </div>
+            </div>
+        `;
+        $('body').append(loadingHtml);
+    },
+    
+    hideLoading() {
+        $('#loadingOverlay').remove();
+    },
+    
+    showError(message) {
+        Swal.fire({
+            icon: 'error',
+            title: 'שגיאה',
+            text: message,
+            confirmButtonText: 'סגור'
+        });
+    },
+    
     // פונקציה חדשה להצגת פרטי קבר
     async showDetails(graveId) {
         try {
-            Utils.showLoading();
+            this.showLoading();
             
             // טען פרטי קבר מלאים
             const response = await $.ajax({
@@ -172,7 +215,7 @@ Views.Graves = {
             });
             
             if (!response.success) {
-                throw new Error('Failed to load grave details');
+                throw new Error(response.error || 'Failed to load grave details');
             }
             
             const data = response.data;
@@ -189,7 +232,7 @@ Views.Graves = {
                 statusInfo = {
                     text: 'תפוס',
                     class: 'danger',
-                    icon: 'fa-cross'
+                    icon: 'fa-times-circle'
                 };
             } else if (data.has_purchase) {
                 statusInfo = {
@@ -259,86 +302,94 @@ Views.Graves = {
             if (data.has_purchase || data.has_burial) {
                 // טען פרטים נוספים
                 if (data.has_purchase) {
-                    const purchaseResponse = await $.ajax({
-                        url: 'api/check_grave_status.php',
-                        method: 'GET',
-                        data: { 
-                            action: 'check_purchase',
-                            grave_id: graveId 
+                    try {
+                        const purchaseResponse = await $.ajax({
+                            url: 'api/check_grave_status.php',
+                            method: 'GET',
+                            data: { 
+                                action: 'check_purchase',
+                                grave_id: graveId 
+                            }
+                        });
+                        
+                        if (purchaseResponse.success && purchaseResponse.data) {
+                            const purchase = purchaseResponse.data;
+                            detailsHtml += `
+                                <h5><i class="fas fa-shopping-cart"></i> פרטי רכישה</h5>
+                                <table class="table table-striped">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>מספר טופס:</strong></td>
+                                            <td>${purchase.form_uuid || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>שם הרוכש:</strong></td>
+                                            <td>${purchase.buyer_name || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>תאריך רכישה:</strong></td>
+                                            <td>${purchase.purchase_date || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>טלפון:</strong></td>
+                                            <td>${purchase.buyer_phone || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>סטטוס טופס:</strong></td>
+                                            <td>${this.getStatusBadge(purchase.status)}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            `;
                         }
-                    });
-                    
-                    if (purchaseResponse.success && purchaseResponse.data) {
-                        const purchase = purchaseResponse.data;
-                        detailsHtml += `
-                            <h5><i class="fas fa-shopping-cart"></i> פרטי רכישה</h5>
-                            <table class="table table-striped">
-                                <tbody>
-                                    <tr>
-                                        <td><strong>מספר טופס:</strong></td>
-                                        <td>${purchase.form_uuid || '-'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>שם הרוכש:</strong></td>
-                                        <td>${purchase.buyer_name || '-'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>תאריך רכישה:</strong></td>
-                                        <td>${purchase.purchase_date || '-'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>טלפון:</strong></td>
-                                        <td>${purchase.buyer_phone || '-'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>סטטוס טופס:</strong></td>
-                                        <td>${this.getStatusBadge(purchase.status)}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        `;
+                    } catch(e) {
+                        console.error('Error loading purchase data:', e);
                     }
                 }
                 
                 if (data.has_burial) {
-                    const burialResponse = await $.ajax({
-                        url: 'api/check_grave_status.php',
-                        method: 'GET',
-                        data: { 
-                            action: 'check_burial',
-                            grave_id: graveId 
+                    try {
+                        const burialResponse = await $.ajax({
+                            url: 'api/check_grave_status.php',
+                            method: 'GET',
+                            data: { 
+                                action: 'check_burial',
+                                grave_id: graveId 
+                            }
+                        });
+                        
+                        if (burialResponse.success && burialResponse.data) {
+                            const burial = burialResponse.data;
+                            detailsHtml += `
+                                <h5><i class="fas fa-cross"></i> פרטי קבורה</h5>
+                                <table class="table table-striped">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>מספר טופס:</strong></td>
+                                            <td>${burial.form_uuid || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>שם הנפטר:</strong></td>
+                                            <td>${burial.deceased_name || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>תאריך פטירה:</strong></td>
+                                            <td>${burial.death_date || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>תאריך קבורה:</strong></td>
+                                            <td>${burial.burial_date || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>רשיון קבורה:</strong></td>
+                                            <td>${burial.burial_license || '-'}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            `;
                         }
-                    });
-                    
-                    if (burialResponse.success && burialResponse.data) {
-                        const burial = burialResponse.data;
-                        detailsHtml += `
-                            <h5><i class="fas fa-cross"></i> פרטי קבורה</h5>
-                            <table class="table table-striped">
-                                <tbody>
-                                    <tr>
-                                        <td><strong>מספר טופס:</strong></td>
-                                        <td>${burial.form_uuid || '-'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>שם הנפטר:</strong></td>
-                                        <td>${burial.deceased_name || '-'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>תאריך פטירה:</strong></td>
-                                        <td>${burial.death_date || '-'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>תאריך קבורה:</strong></td>
-                                        <td>${burial.burial_date || '-'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>רשיון קבורה:</strong></td>
-                                        <td>${burial.burial_license || '-'}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        `;
+                    } catch(e) {
+                        console.error('Error loading burial data:', e);
                     }
                 }
             } else {
@@ -382,9 +433,9 @@ Views.Graves = {
             
         } catch (error) {
             console.error('Error loading grave details:', error);
-            Utils.showError('שגיאה בטעינת פרטי הקבר');
+            this.showError(error.message || 'שגיאה בטעינת פרטי הקבר');
         } finally {
-            Utils.hideLoading();
+            this.hideLoading();
         }
     },
     
