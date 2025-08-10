@@ -235,13 +235,17 @@ Views.Cemeteries = {
             `;
             
             $('#cemeteryDetailsModal').remove();
+
             $('body').append(modalContent);
             
             const modal = new bootstrap.Modal(document.getElementById('cemeteryDetailsModal'));
             modal.show();
-            
+
             $('#cemeteryDetailsModal').on('hidden.bs.modal', function () {
                 $(this).remove();
+                $('.modal-backdrop').remove(); // הוסף את השורה הזו!
+                $('body').removeClass('modal-open'); // ואת השורה הזו!
+                $('body').css('padding-right', ''); // ואת השורה הזו!
             });
             
         } catch (error) {

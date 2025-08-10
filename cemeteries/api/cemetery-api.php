@@ -825,123 +825,6 @@ function createItem() {
     return ['success' => false, 'message' => 'שגיאה בהוספת הרשומה'];
 }
 
-function updateItem2() {
-    global $pdo;
-    
-    $type = $_POST['type'] ?? '';
-    $id = $_POST['id'] ?? 0;
-    $table = getTableName($type);
-    
-    // וולידציה בסיסית
-    if (!$table || !is_numeric($id) || $id <= 0) {
-        return ['success' => false, 'message' => 'נתונים לא תקינים'];
-    }
-    
-    $id = (int)$id;
-    
-    // בדוק שהרשומה קיימת
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE id = ?");
-    $stmt->execute([$id]);
-    if ($stmt->fetchColumn() == 0) {
-        return ['success' => false, 'message' => 'הרשומה לא נמצאה'];
-    }
-    
-    // רשימת שדות מותרים לכל טבלה
-    $allowedFields = [
-        'cemeteries' => ['name', 'code', 'is_active'],
-        'blocks' => ['cemetery_id', 'name', 'code', 'is_active'],
-        'plots' => ['block_id', 'name', 'code', 'is_active'],
-        'rows' => ['plot_id', 'name', 'code', 'is_active'],
-        'areaGraves' => ['row_id', 'name', 'code', 'is_active'],
-        'graves' => ['areaGrave_id', 'name', 'grave_number', 'code', 'is_available']
-    ];
-    
-    if (!isset($allowedFields[$table])) {
-        return ['success' => false, 'message' => 'טבלה לא מוכרת'];
-    }
-    
-    // סנן רק שדות מותרים
-    $data = [];
-    foreach ($allowedFields[$table] as $field) {
-        if (isset($_POST[$field])) {
-            $value = $_POST[$field];
-            
-            // וולידציה לשדות מספריים
-            if (in_array($field, ['cemetery_id', 'block_id', 'plot_id', 'row_id', 'areaGrave_id'])) {
-                if (!is_numeric($value) || $value <= 0) {
-                    return ['success' => false, 'message' => "ערך לא תקין בשדה $field"];
-                }
-                $data[$field] = (int)$value;
-            }
-            // וולידציה לשדות בוליאניים
-            elseif (in_array($field, ['is_active', 'is_available'])) {
-                $data[$field] = in_array($value, ['1', '0']) ? (int)$value : 1;
-            }
-            // וולידציה לשדות טקסט
-            else {
-                $value = trim($value);
-                if ($field === 'name' && empty($value)) {
-                    return ['success' => false, 'message' => 'שם הוא שדה חובה'];
-                }
-                if (strlen($value) > 255) {
-                    return ['success' => false, 'message' => "השדה $field ארוך מדי"];
-                }
-                if ($field === 'code' && !empty($value)) {
-                    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $value)) {
-                        return ['success' => false, 'message' => 'קוד יכול להכיל רק אותיות, מספרים, מקף וקו תחתון'];
-                    }
-                }
-                $data[$field] = $value;
-            }
-        }
-    }
-    
-    if (empty($data)) {
-        return ['success' => false, 'message' => 'אין נתונים לעדכון'];
-    }
-    
-    // בדיקת תלויות
-    if (!validateParentExists($table, $data)) {
-        return ['success' => false, 'message' => 'הרשומה האב לא קיימת'];
-    }
-    
-    // בניית השאילתה
-    $sets = [];
-    foreach ($data as $key => $value) {
-        $sets[] = "$key = :$key";
-    }
-    
-    $sql = "UPDATE $table SET " . implode(', ', $sets) . " WHERE id = :id";
-    
-    try {
-        $stmt = $pdo->prepare($sql);
-        
-        foreach ($data as $key => $value) {
-            $stmt->bindValue(":$key", $value);
-        }
-        $stmt->bindValue(":id", $id, PDO::PARAM_INT);
-        
-        if ($stmt->execute()) {
-            return ['success' => true, 'message' => 'הרשומה עודכנה בהצלחה'];
-        }
-    } catch (PDOException $e) {
-        if ($e->getCode() == 23000) {
-            return ['success' => false, 'message' => 'קוד זה כבר קיים במערכת'];
-        }
-        error_log('Database error in updateItem: ' . $e->getMessage());
-        return ['success' => false, 'message' => 'שגיאה בעדכון הרשומה'];
-    }
-    
-    return ['success' => false, 'message' => 'שגיאה בעדכון הרשומה'];
-}
-
-// 101010101010101010101010100101010101010101010101010
-
-// תיקון 2: עדכון cemetery-api.php - מניעת שינוי שדות היררכיה בצד השרת
-// =====================================================================
-
-// עדכן את הפונקציה updateItem() בקובץ cemetery-api.php:
-
 function updateItem() {
     global $pdo;
     
@@ -1082,8 +965,6 @@ function updateItem() {
     
     return ['success' => false, 'message' => 'שגיאה בעדכון הרשומה'];
 }
-
-// 101010101010101010101010101010101010101010101010101
 
 function deleteItem() {
     global $pdo;
