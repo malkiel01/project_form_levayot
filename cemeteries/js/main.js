@@ -3,9 +3,7 @@ const App = {
     currentPage: 'overview',
     
     init() {
-        // Check authentication first
-        Auth.checkSession();
-        
+        // לא צריך בדיקת הרשאות כאן - זה נעשה בצד השרת
         this.bindEvents();
         this.loadPage('overview');
     },

@@ -4,9 +4,32 @@ require_once '../../config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// בדיקת הרשאות
-if (!isset($_SESSION['user_id']) || $_SESSION['permission_level'] < 4) {
-    die(json_encode(['error' => 'אין הרשאה']));
+// בדיקת הרשאות בסיסית
+if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    die(json_encode(['error' => 'לא מחובר למערכת']));
+}
+
+// בדיקה האם המשתמש הוא מנהל או יש לו הרשאה ספציפית
+$hasAccess = false;
+if ($_SESSION['permission_level'] >= 4) {
+    $hasAccess = true;
+} else {
+    // בדוק הרשאה ספציפית למודול
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) 
+        FROM user_permissions 
+        WHERE user_id = ? 
+        AND module_name = 'cemeteries' 
+        AND can_access = 1
+    ");
+    $stmt->execute([$_SESSION['user_id']]);
+    $hasAccess = $stmt->fetchColumn() > 0;
+}
+
+if (!$hasAccess) {
+    http_response_code(403);
+    die(json_encode(['error' => 'אין הרשאה לגשת למודול זה']));
 }
 
 $action = $_REQUEST['action'] ?? '';
@@ -83,6 +106,7 @@ try {
             throw new Exception('Invalid action');
     }
 } catch (Exception $e) {
+    http_response_code(400);
     echo json_encode(['error' => $e->getMessage()]);
 }
 
@@ -237,6 +261,10 @@ function getItem($type, $id) {
     global $pdo;
     
     $table = getTableName($type);
+    if (!$table) {
+        throw new Exception('Invalid type');
+    }
+    
     $stmt = $pdo->prepare("SELECT * FROM $table WHERE id = ?");
     $stmt->execute([$id]);
     
@@ -249,6 +277,10 @@ function createItem() {
     $type = $_POST['type'] ?? '';
     $table = getTableName($type);
     
+    if (!$table) {
+        return ['success' => false, 'message' => 'סוג רשומה לא תקין'];
+    }
+    
     // הסרת שדות מיותרים
     unset($_POST['action'], $_POST['type'], $_POST['id']);
     
@@ -257,18 +289,23 @@ function createItem() {
     $placeholders = array_map(function($field) { return ":$field"; }, $fields);
     
     $sql = "INSERT INTO $table (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
-    $stmt = $pdo->prepare($sql);
     
-    foreach ($_POST as $key => $value) {
-        $stmt->bindValue(":$key", $value);
-    }
-    
-    if ($stmt->execute()) {
-        return [
-            'success' => true,
-            'message' => 'הרשומה נוספה בהצלחה',
-            'id' => $pdo->lastInsertId()
-        ];
+    try {
+        $stmt = $pdo->prepare($sql);
+        
+        foreach ($_POST as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+        
+        if ($stmt->execute()) {
+            return [
+                'success' => true,
+                'message' => 'הרשומה נוספה בהצלחה',
+                'id' => $pdo->lastInsertId()
+            ];
+        }
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => 'שגיאה בהוספת הרשומה: ' . $e->getMessage()];
     }
     
     return ['success' => false, 'message' => 'שגיאה בהוספת הרשומה'];
@@ -281,6 +318,10 @@ function updateItem() {
     $id = $_POST['id'] ?? 0;
     $table = getTableName($type);
     
+    if (!$table || !$id) {
+        return ['success' => false, 'message' => 'נתונים לא תקינים'];
+    }
+    
     // הסרת שדות מיותרים
     unset($_POST['action'], $_POST['type'], $_POST['id']);
     
@@ -291,15 +332,20 @@ function updateItem() {
     }
     
     $sql = "UPDATE $table SET " . implode(', ', $sets) . " WHERE id = :id";
-    $stmt = $pdo->prepare($sql);
     
-    foreach ($_POST as $key => $value) {
-        $stmt->bindValue(":$key", $value);
-    }
-    $stmt->bindValue(":id", $id);
-    
-    if ($stmt->execute()) {
-        return ['success' => true, 'message' => 'הרשומה עודכנה בהצלחה'];
+    try {
+        $stmt = $pdo->prepare($sql);
+        
+        foreach ($_POST as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+        $stmt->bindValue(":id", $id);
+        
+        if ($stmt->execute()) {
+            return ['success' => true, 'message' => 'הרשומה עודכנה בהצלחה'];
+        }
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => 'שגיאה בעדכון הרשומה: ' . $e->getMessage()];
     }
     
     return ['success' => false, 'message' => 'שגיאה בעדכון הרשומה'];
@@ -312,14 +358,22 @@ function deleteItem() {
     $id = $_POST['id'] ?? 0;
     $table = getTableName($type);
     
+    if (!$table || !$id) {
+        return ['success' => false, 'message' => 'נתונים לא תקינים'];
+    }
+    
     // בדיקה אם יש רשומות תלויות
     if (hasChildren($type, $id)) {
         return ['success' => false, 'message' => 'לא ניתן למחוק - קיימות רשומות תלויות'];
     }
     
-    $stmt = $pdo->prepare("DELETE FROM $table WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        return ['success' => true, 'message' => 'הרשומה נמחקה בהצלחה'];
+    try {
+        $stmt = $pdo->prepare("DELETE FROM $table WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            return ['success' => true, 'message' => 'הרשומה נמחקה בהצלחה'];
+        }
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => 'שגיאה במחיקת הרשומה: ' . $e->getMessage()];
     }
     
     return ['success' => false, 'message' => 'שגיאה במחיקת הרשומה'];
@@ -335,7 +389,7 @@ function getTableName($type) {
         'grave' => 'graves'
     ];
     
-    return $tables[$type] ?? '';
+    return $tables[$type] ?? null;
 }
 
 function hasChildren($type, $id) {
@@ -360,38 +414,6 @@ function hasChildren($type, $id) {
     }
     
     return false;
-}
-
-function getHierarchy() {
-    global $pdo;
-    
-    $stmt = $pdo->query("
-        SELECT 
-            c.id as cemetery_id,
-            c.name as cemetery_name,
-            b.id as block_id,
-            b.name as block_name,
-            p.id as plot_id,
-            p.name as plot_name,
-            r.id as row_id,
-            r.name as row_name,
-            ag.id as area_grave_id,
-            ag.name as area_grave_name,
-            g.id as grave_id,
-            g.name as grave_name,
-            g.grave_number,
-            g.is_available
-        FROM cemeteries c
-        LEFT JOIN blocks b ON b.cemetery_id = c.id
-        LEFT JOIN plots p ON p.block_id = b.id
-        LEFT JOIN rows r ON r.plot_id = p.id
-        LEFT JOIN areaGraves ag ON ag.row_id = r.id
-        LEFT JOIN graves g ON g.areaGrave_id = ag.id
-        WHERE c.is_active = 1
-        ORDER BY c.name, b.name, p.name, r.name, ag.name, g.grave_number
-    ");
-    
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function getBlocksByCemetery($cemetery_id) {
@@ -449,5 +471,4 @@ function getAreaGravesByRow($row_id) {
     
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-
 ?>
