@@ -1,10 +1,46 @@
 <?php
 // בדיקת הרשאות בצד השרת
 require_once '../config.php';
-require_once '../includes/auth_check.php';
 
-// בדיקת הרשאה לדף - רמה 4 (מנהל) או הרשאה ספציפית למודול cemeteries
-checkPageAccess('cemeteries', 4, true);
+// בדיקה פשוטה - האם המשתמש מחובר
+if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+    header('Location: ../auth/login.php');
+    exit;
+}
+
+// בדיקת רמת הרשאה - רק מנהלים (רמה 4) או הרשאה ספציפית
+$hasAccess = false;
+if (isset($_SESSION['permission_level']) && $_SESSION['permission_level'] >= 4) {
+    $hasAccess = true;
+} else {
+    // בדוק הרשאה ספציפית למודול
+    try {
+        $db = getDbConnection();
+        $stmt = $db->prepare("
+            SELECT COUNT(*) 
+            FROM user_permissions 
+            WHERE user_id = ? 
+            AND module_name = 'cemeteries' 
+            AND can_access = 1
+        ");
+        $stmt->execute([$_SESSION['user_id']]);
+        $hasAccess = $stmt->fetchColumn() > 0;
+    } catch (Exception $e) {
+        // אם אין טבלת הרשאות, תן גישה רק למנהלים
+        $hasAccess = false;
+    }
+}
+
+if (!$hasAccess) {
+    // אין הרשאה - חזור לדשבורד הראשי
+    header('Location: ../');
+    exit;
+}
+
+// קבע את שם האתר אם לא מוגדר
+if (!defined('SITE_NAME')) {
+    define('SITE_NAME', 'מערכת ניהול');
+}
 ?>
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
@@ -17,6 +53,12 @@ checkPageAccess('cemeteries', 4, true);
     <link href="css/style.css" rel="stylesheet">
 </head>
 <body>
+    <!-- הצג מידע על המשתמש המחובר -->
+    <div class="position-fixed top-0 start-0 m-3 text-muted small">
+        <i class="fas fa-user"></i> <?php echo $_SESSION['username'] ?? 'משתמש'; ?> 
+        | רמה: <?php echo $_SESSION['permission_level'] ?? '?'; ?>
+    </div>
+    
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
@@ -49,6 +91,9 @@ checkPageAccess('cemeteries', 4, true);
                     <hr class="my-3">
                     <a class="nav-link" href="../">
                         <i class="fas fa-arrow-right"></i> חזרה לדשבורד
+                    </a>
+                    <a class="nav-link" href="../auth/logout.php">
+                        <i class="fas fa-sign-out-alt"></i> יציאה
                     </a>
                 </nav>
             </div>
