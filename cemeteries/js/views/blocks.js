@@ -101,6 +101,19 @@ Views.Blocks = {
     async showDetails(blockId) {
         try {
             const response = await API.getBlockDetails(blockId);
+            
+            // בדוק אם התשובה תקינה
+            if (!response || !response.success) {
+                Utils.showError(response?.message || 'שגיאה בטעינת פרטי גוש');
+                return;
+            }
+            
+            // בדוק שיש נתונים
+            if (!response.block) {
+                Utils.showError('לא נמצאו פרטי גוש');
+                return;
+            }
+            
             const stats = response.stats || {};
             
             let modalContent = `
@@ -127,7 +140,7 @@ Views.Blocks = {
                                                         ${response.block.is_active == 1 ? 'פעיל' : 'לא פעיל'}
                                                     </span>
                                                 </p>
-                                                <p><strong>חלקות:</strong> ${response.plots.length}</p>
+                                                <p><strong>חלקות:</strong> ${response.plots?.length || 0}</p>
                                             </div>
                                             <div class="col-md-4">
                                                 <p><strong>אחוזות קבר:</strong> ${stats.total_area_graves || 0}</p>
@@ -140,28 +153,22 @@ Views.Blocks = {
                                     <div class="stats-section mb-4">
                                         <h6 class="text-primary">סטטיסטיקת קברים</h6>
                                         <div class="row">
-                                            <div class="col-md-3">
+                                            <div class="col-md-4">
                                                 <div class="stat-card bg-success text-white p-3 rounded">
                                                     <h4>${stats.available_graves || 0}</h4>
                                                     <p class="mb-0">קברים פנויים</p>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3">
-                                                <div class="stat-card bg-info text-white p-3 rounded">
-                                                    <h4>${stats.purchased_graves || 0}</h4>
-                                                    <p class="mb-0">קברים שנרכשו</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-4">
                                                 <div class="stat-card bg-secondary text-white p-3 rounded">
-                                                    <h4>${stats.buried_graves || 0}</h4>
-                                                    <p class="mb-0">קברים שנקברו</p>
+                                                    <h4>${(stats.total_graves || 0) - (stats.available_graves || 0)}</h4>
+                                                    <p class="mb-0">קברים תפוסים</p>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3">
-                                                <div class="stat-card bg-warning text-white p-3 rounded">
-                                                    <h4>${stats.reserved_graves || 0}</h4>
-                                                    <p class="mb-0">קברים שמורים</p>
+                                            <div class="col-md-4">
+                                                <div class="stat-card bg-info text-white p-3 rounded">
+                                                    <h4>${stats.total_graves || 0}</h4>
+                                                    <p class="mb-0">סה"כ קברים</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -170,7 +177,7 @@ Views.Blocks = {
                                     <!-- חלקות -->
                                     <div class="plots-section">
                                         <h6 class="text-primary">חלקות בגוש</h6>
-                                        ${response.plots.length > 0 ? `
+                                        ${response.plots && response.plots.length > 0 ? `
                                             <div class="table-responsive">
                                                 <table class="table table-sm">
                                                     <thead>
@@ -185,20 +192,25 @@ Views.Blocks = {
                                                     </thead>
                                                     <tbody>
                                                         ${response.plots.map(plot => {
-                                                            const occupancy = plot.total_graves > 0 
-                                                                ? Math.round((plot.total_graves - (plot.available_graves || 0)) / plot.total_graves * 100)
+                                                            const total = plot.total_graves || 0;
+                                                            const available = plot.available_graves || 0;
+                                                            const occupancy = total > 0 
+                                                                ? Math.round((total - available) / total * 100)
                                                                 : 0;
                                                             return `
                                                                 <tr>
                                                                     <td>${plot.name}</td>
                                                                     <td>${plot.code || '-'}</td>
                                                                     <td>${plot.rows_count || 0}</td>
-                                                                    <td>${plot.total_graves || 0}</td>
-                                                                    <td>${plot.available_graves || 0}</td>
+                                                                    <td>${total}</td>
+                                                                    <td>${available}</td>
                                                                     <td>
-                                                                        <div class="progress" style="height: 20px;">
-                                                                            <div class="progress-bar" style="width: ${occupancy}%">${occupancy}%</div>
-                                                                        </div>
+                                                                        ${total > 0 ? `
+                                                                            <div class="progress" style="height: 20px;">
+                                                                                <div class="progress-bar ${occupancy > 90 ? 'bg-danger' : occupancy > 70 ? 'bg-warning' : 'bg-success'}" 
+                                                                                     style="width: ${occupancy}%">${occupancy}%</div>
+                                                                            </div>
+                                                                        ` : '-'}
                                                                     </td>
                                                                 </tr>
                                                             `;
