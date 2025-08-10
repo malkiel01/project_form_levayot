@@ -1,6 +1,6 @@
 // form/js/form-fields.js - טיפול בשדות תלויים
 
-$(document).ready(function() {
+$(document).ready(function() { 
     // טיפול בשדות תלויים של מקום קבורה - רק אם לא במצב צפייה
     if (!formConfig.isViewOnly) {
         // בית עלמין → גושים
@@ -15,7 +15,7 @@ $(document).ready(function() {
             $('#grave_id').html('<option value="">בחר קודם אחוזת קבר</option>');
             
             if (cemeteryId) {
-                $.get('../../ajax/get_blocks.php', {cemetery_id: cemeteryId}, function(data) {  // ✅ תוקן הנתיב
+                $.get('../ajax/get_blocks.php', {cemetery_id: cemeteryId}, function(data) {  // ✅ תוקן הנתיב
                     $('#block_id').html(data);
                     // אם יש ערך קיים, בחר אותו
                     if (formData.block_id) {
