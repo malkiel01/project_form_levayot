@@ -84,336 +84,6 @@ try {
         case 'getCemeteries':
             echo json_encode(getCemeteries());
             break;
-case 'getCemeteryDetails':
-    if (!isset($_GET['id'])) {
-        echo json_encode(['success' => false, 'message' => 'מזהה בית עלמין חסר']);
-        exit;
-    }
-    
-    $cemeteryId = intval($_GET['id']);
-    
-    try {
-        // Get cemetery details
-        $stmt = $pdo->prepare("SELECT * FROM cemeteries WHERE id = ?");
-        $stmt->execute([$cemeteryId]);
-        $cemetery = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$cemetery) {
-            echo json_encode(['success' => false, 'message' => 'בית עלמין לא נמצא']);
-            exit;
-        }
-        
-        // Get blocks with stats
-        $stmt = $pdo->prepare("
-            SELECT b.*, 
-                   COUNT(DISTINCT p.id) as plots_count,
-                   COUNT(DISTINCT g.id) as total_graves,
-                   SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves,
-                   SUM(CASE WHEN g.status = 'purchased' THEN 1 ELSE 0 END) as purchased_graves,
-                   SUM(CASE WHEN g.status = 'buried' THEN 1 ELSE 0 END) as buried_graves,
-                   SUM(CASE WHEN g.status = 'reserved' THEN 1 ELSE 0 END) as reserved_graves
-            FROM blocks b
-            LEFT JOIN plots p ON b.id = p.block_id
-            LEFT JOIN rows r ON p.id = r.plot_id
-            LEFT JOIN areaGraves ag ON r.id = ag.row_id
-            LEFT JOIN graves g ON ag.id = g.areaGrave_id
-            WHERE b.cemetery_id = ?
-            GROUP BY b.id
-            ORDER BY b.name
-        ");
-        $stmt->execute([$cemeteryId]);
-        $blocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Get plots with stats
-        $stmt = $pdo->prepare("
-            SELECT p.*, 
-                   b.name as block_name,
-                   COUNT(DISTINCT r.id) as rows_count,
-                   COUNT(DISTINCT g.id) as total_graves,
-                   SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves
-            FROM plots p
-            LEFT JOIN blocks b ON p.block_id = b.id
-            LEFT JOIN rows r ON p.id = r.plot_id
-            LEFT JOIN areaGraves ag ON r.id = ag.row_id
-            LEFT JOIN graves g ON ag.id = g.areaGrave_id
-            WHERE b.cemetery_id = ?
-            GROUP BY p.id
-            ORDER BY b.name, p.name
-        ");
-        $stmt->execute([$cemeteryId]);
-        $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Get total stats for cemetery
-        $stmt = $pdo->prepare("
-            SELECT 
-                COUNT(DISTINCT ag.id) as total_area_graves,
-                COUNT(DISTINCT g.id) as total_graves,
-                SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves,
-                SUM(CASE WHEN g.status = 'purchased' THEN 1 ELSE 0 END) as purchased_graves,
-                SUM(CASE WHEN g.status = 'buried' THEN 1 ELSE 0 END) as buried_graves,
-                SUM(CASE WHEN g.status = 'reserved' THEN 1 ELSE 0 END) as reserved_graves
-            FROM blocks b
-            LEFT JOIN plots p ON b.id = p.block_id
-            LEFT JOIN rows r ON p.id = r.plot_id
-            LEFT JOIN areaGraves ag ON r.id = ag.row_id
-            LEFT JOIN graves g ON ag.id = g.areaGrave_id
-            WHERE b.cemetery_id = ?
-        ");
-        $stmt->execute([$cemeteryId]);
-        $stats = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        echo json_encode([
-            'success' => true,
-            'cemetery' => $cemetery,
-            'blocks' => $blocks,
-            'plots' => $plots,
-            'stats' => $stats
-        ]);
-        
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי בית עלמין']);
-    }
-    break;
-
-case 'getBlockDetails':
-    if (!isset($_GET['id'])) {
-        echo json_encode(['success' => false, 'message' => 'מזהה גוש חסר']);
-        exit;
-    }
-    
-    $blockId = intval($_GET['id']);
-    
-    try {
-        // Get block with cemetery info
-        $stmt = $pdo->prepare("
-            SELECT b.*, c.name as cemetery_name 
-            FROM blocks b
-            LEFT JOIN cemeteries c ON b.cemetery_id = c.id
-            WHERE b.id = ?
-        ");
-        $stmt->execute([$blockId]);
-        $block = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$block) {
-            echo json_encode(['success' => false, 'message' => 'גוש לא נמצא']);
-            exit;
-        }
-        
-        // Get plots in this block
-        $stmt = $pdo->prepare("
-            SELECT p.*,
-                   COUNT(DISTINCT r.id) as rows_count,
-                   COUNT(DISTINCT g.id) as total_graves,
-                   SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves
-            FROM plots p
-            LEFT JOIN rows r ON p.id = r.plot_id
-            LEFT JOIN areaGraves ag ON r.id = ag.row_id
-            LEFT JOIN graves g ON ag.id = g.areaGrave_id
-            WHERE p.block_id = ?
-            GROUP BY p.id
-            ORDER BY p.name
-        ");
-        $stmt->execute([$blockId]);
-        $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Get stats
-        $stmt = $pdo->prepare("
-            SELECT 
-                COUNT(DISTINCT ag.id) as total_area_graves,
-                COUNT(DISTINCT g.id) as total_graves,
-                SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves,
-                SUM(CASE WHEN g.status = 'purchased' THEN 1 ELSE 0 END) as purchased_graves,
-                SUM(CASE WHEN g.status = 'buried' THEN 1 ELSE 0 END) as buried_graves,
-                SUM(CASE WHEN g.status = 'reserved' THEN 1 ELSE 0 END) as reserved_graves
-            FROM plots p
-            LEFT JOIN rows r ON p.id = r.plot_id
-            LEFT JOIN areaGraves ag ON r.id = ag.row_id
-            LEFT JOIN graves g ON ag.id = g.areaGrave_id
-            WHERE p.block_id = ?
-        ");
-        $stmt->execute([$blockId]);
-        $stats = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        echo json_encode([
-            'success' => true,
-            'block' => $block,
-            'plots' => $plots,
-            'stats' => $stats
-        ]);
-        
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי גוש']);
-    }
-    break;
-
-case 'getPlotDetails':
-    if (!isset($_GET['id'])) {
-        echo json_encode(['success' => false, 'message' => 'מזהה חלקה חסר']);
-        exit;
-    }
-    
-    $plotId = intval($_GET['id']);
-    
-    try {
-        // Get plot with block and cemetery info
-        $stmt = $pdo->prepare("
-            SELECT p.*, 
-                   b.name as block_name,
-                   c.name as cemetery_name
-            FROM plots p
-            LEFT JOIN blocks b ON p.block_id = b.id
-            LEFT JOIN cemeteries c ON b.cemetery_id = c.id
-            WHERE p.id = ?
-        ");
-        $stmt->execute([$plotId]);
-        $plot = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$plot) {
-            echo json_encode(['success' => false, 'message' => 'חלקה לא נמצאה']);
-            exit;
-        }
-        
-        // Get rows with area graves
-        $stmt = $pdo->prepare("
-            SELECT r.*,
-                   COUNT(DISTINCT ag.id) as area_graves_count,
-                   COUNT(DISTINCT g.id) as total_graves,
-                   SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves
-            FROM rows r
-            LEFT JOIN areaGraves ag ON r.id = ag.row_id
-            LEFT JOIN graves g ON ag.id = g.areaGrave_id
-            WHERE r.plot_id = ?
-            GROUP BY r.id
-            ORDER BY r.name
-        ");
-        $stmt->execute([$plotId]);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Get area graves in this plot
-        $stmt = $pdo->prepare("
-            SELECT ag.*,
-                   r.name as row_name,
-                   COUNT(g.id) as graves_count,
-                   SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_count
-            FROM areaGraves ag
-            LEFT JOIN rows r ON ag.row_id = r.id
-            LEFT JOIN graves g ON ag.id = g.areaGrave_id
-            WHERE r.plot_id = ?
-            GROUP BY ag.id
-            ORDER BY r.name, ag.name
-        ");
-        $stmt->execute([$plotId]);
-        $areaGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        echo json_encode([
-            'success' => true,
-            'plot' => $plot,
-            'rows' => $rows,
-            'areaGraves' => $areaGraves
-        ]);
-        
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי חלקה']);
-    }
-    break;
-
-case 'getAreaGraveDetails':
-    if (!isset($_GET['id'])) {
-        echo json_encode(['success' => false, 'message' => 'מזהה אחוזת קבר חסר']);
-        exit;
-    }
-    
-    $areaGraveId = intval($_GET['id']);
-    
-    try {
-        // Get area grave with full hierarchy
-        $stmt = $pdo->prepare("
-            SELECT ag.*,
-                   r.name as row_name,
-                   p.name as plot_name,
-                   b.name as block_name,
-                   c.name as cemetery_name
-            FROM areaGraves ag
-            LEFT JOIN rows r ON ag.row_id = r.id
-            LEFT JOIN plots p ON r.plot_id = p.id
-            LEFT JOIN blocks b ON p.block_id = b.id
-            LEFT JOIN cemeteries c ON b.cemetery_id = c.id
-            WHERE ag.id = ?
-        ");
-        $stmt->execute([$areaGraveId]);
-        $areaGrave = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$areaGrave) {
-            echo json_encode(['success' => false, 'message' => 'אחוזת קבר לא נמצאה']);
-            exit;
-        }
-        
-        // Get graves in this area
-        $stmt = $pdo->prepare("
-            SELECT * FROM graves 
-            WHERE areaGrave_id = ?
-            ORDER BY grave_number, name
-        ");
-        $stmt->execute([$areaGraveId]);
-        $graves = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        echo json_encode([
-            'success' => true,
-            'areaGrave' => $areaGrave,
-            'graves' => $graves
-        ]);
-        
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי אחוזת קבר']);
-    }
-    break;
-
-case 'getGraveDetails':
-    if (!isset($_GET['id'])) {
-        echo json_encode(['success' => false, 'message' => 'מזהה קבר חסר']);
-        exit;
-    }
-    
-    $graveId = intval($_GET['id']);
-    
-    try {
-        // Get grave with full hierarchy
-        $stmt = $pdo->prepare("
-            SELECT g.*,
-                   ag.name as area_grave_name,
-                   r.name as row_name,
-                   p.name as plot_name,
-                   b.name as block_name,
-                   c.name as cemetery_name,
-                   df.deceased_name,
-                   df.death_date,
-                   df.burial_date
-            FROM graves g
-            LEFT JOIN areaGraves ag ON g.areaGrave_id = ag.id
-            LEFT JOIN rows r ON ag.row_id = r.id
-            LEFT JOIN plots p ON r.plot_id = p.id
-            LEFT JOIN blocks b ON p.block_id = b.id
-            LEFT JOIN cemeteries c ON b.cemetery_id = c.id
-            LEFT JOIN deceased_forms df ON g.id = df.grave_id AND df.status = 'completed'
-            WHERE g.id = ?
-        ");
-        $stmt->execute([$graveId]);
-        $grave = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$grave) {
-            echo json_encode(['success' => false, 'message' => 'קבר לא נמצא']);
-            exit;
-        }
-        
-        echo json_encode([
-            'success' => true,
-            'grave' => $grave
-        ]);
-        
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי קבר']);
-    }
-    break;
         case 'getBlocks':
             echo json_encode(getBlocks());
             break;
@@ -431,9 +101,436 @@ case 'getGraveDetails':
             break;
             
         case 'getGraves':
-            echo json_encode(getGraves());
-            break;
+                echo json_encode(getGraves());
+                break;   
+        case 'getCemeteryDetails':
+            if (!isset($_GET['id'])) {
+                echo json_encode(['success' => false, 'message' => 'מזהה בית עלמין חסר']);
+                exit;
+            }
             
+            $cemeteryId = intval($_GET['id']);
+            
+            try {
+                // Get cemetery details
+                $stmt = $pdo->prepare("SELECT * FROM cemeteries WHERE id = ?");
+                $stmt->execute([$cemeteryId]);
+                $cemetery = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$cemetery) {
+                    echo json_encode(['success' => false, 'message' => 'בית עלמין לא נמצא']);
+                    exit;
+                }
+                
+                // Get blocks with stats - בדוק אם יש טבלת status בכלל
+                $stmt = $pdo->prepare("
+                    SELECT b.*, 
+                        COUNT(DISTINCT p.id) as plots_count,
+                        COUNT(DISTINCT g.id) as total_graves,
+                        SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves,
+                        SUM(CASE WHEN g.is_available = 0 THEN 1 ELSE 0 END) as occupied_graves
+                    FROM blocks b
+                    LEFT JOIN plots p ON b.id = p.block_id
+                    LEFT JOIN rows r ON p.id = r.plot_id
+                    LEFT JOIN areaGraves ag ON r.id = ag.row_id
+                    LEFT JOIN graves g ON ag.id = g.areaGrave_id
+                    WHERE b.cemetery_id = ?
+                    GROUP BY b.id
+                    ORDER BY b.name
+                ");
+                $stmt->execute([$cemeteryId]);
+                $blocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Get plots with stats
+                $stmt = $pdo->prepare("
+                    SELECT p.*, 
+                        b.name as block_name,
+                        COUNT(DISTINCT r.id) as rows_count,
+                        COUNT(DISTINCT g.id) as total_graves,
+                        SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves
+                    FROM plots p
+                    LEFT JOIN blocks b ON p.block_id = b.id
+                    LEFT JOIN rows r ON p.id = r.plot_id
+                    LEFT JOIN areaGraves ag ON r.id = ag.row_id
+                    LEFT JOIN graves g ON ag.id = g.areaGrave_id
+                    WHERE b.cemetery_id = ?
+                    GROUP BY p.id
+                    ORDER BY b.name, p.name
+                ");
+                $stmt->execute([$cemeteryId]);
+                $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Get total stats for cemetery - פשוט יותר
+                $stmt = $pdo->prepare("
+                    SELECT 
+                        COUNT(DISTINCT ag.id) as total_area_graves,
+                        COUNT(DISTINCT g.id) as total_graves,
+                        SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves
+                    FROM blocks b
+                    LEFT JOIN plots p ON b.id = p.block_id
+                    LEFT JOIN rows r ON p.id = r.plot_id
+                    LEFT JOIN areaGraves ag ON r.id = ag.row_id
+                    LEFT JOIN graves g ON ag.id = g.areaGrave_id
+                    WHERE b.cemetery_id = ?
+                ");
+                $stmt->execute([$cemeteryId]);
+                $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                // אם אין נתונים, תן ערכי ברירת מחדל
+                if (!$stats) {
+                    $stats = [
+                        'total_area_graves' => 0,
+                        'total_graves' => 0,
+                        'available_graves' => 0,
+                        'purchased_graves' => 0,
+                        'buried_graves' => 0,
+                        'reserved_graves' => 0
+                    ];
+                }
+                
+                echo json_encode([
+                    'success' => true,
+                    'cemetery' => $cemetery,
+                    'blocks' => $blocks ?: [],
+                    'plots' => $plots ?: [],
+                    'stats' => $stats
+                ]);
+                
+            } catch (PDOException $e) {
+                // לוג השגיאה לצורך דיבוג
+                error_log('Cemetery Details Error: ' . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי בית עלמין: ' . $e->getMessage()]);
+            }
+            break;
+        case 'getCemeteryDetails2':
+            if (!isset($_GET['id'])) {
+                echo json_encode(['success' => false, 'message' => 'מזהה בית עלמין חסר']);
+                exit;
+            }
+            
+            $cemeteryId = intval($_GET['id']);
+            
+            try {
+                // Get cemetery details
+                $stmt = $pdo->prepare("SELECT * FROM cemeteries WHERE id = ?");
+                $stmt->execute([$cemeteryId]);
+                $cemetery = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$cemetery) {
+                    echo json_encode(['success' => false, 'message' => 'בית עלמין לא נמצא']);
+                    exit;
+                }
+                
+                // Get blocks with stats
+                $stmt = $pdo->prepare("
+                    SELECT b.*, 
+                        COUNT(DISTINCT p.id) as plots_count,
+                        COUNT(DISTINCT g.id) as total_graves,
+                        SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves,
+                        SUM(CASE WHEN g.status = 'purchased' THEN 1 ELSE 0 END) as purchased_graves,
+                        SUM(CASE WHEN g.status = 'buried' THEN 1 ELSE 0 END) as buried_graves,
+                        SUM(CASE WHEN g.status = 'reserved' THEN 1 ELSE 0 END) as reserved_graves
+                    FROM blocks b
+                    LEFT JOIN plots p ON b.id = p.block_id
+                    LEFT JOIN rows r ON p.id = r.plot_id
+                    LEFT JOIN areaGraves ag ON r.id = ag.row_id
+                    LEFT JOIN graves g ON ag.id = g.areaGrave_id
+                    WHERE b.cemetery_id = ?
+                    GROUP BY b.id
+                    ORDER BY b.name
+                ");
+                $stmt->execute([$cemeteryId]);
+                $blocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Get plots with stats
+                $stmt = $pdo->prepare("
+                    SELECT p.*, 
+                        b.name as block_name,
+                        COUNT(DISTINCT r.id) as rows_count,
+                        COUNT(DISTINCT g.id) as total_graves,
+                        SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves
+                    FROM plots p
+                    LEFT JOIN blocks b ON p.block_id = b.id
+                    LEFT JOIN rows r ON p.id = r.plot_id
+                    LEFT JOIN areaGraves ag ON r.id = ag.row_id
+                    LEFT JOIN graves g ON ag.id = g.areaGrave_id
+                    WHERE b.cemetery_id = ?
+                    GROUP BY p.id
+                    ORDER BY b.name, p.name
+                ");
+                $stmt->execute([$cemeteryId]);
+                $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Get total stats for cemetery
+                $stmt = $pdo->prepare("
+                    SELECT 
+                        COUNT(DISTINCT ag.id) as total_area_graves,
+                        COUNT(DISTINCT g.id) as total_graves,
+                        SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves,
+                        SUM(CASE WHEN g.status = 'purchased' THEN 1 ELSE 0 END) as purchased_graves,
+                        SUM(CASE WHEN g.status = 'buried' THEN 1 ELSE 0 END) as buried_graves,
+                        SUM(CASE WHEN g.status = 'reserved' THEN 1 ELSE 0 END) as reserved_graves
+                    FROM blocks b
+                    LEFT JOIN plots p ON b.id = p.block_id
+                    LEFT JOIN rows r ON p.id = r.plot_id
+                    LEFT JOIN areaGraves ag ON r.id = ag.row_id
+                    LEFT JOIN graves g ON ag.id = g.areaGrave_id
+                    WHERE b.cemetery_id = ?
+                ");
+                $stmt->execute([$cemeteryId]);
+                $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                echo json_encode([
+                    'success' => true,
+                    'cemetery' => $cemetery,
+                    'blocks' => $blocks,
+                    'plots' => $plots,
+                    'stats' => $stats
+                ]);
+                
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי בית עלמין']);
+            }
+            break;
+        case 'getBlockDetails':
+            if (!isset($_GET['id'])) {
+                echo json_encode(['success' => false, 'message' => 'מזהה גוש חסר']);
+                exit;
+            }
+            
+            $blockId = intval($_GET['id']);
+            
+            try {
+                // Get block with cemetery info
+                $stmt = $pdo->prepare("
+                    SELECT b.*, c.name as cemetery_name 
+                    FROM blocks b
+                    LEFT JOIN cemeteries c ON b.cemetery_id = c.id
+                    WHERE b.id = ?
+                ");
+                $stmt->execute([$blockId]);
+                $block = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$block) {
+                    echo json_encode(['success' => false, 'message' => 'גוש לא נמצא']);
+                    exit;
+                }
+                
+                // Get plots in this block
+                $stmt = $pdo->prepare("
+                    SELECT p.*,
+                        COUNT(DISTINCT r.id) as rows_count,
+                        COUNT(DISTINCT g.id) as total_graves,
+                        SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves
+                    FROM plots p
+                    LEFT JOIN rows r ON p.id = r.plot_id
+                    LEFT JOIN areaGraves ag ON r.id = ag.row_id
+                    LEFT JOIN graves g ON ag.id = g.areaGrave_id
+                    WHERE p.block_id = ?
+                    GROUP BY p.id
+                    ORDER BY p.name
+                ");
+                $stmt->execute([$blockId]);
+                $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Get stats
+                $stmt = $pdo->prepare("
+                    SELECT 
+                        COUNT(DISTINCT ag.id) as total_area_graves,
+                        COUNT(DISTINCT g.id) as total_graves,
+                        SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves,
+                        SUM(CASE WHEN g.status = 'purchased' THEN 1 ELSE 0 END) as purchased_graves,
+                        SUM(CASE WHEN g.status = 'buried' THEN 1 ELSE 0 END) as buried_graves,
+                        SUM(CASE WHEN g.status = 'reserved' THEN 1 ELSE 0 END) as reserved_graves
+                    FROM plots p
+                    LEFT JOIN rows r ON p.id = r.plot_id
+                    LEFT JOIN areaGraves ag ON r.id = ag.row_id
+                    LEFT JOIN graves g ON ag.id = g.areaGrave_id
+                    WHERE p.block_id = ?
+                ");
+                $stmt->execute([$blockId]);
+                $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                echo json_encode([
+                    'success' => true,
+                    'block' => $block,
+                    'plots' => $plots,
+                    'stats' => $stats
+                ]);
+                
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי גוש']);
+            }
+            break;
+
+        case 'getPlotDetails':
+            if (!isset($_GET['id'])) {
+                echo json_encode(['success' => false, 'message' => 'מזהה חלקה חסר']);
+                exit;
+            }
+            
+            $plotId = intval($_GET['id']);
+            
+            try {
+                // Get plot with block and cemetery info
+                $stmt = $pdo->prepare("
+                    SELECT p.*, 
+                        b.name as block_name,
+                        c.name as cemetery_name
+                    FROM plots p
+                    LEFT JOIN blocks b ON p.block_id = b.id
+                    LEFT JOIN cemeteries c ON b.cemetery_id = c.id
+                    WHERE p.id = ?
+                ");
+                $stmt->execute([$plotId]);
+                $plot = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$plot) {
+                    echo json_encode(['success' => false, 'message' => 'חלקה לא נמצאה']);
+                    exit;
+                }
+                
+                // Get rows with area graves
+                $stmt = $pdo->prepare("
+                    SELECT r.*,
+                        COUNT(DISTINCT ag.id) as area_graves_count,
+                        COUNT(DISTINCT g.id) as total_graves,
+                        SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_graves
+                    FROM rows r
+                    LEFT JOIN areaGraves ag ON r.id = ag.row_id
+                    LEFT JOIN graves g ON ag.id = g.areaGrave_id
+                    WHERE r.plot_id = ?
+                    GROUP BY r.id
+                    ORDER BY r.name
+                ");
+                $stmt->execute([$plotId]);
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Get area graves in this plot
+                $stmt = $pdo->prepare("
+                    SELECT ag.*,
+                        r.name as row_name,
+                        COUNT(g.id) as graves_count,
+                        SUM(CASE WHEN g.is_available = 1 THEN 1 ELSE 0 END) as available_count
+                    FROM areaGraves ag
+                    LEFT JOIN rows r ON ag.row_id = r.id
+                    LEFT JOIN graves g ON ag.id = g.areaGrave_id
+                    WHERE r.plot_id = ?
+                    GROUP BY ag.id
+                    ORDER BY r.name, ag.name
+                ");
+                $stmt->execute([$plotId]);
+                $areaGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                echo json_encode([
+                    'success' => true,
+                    'plot' => $plot,
+                    'rows' => $rows,
+                    'areaGraves' => $areaGraves
+                ]);
+                
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי חלקה']);
+            }
+            break;
+
+        case 'getAreaGraveDetails':
+            if (!isset($_GET['id'])) {
+                echo json_encode(['success' => false, 'message' => 'מזהה אחוזת קבר חסר']);
+                exit;
+            }
+            
+            $areaGraveId = intval($_GET['id']);
+            
+            try {
+                // Get area grave with full hierarchy
+                $stmt = $pdo->prepare("
+                    SELECT ag.*,
+                        r.name as row_name,
+                        p.name as plot_name,
+                        b.name as block_name,
+                        c.name as cemetery_name
+                    FROM areaGraves ag
+                    LEFT JOIN rows r ON ag.row_id = r.id
+                    LEFT JOIN plots p ON r.plot_id = p.id
+                    LEFT JOIN blocks b ON p.block_id = b.id
+                    LEFT JOIN cemeteries c ON b.cemetery_id = c.id
+                    WHERE ag.id = ?
+                ");
+                $stmt->execute([$areaGraveId]);
+                $areaGrave = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$areaGrave) {
+                    echo json_encode(['success' => false, 'message' => 'אחוזת קבר לא נמצאה']);
+                    exit;
+                }
+                
+                // Get graves in this area
+                $stmt = $pdo->prepare("
+                    SELECT * FROM graves 
+                    WHERE areaGrave_id = ?
+                    ORDER BY grave_number, name
+                ");
+                $stmt->execute([$areaGraveId]);
+                $graves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                echo json_encode([
+                    'success' => true,
+                    'areaGrave' => $areaGrave,
+                    'graves' => $graves
+                ]);
+                
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי אחוזת קבר']);
+            }
+            break;
+
+        case 'getGraveDetails':
+            if (!isset($_GET['id'])) {
+                echo json_encode(['success' => false, 'message' => 'מזהה קבר חסר']);
+                exit;
+            }
+            
+            $graveId = intval($_GET['id']);
+            
+            try {
+                // Get grave with full hierarchy
+                $stmt = $pdo->prepare("
+                    SELECT g.*,
+                        ag.name as area_grave_name,
+                        r.name as row_name,
+                        p.name as plot_name,
+                        b.name as block_name,
+                        c.name as cemetery_name,
+                        df.deceased_name,
+                        df.death_date,
+                        df.burial_date
+                    FROM graves g
+                    LEFT JOIN areaGraves ag ON g.areaGrave_id = ag.id
+                    LEFT JOIN rows r ON ag.row_id = r.id
+                    LEFT JOIN plots p ON r.plot_id = p.id
+                    LEFT JOIN blocks b ON p.block_id = b.id
+                    LEFT JOIN cemeteries c ON b.cemetery_id = c.id
+                    LEFT JOIN deceased_forms df ON g.id = df.grave_id AND df.status = 'completed'
+                    WHERE g.id = ?
+                ");
+                $stmt->execute([$graveId]);
+                $grave = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$grave) {
+                    echo json_encode(['success' => false, 'message' => 'קבר לא נמצא']);
+                    exit;
+                }
+                
+                echo json_encode([
+                    'success' => true,
+                    'grave' => $grave
+                ]);
+                
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'שגיאה בקבלת פרטי קבר']);
+            }
+            break;
         case 'getItem':
             $type = $_GET['type'] ?? '';
             $id = $_GET['id'] ?? 0;
