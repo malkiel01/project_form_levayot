@@ -1,10 +1,19 @@
 <?php
 // api/create-tables.php - יצירת טבלאות למערכת בתי עלמין
+ob_start();
 require_once '../../config.php';
+ob_end_clean();
 
 // בדיקת הרשאות - רק מנהלים
 if (!isset($_SESSION['user_id']) || $_SESSION['permission_level'] < 4) {
     die('אין הרשאה');
+}
+
+// קבל חיבור למסד נתונים
+if (function_exists('getDbConnection')) {
+    $pdo = getDbConnection();
+} elseif (!isset($pdo)) {
+    die('אין חיבור למסד נתונים');
 }
 
 $queries = [
@@ -91,42 +100,71 @@ $queries = [
         CONSTRAINT `graves_areagrave_fk` FOREIGN KEY (`areaGrave_id`) REFERENCES `areaGraves` (`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
 ];
-
-echo "<h2>יצירת טבלאות למערכת בתי עלמין</h2>";
-
-$success = true;
-foreach ($queries as $query) {
-    try {
-        $pdo->exec($query);
-        // נמצא את שם הטבלה מהשאילתה
-        preg_match('/CREATE TABLE IF NOT EXISTS `(\w+)`/', $query, $matches);
-        $tableName = $matches[1] ?? 'unknown';
-        echo "<p style='color: green;'>✓ טבלה $tableName נוצרה בהצלחה</p>";
-    } catch (PDOException $e) {
-        $success = false;
-        echo "<p style='color: red;'>✗ שגיאה ביצירת טבלה: " . $e->getMessage() . "</p>";
-    }
-}
-
-if ($success) {
-    echo "<h3 style='color: green;'>כל הטבלאות נוצרו בהצלחה!</h3>";
-    
-    // הוסף נתוני דוגמה
-    try {
-        $stmt = $pdo->query("SELECT COUNT(*) FROM cemeteries");
-        if ($stmt->fetchColumn() == 0) {
-            echo "<h3>הוספת נתוני דוגמה...</h3>";
-            
-            // הוסף בית עלמין לדוגמה
-            $pdo->exec("INSERT INTO cemeteries (name, code) VALUES ('בית עלמין ראשי', 'MAIN')");
-            echo "<p style='color: blue;'>נוסף בית עלמין לדוגמה</p>";
-        }
-    } catch (PDOException $e) {
-        echo "<p style='color: orange;'>לא ניתן להוסיף נתוני דוגמה: " . $e->getMessage() . "</p>";
-    }
-}
-
-echo "<hr>";
-echo "<p><a href='test.php'>בדיקת חיבור</a></p>";
-echo "<p><a href='../'>חזרה לממשק</a></p>";
 ?>
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>יצירת טבלאות</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h2>יצירת טבלאות למערכת בתי עלמין</h2>
+    
+    <?php
+    $success = true;
+    foreach ($queries as $query) {
+        try {
+            $pdo->exec($query);
+            // נמצא את שם הטבלה מהשאילתה
+            preg_match('/CREATE TABLE IF NOT EXISTS `(\w+)`/', $query, $matches);
+            $tableName = $matches[1] ?? 'unknown';
+            echo "<p class='success'>✓ טבלה $tableName נוצרה/קיימת</p>";
+        } catch (PDOException $e) {
+            $success = false;
+            echo "<p class='error'>✗ שגיאה ביצירת טבלה: " . $e->getMessage() . "</p>";
+        }
+    }
+    
+    if ($success) {
+        echo "<h3 class='success'>כל הטבלאות מוכנות!</h3>";
+        
+        // הוסף נתוני דוגמה
+        try {
+            $stmt = $pdo->query("SELECT COUNT(*) FROM cemeteries");
+            if ($stmt->fetchColumn() == 0) {
+                echo "<h3>הוספת נתוני דוגמה...</h3>";
+                
+                // הוסף בית עלמין לדוגמה
+                $pdo->exec("INSERT INTO cemeteries (name, code) VALUES ('בית עלמין ראשי', 'MAIN')");
+                $cemeteryId = $pdo->lastInsertId();
+                echo "<p class='info'>✓ נוסף בית עלמין לדוגמה</p>";
+                
+                // הוסף גוש לדוגמה
+                $pdo->exec("INSERT INTO blocks (cemetery_id, name, code) VALUES ($cemeteryId, 'גוש א', 'A')");
+                $blockId = $pdo->lastInsertId();
+                echo "<p class='info'>✓ נוסף גוש לדוגמה</p>";
+                
+                // הוסף חלקה לדוגמה
+                $pdo->exec("INSERT INTO plots (block_id, name, code) VALUES ($blockId, 'חלקה 1', 'A1')");
+                echo "<p class='info'>✓ נוספה חלקה לדוגמה</p>";
+            }
+        } catch (PDOException $e) {
+            echo "<p class='error'>לא ניתן להוסיף נתוני דוגמה: " . $e->getMessage() . "</p>";
+        }
+    }
+    ?>
+    
+    <hr>
+    <h3>קישורים:</h3>
+    <ul>
+        <li><a href="test.php">בדיקת חיבור</a></li>
+        <li><a href="../">חזרה לממשק</a></li>
+    </ul>
+</body>
+</html>

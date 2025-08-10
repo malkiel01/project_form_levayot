@@ -1,30 +1,49 @@
 <?php
 // api/cemetery-api.php
-error_reporting(E_ALL);
-ini_set('display_errors', 0); // אל תציג שגיאות ישירות
-ini_set('log_errors', 1);
+// אל תשלח שום פלט לפני טעינת הקונפיג
+ob_start();
 
 // נסה לטעון את הקונפיג
 $configPath = __DIR__ . '/../../config.php';
 if (!file_exists($configPath)) {
+    ob_end_clean();
     http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
     die(json_encode(['error' => 'קובץ הגדרות לא נמצא']));
 }
 
 require_once $configPath;
+ob_end_clean();
 
-// וודא שיש חיבור למסד נתונים
-if (!isset($pdo)) {
-    http_response_code(500);
-    die(json_encode(['error' => 'אין חיבור למסד נתונים']));
-}
-
+// כעת אפשר לשלוח headers
 header('Content-Type: application/json; charset=utf-8');
 
 // בדיקת הרשאות בסיסית
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
     die(json_encode(['error' => 'לא מחובר למערכת']));
+}
+
+// קבל חיבור למסד נתונים
+try {
+    if (function_exists('getDbConnection')) {
+        $pdo = getDbConnection();
+    } elseif (!isset($pdo) && defined('DB_HOST') && defined('DB_NAME')) {
+        // נסה להתחבר ישירות
+        $pdo = new PDO(
+            "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
+            DB_USER,
+            DB_PASS,
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        );
+    }
+    
+    if (!isset($pdo)) {
+        throw new Exception('אין חיבור למסד נתונים');
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    die(json_encode(['error' => 'שגיאה בחיבור למסד נתונים']));
 }
 
 // בדיקה האם המשתמש הוא מנהל או יש לו הרשאה ספציפית
