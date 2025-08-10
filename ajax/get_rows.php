@@ -1,7 +1,7 @@
 <?php
 // ajax/get_rows.php - קבלת רשימת שורות
-require_once '../../config.php';
-require_once '../../DeceasedForm.php';
+require_once '../config.php';
+require_once '../DeceasedForm.php';
 
 $plotId = $_GET['plot_id'] ?? 0;  // ✅ כבר נכון, רק וודא שכך
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;

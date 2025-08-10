@@ -1,7 +1,7 @@
 <?php
 // ajax/get_graves.php - קבלת רשימת קברים
-require_once '../../config.php';
-require_once '../../DeceasedForm.php';
+require_once '../config.php';
+require_once '../DeceasedForm.php';
 
 $areaGraveId = $_GET['area_grave_id'] ?? 0;  // ✅ תוקן מ-row_id ל-area_grave_id
 $userPermissionLevel = $_SESSION['permission_level'] ?? 1;
