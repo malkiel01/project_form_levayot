@@ -66,7 +66,7 @@ $sql = "
     FROM deceased_forms df
     LEFT JOIN cemeteries c ON df.cemetery_id = c.id
     LEFT JOIN blocks b ON df.block_id = b.id
-    LEFT JOIN sections s ON df.section_id = s.id
+    LEFT JOIN plots p ON df.plot_id = p.id
     LEFT JOIN users u ON df.created_by = u.id
     $whereClause
     ORDER BY df.created_at DESC
@@ -102,13 +102,13 @@ function exportDeceasedList() {
             df.burial_date as 'תאריך קבורה',
             c.name as 'בית עלמין',
             b.name as 'גוש',
-            s.name as 'חלקה',
+            p.name as 'חלקה',
             df.status as 'סטטוס',
             df.created_at as 'תאריך יצירה'
         FROM deceased_forms df
         LEFT JOIN cemeteries c ON df.cemetery_id = c.id
         LEFT JOIN blocks b ON df.block_id = b.id
-        LEFT JOIN sections s ON df.section_id = s.id
+        LEFT JOIN plots p ON df.plot_id = p.id
         $whereClause
         ORDER BY df.created_at DESC
     ";

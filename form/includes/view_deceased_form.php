@@ -33,17 +33,17 @@ if ($formData['cemetery_id']) {
         SELECT 
             c.name as cemetery_name,
             b.name as block_name,
-            s.name as section_name,
+            p.name as plot_name,
             r.name as row_name,
-            g.name as grave_name,
-            p.name as plot_name
+            ag.name as areaGrave_name,
+            g.name as grave_name
         FROM deceased_forms df
         LEFT JOIN cemeteries c ON df.cemetery_id = c.id
         LEFT JOIN blocks b ON df.block_id = b.id
-        LEFT JOIN sections s ON df.section_id = s.id
-        LEFT JOIN rows r ON df.row_id = r.id
-        LEFT JOIN graves g ON df.grave_id = g.id
         LEFT JOIN plots p ON df.plot_id = p.id
+        LEFT JOIN rows r ON df.row_id = r.id
+        LEFT JOIN areaGraves ag ON df.areaGrave_id = ag.id
+        LEFT JOIN graves g ON df.grave_id = g.id
         WHERE df.form_uuid = ?
     ");
     $stmt->execute([$formUuid]);
@@ -256,24 +256,18 @@ if ($formData['cemetery_id']) {
                     </div>
                     <?php endif; ?>
                     
-                    <?php if ($locationDetails['block_name'] || $locationDetails['section_name'] || $locationDetails['row_name'] || $locationDetails['grave_name']): ?>
+                    <?php if ($locationDetails['block_name'] || $locationDetails['plot_name'] || $locationDetails['row_name'] || $locationDetails['areaGrave_name'] || $locationDetails['grave_name']): ?>
                     <div class="info-row">
                         <span class="info-label">מיקום:</span>
                         <?php
                         $location = [];
                         if ($locationDetails['block_name']) $location[] = "גוש: " . $locationDetails['block_name'];
-                        if ($locationDetails['section_name']) $location[] = "חלקה: " . $locationDetails['section_name'];
+                        if ($locationDetails['plot_name']) $location[] = "חלקה: " . $locationDetails['plot_name'];
                         if ($locationDetails['row_name']) $location[] = "שורה: " . $locationDetails['row_name'];
+                        if ($locationDetails['areaGrave_name']) $location[] = "אחוזת קבר: " . $locationDetails['areaGrave_name'];
                         if ($locationDetails['grave_name']) $location[] = "קבר: " . $locationDetails['grave_name'];
                         echo implode(', ', $location);
                         ?>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <?php if ($locationDetails['plot_name']): ?>
-                    <div class="info-row">
-                        <span class="info-label">אחוזת קבר:</span>
-                        <?= htmlspecialchars($locationDetails['plot_name']) ?>
                     </div>
                     <?php endif; ?>
                 </div>

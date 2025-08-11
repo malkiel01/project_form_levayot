@@ -33,17 +33,17 @@ if ($formData['cemetery_id']) {
         SELECT 
             c.name as cemetery_name,
             b.name as block_name,
-            s.name as section_name,
+            p.name as plot_name,
             r.name as row_name,
-            g.name as grave_name,
-            p.name as plot_name
+            ag.name as areaGrave_name,
+            g.name as grave_name
         FROM purchase_forms pf
         LEFT JOIN cemeteries c ON pf.cemetery_id = c.id
         LEFT JOIN blocks b ON pf.block_id = b.id
-        LEFT JOIN sections s ON pf.section_id = s.id
-        LEFT JOIN rows r ON pf.row_id = r.id
-        LEFT JOIN graves g ON pf.grave_id = g.id
         LEFT JOIN plots p ON pf.plot_id = p.id
+        LEFT JOIN rows r ON pf.row_id = r.id
+        LEFT JOIN areaGraves ag ON pf.areaGrave_id = ag.id
+        LEFT JOIN graves g ON pf.grave_id = g.id
         WHERE pf.form_uuid = ?
     ");
     $stmt->execute([$formUuid]);

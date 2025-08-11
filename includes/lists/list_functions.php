@@ -149,9 +149,9 @@ function buildWhereClause2($filters, &$params) {
         $conditions[] = "block_id = ?";
         $params[] = $filters['block_id'];
     }
-    if (!empty($filters['section_id'])) {
-        $conditions[] = "section_id = ?";
-        $params[] = $filters['section_id'];
+    if (!empty($filters['plot_id'])) {
+        $conditions[] = "plot_id = ?";
+        $params[] = $filters['plot_id'];
     }
     
     // סטטוס
@@ -216,9 +216,9 @@ function buildWhereClause($filters, &$params, $tableAlias = 'df') {
         $conditions[] = "{$tableAlias}.block_id = ?";
         $params[] = $filters['block_id'];
     }
-    if (!empty($filters['section_id'])) {
-        $conditions[] = "{$tableAlias}.section_id = ?";
-        $params[] = $filters['section_id'];
+    if (!empty($filters['plot_id'])) {
+        $conditions[] = "{$tableAlias}.plot_id = ?";
+        $params[] = $filters['plot_id'];
     }
     
     // סטטוס - הוסף את alias הטבלה

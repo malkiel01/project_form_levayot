@@ -147,10 +147,10 @@ if (isset($_SESSION['purchase_form_saved_message'])) {
             // פרטי החלקה
             'cemetery_id': 'בית עלמין',
             'block_id': 'גוש',
-            'section_id': 'חלקה',
+            'plot_id': 'חלקה',
             'row_id': 'שורה',
+            'areaGrave_id': 'אחוזת קבר',
             'grave_id': 'קבר',
-            'plot_id': 'חלקת קבר',
             
             // פרטי תשלום
             'payment_method': 'אמצעי תשלום',

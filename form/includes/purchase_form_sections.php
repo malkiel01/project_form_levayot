@@ -226,9 +226,9 @@ function renderPlotSection($formData, $form, $cemeteries, $blocks, $sections, $r
             </div>
             
             <div class="form-group">
-                <label for="section_id">חלקה</label>
-                <select id="section_id" 
-                        name="section_id" 
+                <label for="plot_id">חלקה</label>
+                <select id="plot_id" 
+                        name="plot_id" 
                         class="form-control"
                         <?= $viewOnly ? 'disabled' : '' ?>
                         <?= empty($formData['block_id']) ? 'disabled' : '' ?>>
@@ -236,7 +236,7 @@ function renderPlotSection($formData, $form, $cemeteries, $blocks, $sections, $r
                     <?php if (!empty($sections)): ?>
                         <?php foreach ($sections as $section): ?>
                             <option value="<?= $section['id'] ?>" 
-                                    <?= ($formData['section_id'] ?? '') == $section['id'] ? 'selected' : '' ?>>
+                                    <?= ($formData['plot_id'] ?? '') == $section['id'] ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($section['name']) ?>
                             </option>
                         <?php endforeach; ?>
@@ -250,7 +250,7 @@ function renderPlotSection($formData, $form, $cemeteries, $blocks, $sections, $r
                         name="row_id" 
                         class="form-control"
                         <?= $viewOnly ? 'disabled' : '' ?>
-                        <?= empty($formData['section_id']) ? 'disabled' : '' ?>>
+                        <?= empty($formData['plot_id']) ? 'disabled' : '' ?>>
                     <option value="">בחר שורה</option>
                     <?php if (!empty($rows)): ?>
                         <?php foreach ($rows as $row): ?>
@@ -264,18 +264,18 @@ function renderPlotSection($formData, $form, $cemeteries, $blocks, $sections, $r
             </div>
             
             <div class="form-group">
-                <label for="grave_id">קבר</label>
-                <select id="grave_id" 
-                        name="grave_id" 
+                <label for="areaGrave_id">אחוזת קבר</label>
+                <select id="areaGrave_id" 
+                        name="areaGrave_id" 
                         class="form-control"
                         <?= $viewOnly ? 'disabled' : '' ?>
                         <?= empty($formData['row_id']) ? 'disabled' : '' ?>>
-                    <option value="">בחר קבר</option>
-                    <?php if (!empty($graves)): ?>
-                        <?php foreach ($graves as $grave): ?>
+                    <option value="">בחר אחוזת קבר</option>
+                    <?php if (!empty($areaGraves)): ?>
+                        <?php foreach ($areaGraves as $areaGrave): ?>
                             <option value="<?= $grave['id'] ?>" 
-                                    <?= ($formData['grave_id'] ?? '') == $grave['id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($grave['grave_number']) ?>
+                                    <?= ($formData['areaGrave_id'] ?? '') == $areaGrave['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($areaGrave['areaGrave_number']) ?>
                             </option>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -283,19 +283,19 @@ function renderPlotSection($formData, $form, $cemeteries, $blocks, $sections, $r
             </div>
             
             <div class="form-group">
-                <label for="plot_id">חלקת קבר</label>
-                <select id="plot_id" 
-                        name="plot_id" 
+                <label for="grave_id">חלקת קבר</label>
+                <select id="grave_id" 
+                        name="grave_id" 
                         class="form-control"
                         <?= $viewOnly ? 'disabled' : '' ?>
                         <?= empty($formData['grave_id']) ? 'disabled' : '' ?>>
                     <option value="">בחר חלקת קבר</option>
-                    <?php if (!empty($plots)): ?>
-                        <?php foreach ($plots as $plot): ?>
+                    <?php if (!empty($graves)): ?>
+                        <?php foreach ($graves as $grave): ?>
                             <option value="<?= $plot['id'] ?>" 
-                                    <?= ($formData['plot_id'] ?? '') == $plot['id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($plot['plot_number']) ?> 
-                                (<?= $plot['status'] == 'available' ? 'פנוי' : 'תפוס' ?>)
+                                    <?= ($formData['grave_id'] ?? '') == $grave['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($grave['grave_number']) ?> 
+                                (<?= $grave['status'] == 'available' ? 'פנוי' : 'תפוס' ?>)
                             </option>
                         <?php endforeach; ?>
                     <?php endif; ?>

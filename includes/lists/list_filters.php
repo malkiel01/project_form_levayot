@@ -102,7 +102,7 @@ function renderListFilters($listType, $currentFilters = [], $savedPreferences = 
                 <!-- גוש -->
                 <div class="col-md-2">
                     <label class="form-label">גוש</label>
-                    <select class="form-select" name="block_id" id="blockSelect" onchange="loadSections()">
+                    <select class="form-select" name="block_id" id="blockSelect" onchange="loadPlots()">
                         <option value="">כל הגושים</option>
                     </select>
                 </div>
@@ -110,7 +110,7 @@ function renderListFilters($listType, $currentFilters = [], $savedPreferences = 
                 <!-- חלקה -->
                 <div class="col-md-2">
                     <label class="form-label">חלקה</label>
-                    <select class="form-select" name="section_id" id="sectionSelect">
+                    <select class="form-select" name="plot_id" id="sectionSelect">
                         <option value="">כל החלקות</option>
                     </select>
                 </div>
@@ -195,7 +195,7 @@ function renderListFilters($listType, $currentFilters = [], $savedPreferences = 
             });
     }
     
-    function loadSections() {
+    function loadPlots() {
         const blockId = document.getElementById('blockSelect').value;
         if (!blockId) {
             document.getElementById('sectionSelect').innerHTML = '<option value="">כל החלקות</option>';
@@ -287,10 +287,10 @@ function renderListFilters($listType, $currentFilters = [], $savedPreferences = 
             <?php if (!empty($currentFilters['block_id'])): ?>
                 setTimeout(() => {
                     document.getElementById('blockSelect').value = '<?= $currentFilters['block_id'] ?>';
-                    loadSections();
-                    <?php if (!empty($currentFilters['section_id'])): ?>
+                    loadPlots();
+                    <?php if (!empty($currentFilters['plot_id'])): ?>
                         setTimeout(() => {
-                            document.getElementById('sectionSelect').value = '<?= $currentFilters['section_id'] ?>';
+                            document.getElementById('sectionSelect').value = '<?= $currentFilters['plot_id'] ?>';
                         }, 300);
                     <?php endif; ?>
                 }, 300);

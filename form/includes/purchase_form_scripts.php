@@ -46,10 +46,10 @@ function renderPurchaseFormScripts() {
         
         $('#block_id').on('change', function() {
             const blockId = $(this).val();
-            loadSections(blockId);
+            loadPlots(blockId);
         });
         
-        $('#section_id').on('change', function() {
+        $('#plot_id').on('change', function() {
             const sectionId = $(this).val();
             loadRows(sectionId);
         });
@@ -59,9 +59,9 @@ function renderPurchaseFormScripts() {
             loadGraves(rowId);
         });
         
-        $('#grave_id').on('change', function() {
-            const graveId = $(this).val();
-            loadPlots(graveId);
+        $('#areaGrave_id').on('change', function() {
+            const areaGraveId = $(this).val();
+            loadAreaGraves(areaGraveId);
         });
         
         // טיפול בחישובי תשלומים
@@ -298,9 +298,9 @@ function renderPurchaseFormScripts() {
         });
     }
     
-    function loadSections(blockId) {
+    function loadPlots(blockId) {
         if (!blockId) {
-            $('#section_id').html('<option value="">בחר חלקה</option>').prop('disabled', true).trigger('change');
+            $('#plot_id').html('<option value="">בחר חלקה</option>').prop('disabled', true).trigger('change');
             return;
         }
         
@@ -348,9 +348,9 @@ function renderPurchaseFormScripts() {
         });
     }
     
-    function loadGraves(rowId) {
+    function loadAreaGraves(rowId) {
         if (!rowId) {
-            $('#grave_id').html('<option value="">בחר קבר</option>').prop('disabled', true).trigger('change');
+            $('#areaGrave_id').html('<option value="">בחר אחוזת קבר</option>').prop('disabled', true).trigger('change');
             return;
         }
         
@@ -358,24 +358,24 @@ function renderPurchaseFormScripts() {
         $.ajax({
             url: '../api/get_locations.php',
             method: 'GET',
-            data: { action: 'get_graves', row_id: rowId },
+            data: { action: 'get_areaGraves', row_id: rowId },
             success: function(response) {
-                let options = '<option value="">בחר קבר</option>';
+                let options = '<option value="">בחר אחוזת קבר</option>';
                 response.forEach(grave => {
-                    options += `<option value="${grave.id}">${grave.grave_number}</option>`;
+                    options += `<option value="${areaGrave.id}">${areaGrave.areaGrave_number}</option>`;
                 });
-                $('#grave_id').html(options).prop('disabled', false).trigger('change');
+                $('#areaGrave_id').html(options).prop('disabled', false).trigger('change');
             },
             error: function() {
-                Swal.fire('שגיאה', 'לא ניתן לטעון את רשימת הקברים', 'error');
+                Swal.fire('שגיאה', 'לא ניתן לטעון את רשימת אחוזות הקברים', 'error');
             },
             complete: hideLoading
         });
     }
     
-    function loadPlots(graveId) {
+    function loadGraves(graveId) {
         if (!graveId) {
-            $('#plot_id').html('<option value="">בחר חלקת קבר</option>').prop('disabled', true);
+            $('#grave_id').html('<option value="">בחר קבר</option>').prop('disabled', true);
             return;
         }
         
@@ -383,15 +383,15 @@ function renderPurchaseFormScripts() {
         $.ajax({
             url: '../api/get_locations.php',
             method: 'GET',
-            data: { action: 'get_plots', grave_id: graveId },
+            data: { action: 'get_graves', grave_id: graveId },
             success: function(response) {
-                let options = '<option value="">בחר חלקת קבר</option>';
-                response.forEach(plot => {
-                    const status = plot.status === 'available' ? 'פנוי' : 'תפוס';
-                    const disabled = plot.status !== 'available' ? 'disabled' : '';
-                    options += `<option value="${plot.id}" ${disabled}>${plot.plot_number} (${status})</option>`;
+                let options = '<option value="">בחר קבר</option>';
+                response.forEach(grave => {
+                    const status = grave.status === 'available' ? 'פנוי' : 'תפוס';
+                    const disabled = grave.status !== 'available' ? 'disabled' : '';
+                    options += `<option value="${grave.id}" ${disabled}>${grave.grave_number} (${status})</option>`;
                 });
-                $('#plot_id').html(options).prop('disabled', false);
+                $('#grave_id').html(options).prop('disabled', false);
             },
             error: function() {
                 Swal.fire('שגיאה', 'לא ניתן לטעון את רשימת החלקות', 'error');
