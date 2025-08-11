@@ -61,12 +61,18 @@ $sql = "
         df.*,
         c.name as cemetery_name,
         b.name as block_name,
-        s.name as section_name,
+        p.name as plot_name,
+        r.name as row_name,
+        ag.name as areaGrave_name,
+        g.name as grave_name,
         u.full_name as created_by_name
     FROM deceased_forms df
     LEFT JOIN cemeteries c ON df.cemetery_id = c.id
     LEFT JOIN blocks b ON df.block_id = b.id
     LEFT JOIN plots p ON df.plot_id = p.id
+    LEFT JOIN rows r ON df.row_id = r.id
+    LEFT JOIN areaGraves ag ON df.areaGrave_id = ag.id
+    LEFT JOIN graves g ON df.grave_id = g.id
     LEFT JOIN users u ON df.created_by = u.id
     $whereClause
     ORDER BY df.created_at DESC
@@ -103,12 +109,18 @@ function exportDeceasedList() {
             c.name as 'בית עלמין',
             b.name as 'גוש',
             p.name as 'חלקה',
+            r.name as 'שורה',
+            ag.name as 'אחוזת קבר',
+            g.name as 'קבר',
             df.status as 'סטטוס',
             df.created_at as 'תאריך יצירה'
         FROM deceased_forms df
         LEFT JOIN cemeteries c ON df.cemetery_id = c.id
         LEFT JOIN blocks b ON df.block_id = b.id
         LEFT JOIN plots p ON df.plot_id = p.id
+        LEFT JOIN rows r ON df.row_id = r.id
+        LEFT JOIN areaGraves ag ON df.areaGrave_id = ag.id
+        LEFT JOIN graves g ON df.grave_id = g.id
         $whereClause
         ORDER BY df.created_at DESC
     ";
@@ -221,8 +233,9 @@ function exportDeceasedList() {
                                     <td>
                                         <?php 
                                         $location = [];
-                                        if ($row['block_name']) $location[] = $row['block_name'];
-                                        if ($row['section_name']) $location[] = $row['section_name'];
+                                        if ($row['block_name']) $location[] = "גוש: " . $row['block_name'];
+                                        if ($row['plot_name']) $location[] = "חלקה: " . $row['plot_name'];
+                                        if ($row['row_name']) $location[] = "שורה: " . $row['row_name'];
                                         echo $location ? implode(' / ', $location) : '-';
                                         ?>
                                     </td>
