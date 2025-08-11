@@ -248,7 +248,7 @@ function exportDeceasedList() {
                                     <td><?= date('d/m/Y H:i', strtotime($row['created_at'])) ?></td>
                                     <td onclick="event.stopPropagation()">
                                         <div class="btn-group btn-group-sm">
-                                            <a href="../../view_deceased_form.php?id=<?= $row['form_uuid'] ?>" 
+                                            <a href="./view_deceased_form.php?id=<?= $row['form_uuid'] ?>" 
                                                class="btn btn-info" title="צפייה">
                                                 <i class="fas fa-eye"></i>
                                             </a>
