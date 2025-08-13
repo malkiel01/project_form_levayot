@@ -2,16 +2,19 @@
 // DeceasedForm.php - מחלקת ניהול טופס נפטרים
 
 require_once 'config.php';
+require_once 'classes/GraveStatusManager.php';  // ⬅️ הוסף את השורה הזו
 
 class DeceasedForm {
     private $db;
     private $formId;
     private $formData;
     private $userPermissionLevel;
+    private $graveManager;  // ⬅️ הוסף את השורה הזו
     
     public function __construct($formId = null, $userPermissionLevel = 1) {
         $this->db = getDbConnection();
         $this->userPermissionLevel = $userPermissionLevel;
+        $this->graveManager = new GraveStatusManager($this->db);  // ⬅️ הוסף את השורה הזו
         
         if ($formId) {
             $this->loadForm($formId);
@@ -75,6 +78,14 @@ class DeceasedForm {
                 unset($data[$field]);
             }
         }
+
+        // בדיקת זמינות קבר לפני יצירה
+        if (!empty($data['grave_id'])) {
+            if (!$this->canUseGrave($data['grave_id'])) {
+                $status = $this->checkGraveStatus($data['grave_id']);
+                throw new Exception("לא ניתן להשתמש בקבר זה - " . $status['reason']);
+            }
+        }
         
         // בניית שאילתת INSERT
         $fields = [];
@@ -131,6 +142,12 @@ class DeceasedForm {
             
             error_log("Form created successfully - UUID: " . $data['form_uuid'] . ", ID: " . $this->formId . ", Status: " . $data['status']);
             
+            // ⬇️ הוסף את זה אחרי ה-INSERT המוצלח (בערך שורה 125)
+            // עדכון סטטוס הקבר אחרי יצירה מוצלחת
+            if (!empty($data['grave_id'])) {
+                $this->updateGraveStatusAfterSave($data['grave_id']);
+            }
+
             return $data['form_uuid'];
         } catch (PDOException $e) {
             error_log("Error creating form: " . $e->getMessage());
@@ -180,6 +197,19 @@ class DeceasedForm {
             'row_id', 'areaGrave_id', 'grave_id', 'informant_name', 'informant_phone',
             'informant_relationship', 'notes', 'client_signature', 'updated_by'
         ];
+
+        // ⬇️ הוסף את הבדיקה הזו לפני בניית ה-SQL (בערך שורה 175)
+        // בדיקת זמינות קבר לפני עדכון
+        if (!empty($data['grave_id'])) {
+            // בדוק רק אם הקבר השתנה
+            $oldGraveId = $this->formData['grave_id'] ?? null;
+            if ($data['grave_id'] != $oldGraveId) {
+                if (!$this->canUseGrave($data['grave_id'])) {
+                    $status = $this->checkGraveStatus($data['grave_id']);
+                    throw new Exception("לא ניתן להשתמש בקבר זה - " . $status['reason']);
+                }
+            }
+        }
         
         // בניית שאילתת UPDATE
         $fields = [];
@@ -204,6 +234,18 @@ class DeceasedForm {
             
             $stmt = $this->db->prepare($sql);
             $result = $stmt->execute($values);
+        
+            // ⬇️ הוסף את זה אחרי ה-UPDATE המוצלח (בערך שורה 210)
+            // עדכון סטטוס הקבר החדש
+            if (!empty($data['grave_id'])) {
+                $this->updateGraveStatusAfterSave($data['grave_id']);
+            }
+            
+            // עדכון סטטוס הקבר הישן (אם השתנה)
+            $oldGraveId = $this->formData['grave_id'] ?? null;
+            if ($oldGraveId && $oldGraveId != ($data['grave_id'] ?? null)) {
+                $this->updateGraveStatusAfterSave($oldGraveId);
+            }
             
             // רישום בלוג
             $logStmt = $this->db->prepare("
@@ -224,6 +266,54 @@ class DeceasedForm {
             throw new Exception("שגיאה בעדכון הטופס: " . $e->getMessage());
         }
     }
+
+
+    // 8080808080808080808080808080808080808080808080808
+    
+    // הוסף את המתודות האלה בתוך המחלקה DeceasedForm
+
+    /**
+     * בדיקת סטטוס קבר
+     */
+    public function checkGraveStatus($graveId) {
+        if (!$graveId) return null;
+        return $this->graveManager->getGraveStatus($graveId);
+    }
+
+    /**
+     * בדיקה האם ניתן להשתמש בקבר
+     */
+    public function canUseGrave($graveId) {
+        if (!$graveId) return true;
+        
+        $status = $this->graveManager->getGraveStatus($graveId);
+        
+        // אם הקבר תפוס ואין מדובר בטופס הנוכחי
+        if ($status['status'] == 'occupied') {
+            // בדוק אם זה אותו טופס
+            if ($this->formId && $this->formData && 
+                isset($this->formData['grave_id']) && 
+                $this->formData['grave_id'] == $graveId) {
+                return true; // אותו טופס יכול לערוך את עצמו
+            }
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * עדכון סטטוס קבר אחרי שמירה
+     */
+    private function updateGraveStatusAfterSave($graveId) {
+        if ($graveId) {
+            $this->graveManager->updateGraveStatus($graveId);
+        }
+    }
+
+    // 8080808080808080808080808080808080808080808080808
+
+
 
     /**
      * קבלת סטטיסטיקות על קישור
