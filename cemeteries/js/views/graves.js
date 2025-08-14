@@ -670,7 +670,7 @@ Views.Graves = {
     
     // עדכון הפונקציה showDetails ב-graves.js
 
-    async showDetails(graveId) {
+    async showDetailsDont2(graveId) {
         try {
             this.showLoading();
             
@@ -972,6 +972,322 @@ Views.Graves = {
             this.hideLoading();
         }
     },
+
+    // תיקון הפונקציה showDetails ב-graves.js
+
+async showDetails(graveId) {
+    try {
+        this.showLoading();
+        
+        // טען את הקבר מהרשימה הקיימת
+        const graveFromList = this.gravesData ? 
+            this.gravesData.find(g => g.id == graveId) : null;
+        
+        // טען פרטי קבר מלאים מה-API
+        const response = await $.ajax({
+            url: 'api/check_grave_status.php',
+            method: 'GET',
+            data: { 
+                action: 'get_full_status',
+                grave_id: graveId 
+            }
+        });
+        
+        if (!response.success) {
+            throw new Error(response.error || 'Failed to load grave details');
+        }
+        
+        const data = response.data;
+        const grave = data.grave;
+        
+        // קבע סטטוס וצבע - השתמש בנתונים מהרשימה אם יש
+        let statusInfo = {
+            text: 'פנוי',
+            class: 'success',
+            icon: 'fa-check-circle'
+        };
+        
+        // העדף את הסטטוס מהרשימה אם קיים
+        const actualStatus = graveFromList ? graveFromList.grave_status : 
+                           (grave.grave_status || 'available');
+        
+        switch(actualStatus) {
+            case 'occupied':
+                statusInfo = {
+                    text: 'תפוס',
+                    class: 'danger',
+                    icon: 'fa-times-circle'
+                };
+                break;
+            case 'in_process':
+                statusInfo = {
+                    text: 'קבורה בהליך',
+                    class: 'info',
+                    icon: 'fa-clock'
+                };
+                break;
+            case 'reserved':
+                statusInfo = {
+                    text: 'שמור',
+                    class: 'warning',
+                    icon: 'fa-lock'
+                };
+                break;
+            default:
+                statusInfo = {
+                    text: 'פנוי',
+                    class: 'success',
+                    icon: 'fa-check-circle'
+                };
+        }
+        
+        // בנה HTML לתצוגה
+        let detailsHtml = `
+            <div class="grave-details-container">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <div class="alert alert-${statusInfo.class} d-flex align-items-center">
+                            <i class="fas ${statusInfo.icon} me-2"></i>
+                            <strong>סטטוס הקבר: ${statusInfo.text}</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-map-marker-alt"></i> פרטי מיקום</h5>
+                        <table class="table table-striped">
+                            <tbody>
+                                <tr>
+                                    <td><strong>בית עלמין:</strong></td>
+                                    <td>${grave.cemetery_name || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>גוש:</strong></td>
+                                    <td>${grave.block_name || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>חלקה:</strong></td>
+                                    <td>${grave.plot_name || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>שורה:</strong></td>
+                                    <td>${grave.row_name || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>אחוזת קבר:</strong></td>
+                                    <td>${grave.areaGrave_name || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>שם הקבר:</strong></td>
+                                    <td><strong>${grave.name || '-'}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>מספר קבר:</strong></td>
+                                    <td>${grave.grave_number || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>קוד:</strong></td>
+                                    <td>${grave.code || '-'}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+        `;
+        
+        // הצג פרטי קבורה אם הסטטוס הוא תפוס או בהליך
+        if (actualStatus === 'occupied' || actualStatus === 'in_process') {
+            // קודם נסה להציג מהנתונים שכבר יש
+            if (graveFromList && (graveFromList.deceased_first_name || graveFromList.deceased_last_name)) {
+                detailsHtml += `
+                    <h5><i class="fas fa-cross"></i> פרטי קבורה</h5>
+                    <table class="table table-striped">
+                        <tbody>`;
+                
+                if (graveFromList.burial_form_id) {
+                    detailsHtml += `
+                        <tr>
+                            <td><strong>מספר טופס:</strong></td>
+                            <td>
+                                <a href="../form/index_deceased.php?id=${graveFromList.burial_form_id}" 
+                                   target="_blank" class="text-primary">
+                                    ${graveFromList.burial_form_id.substring(0, 8)}...
+                                    <i class="fas fa-external-link-alt ms-1"></i>
+                                </a>
+                            </td>
+                        </tr>`;
+                }
+                
+                detailsHtml += `
+                    <tr>
+                        <td><strong>שם הנפטר:</strong></td>
+                        <td>${graveFromList.deceased_first_name || ''} ${graveFromList.deceased_last_name || ''}</td>
+                    </tr>`;
+                
+                if (graveFromList.burial_date) {
+                    detailsHtml += `
+                        <tr>
+                            <td><strong>תאריך קבורה:</strong></td>
+                            <td>${graveFromList.burial_date}</td>
+                        </tr>`;
+                }
+                
+                if (graveFromList.burial_status) {
+                    detailsHtml += `
+                        <tr>
+                            <td><strong>סטטוס טופס:</strong></td>
+                            <td>${this.getStatusBadge(graveFromList.burial_status)}</td>
+                        </tr>`;
+                }
+                
+                detailsHtml += `
+                        </tbody>
+                    </table>`;
+            } else {
+                // אם אין נתונים ברשימה, נסה לטעון מה-API
+                try {
+                    const burialResponse = await $.ajax({
+                        url: 'api/check_grave_status.php',
+                        method: 'GET',
+                        data: { 
+                            action: 'check_burial',
+                            grave_id: graveId 
+                        }
+                    });
+                    
+                    if (burialResponse.success && burialResponse.data) {
+                        const burial = burialResponse.data;
+                        detailsHtml += `
+                            <h5><i class="fas fa-cross"></i> פרטי קבורה</h5>
+                            <table class="table table-striped">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>מספר טופס:</strong></td>
+                                        <td>
+                                            <a href="../form/index_deceased.php?id=${burial.form_uuid}" 
+                                               target="_blank" class="text-primary">
+                                                ${burial.form_uuid.substring(0, 8)}...
+                                                <i class="fas fa-external-link-alt ms-1"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>שם הנפטר:</strong></td>
+                                        <td>${burial.deceased_name || '-'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>תאריך פטירה:</strong></td>
+                                        <td>${burial.death_date || '-'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>תאריך קבורה:</strong></td>
+                                        <td>${burial.burial_date || '-'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>סטטוס טופס:</strong></td>
+                                        <td>${this.getStatusBadge(burial.status)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        `;
+                    }
+                } catch(e) {
+                    console.error('Error loading burial data:', e);
+                }
+            }
+        }
+        
+        // הצג פרטי רכישה אם יש
+        if (actualStatus === 'reserved') {
+            try {
+                const purchaseResponse = await $.ajax({
+                    url: 'api/check_grave_status.php',
+                    method: 'GET',
+                    data: { 
+                        action: 'check_purchase',
+                        grave_id: graveId 
+                    }
+                });
+                
+                if (purchaseResponse.success && purchaseResponse.data) {
+                    const purchase = purchaseResponse.data;
+                    detailsHtml += `
+                        <h5><i class="fas fa-shopping-cart"></i> פרטי רכישה</h5>
+                        <table class="table table-striped">
+                            <tbody>
+                                <tr>
+                                    <td><strong>מספר טופס:</strong></td>
+                                    <td>${purchase.form_uuid || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>שם הרוכש:</strong></td>
+                                    <td>${purchase.buyer_name || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>תאריך רכישה:</strong></td>
+                                    <td>${purchase.purchase_date || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>סטטוס טופס:</strong></td>
+                                    <td>${this.getStatusBadge(purchase.status)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `;
+                }
+            } catch(e) {
+                console.error('Error loading purchase data:', e);
+            }
+        }
+        
+        // אם הקבר פנוי
+        if (actualStatus === 'available') {
+            detailsHtml += `
+                <h5><i class="fas fa-plus-circle"></i> פעולות זמינות</h5>
+                <div class="alert alert-info">
+                    <p>קבר זה פנוי וזמין לרכישה או קבורה.</p>
+                    <div class="mt-3">
+                        <a href="../form/index_purchase.php?grave_id=${graveId}" 
+                           class="btn btn-primary" target="_blank">
+                            <i class="fas fa-shopping-cart"></i> יצירת טופס רכישה
+                        </a>
+                        <a href="../form/index_deceased.php?grave_id=${graveId}" 
+                           class="btn btn-secondary ms-2" target="_blank">
+                            <i class="fas fa-cross"></i> יצירת טופס קבורה
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        detailsHtml += `
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // הצג במודל
+        Swal.fire({
+            title: `פרטי קבר: ${grave.name || 'קבר ' + grave.grave_number}`,
+            html: detailsHtml,
+            width: '900px',
+            showCloseButton: true,
+            showCancelButton: false,
+            confirmButtonText: 'סגור',
+            customClass: {
+                popup: 'rtl-popup'
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error loading grave details:', error);
+        this.showError(error.message || 'שגיאה בטעינת פרטי הקבר');
+    } finally {
+        this.hideLoading();
+    }
+},
 
     // פונקציית עזר לתצוגת סטטוס
     getStatusBadge(status) {
