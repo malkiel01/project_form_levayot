@@ -153,7 +153,7 @@ function renderDeathSection($formData, $form, $requiredFields, $errors = [], $vi
     <?php
 }
 
-function renderCemeterySection2($formData, $form, $cemeteries, $blocks, $plots, $rows, $areaGraves, $graves, $viewOnly = false) {
+function renderCemeterySection($formData, $form, $cemeteries, $blocks, $plots, $rows, $areaGraves, $graves, $viewOnly = false) {
     if (!$form || !$form->canViewField('cemetery_id')) return;
     ?>
     <div class="section-title">מקום הקבורה</div>
@@ -235,7 +235,7 @@ function renderCemeterySection2($formData, $form, $cemeteries, $blocks, $plots, 
            </select>
        </div>
 
-       <!-- graves -->
+       <!-- graves
        <div class="col-md-4">
            <label for="grave_id" class="form-label">קבר</label>
            <select class="form-select" id="grave_id" name="grave_id" 
@@ -248,13 +248,42 @@ function renderCemeterySection2($formData, $form, $cemeteries, $blocks, $plots, 
                    </option>
                <?php endforeach; ?>
            </select>
-       </div>
+       </div> -->
+
+       <!-- קבר - עם תמיכה בערך הנוכחי -->
+        <div class="col-md-4">
+            <label for="grave_id" class="form-label">קבר</label>
+            <select class="form-select" id="grave_id" name="grave_id" 
+                    data-current-value="<?= htmlspecialchars($formData['grave_id'] ?? '') ?>"
+                    <?= (!$form->canEditField('grave_id') || $viewOnly) ? 'disabled' : '' ?>>
+                <option value="">בחר קודם אחוזת קבר</option>
+                <?php 
+                // אם יש קבר נבחר, נציג אותו זמנית עד שייטען מחדש מה-AJAX
+                if (!empty($formData['grave_id']) && !empty($graves)): 
+                    foreach ($graves as $grave):
+                        if ($grave['id'] == $formData['grave_id']):
+                ?>
+                    <option value="<?= $grave['id'] ?>" selected>
+                        <?= htmlspecialchars($grave['name'] ?: 'קבר ' . $grave['grave_number']) ?> (טוען...)
+                    </option>
+                <?php 
+                        endif;
+                    endforeach;
+                elseif (!empty($formData['grave_id'])): 
+                    // אם יש ID אבל אין נתונים, הצג את ה-ID זמנית
+                ?>
+                    <option value="<?= $formData['grave_id'] ?>" selected>
+                        קבר נוכחי (טוען...)
+                    </option>
+                <?php endif; ?>
+            </select>
+        </div>
    </div>
     <?php
 }
 
 // עדכן את החלק של שדה הקבר:
-function renderCemeterySection($formData, $form, $cemeteries, $blocks, $plots, $rows, $areaGraves, $graves, $viewOnly) {
+function renderCemeterySectionDont($formData, $form, $cemeteries, $blocks, $plots, $rows, $areaGraves, $graves, $viewOnly) {
     ?>
     <div class="card">
         <div class="card-header">
