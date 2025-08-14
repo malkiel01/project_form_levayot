@@ -153,7 +153,7 @@ function renderDeathSection($formData, $form, $requiredFields, $errors = [], $vi
     <?php
 }
 
-function renderCemeterySection($formData, $form, $cemeteries, $blocks, $plots, $rows, $areaGraves, $graves, $viewOnly = false) {
+function renderCemeterySection2($formData, $form, $cemeteries, $blocks, $plots, $rows, $areaGraves, $graves, $viewOnly = false) {
     if (!$form || !$form->canViewField('cemetery_id')) return;
     ?>
     <div class="section-title">מקום הקבורה</div>
@@ -250,6 +250,118 @@ function renderCemeterySection($formData, $form, $cemeteries, $blocks, $plots, $
            </select>
        </div>
    </div>
+    <?php
+}
+
+// עדכן את החלק של שדה הקבר:
+function renderCemeterySection($formData, $form, $cemeteries, $blocks, $plots, $rows, $areaGraves, $graves, $viewOnly) {
+    ?>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-map-marker-alt me-2"></i>
+                מיקום הקבורה
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <!-- בית עלמין -->
+                <div class="col-md-4">
+                    <label for="cemetery_id" class="form-label">בית עלמין</label>
+                    <select class="form-select" id="cemetery_id" name="cemetery_id" <?= $viewOnly ? 'disabled' : '' ?>>
+                        <option value="">בחר בית עלמין</option>
+                        <?php foreach ($cemeteries as $cemetery): ?>
+                            <option value="<?= $cemetery['id'] ?>" 
+                                <?= ($formData['cemetery_id'] ?? '') == $cemetery['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cemetery['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <!-- גוש -->
+                <div class="col-md-2">
+                    <label for="block_id" class="form-label">גוש</label>
+                    <select class="form-select" id="block_id" name="block_id" <?= $viewOnly ? 'disabled' : '' ?>>
+                        <option value="">בחר גוש</option>
+                        <?php if (!empty($blocks)): ?>
+                            <?php foreach ($blocks as $block): ?>
+                                <option value="<?= $block['id'] ?>" 
+                                    <?= ($formData['block_id'] ?? '') == $block['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($block['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                
+                <!-- חלקה -->
+                <div class="col-md-2">
+                    <label for="plot_id" class="form-label">חלקה</label>
+                    <select class="form-select" id="plot_id" name="plot_id" <?= $viewOnly ? 'disabled' : '' ?>>
+                        <option value="">בחר חלקה</option>
+                        <?php if (!empty($plots)): ?>
+                            <?php foreach ($plots as $plot): ?>
+                                <option value="<?= $plot['id'] ?>" 
+                                    <?= ($formData['plot_id'] ?? '') == $plot['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($plot['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                
+                <!-- שורה -->
+                <div class="col-md-2">
+                    <label for="row_id" class="form-label">שורה</label>
+                    <select class="form-select" id="row_id" name="row_id" <?= $viewOnly ? 'disabled' : '' ?>>
+                        <option value="">בחר שורה</option>
+                        <?php if (!empty($rows)): ?>
+                            <?php foreach ($rows as $row): ?>
+                                <option value="<?= $row['id'] ?>" 
+                                    <?= ($formData['row_id'] ?? '') == $row['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($row['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                
+                <!-- אחוזת קבר -->
+                <div class="col-md-2">
+                    <label for="areaGrave_id" class="form-label">אחוזת קבר</label>
+                    <select class="form-select" id="areaGrave_id" name="areaGrave_id" <?= $viewOnly ? 'disabled' : '' ?>>
+                        <option value="">בחר אחוזת קבר</option>
+                        <?php if (!empty($areaGraves)): ?>
+                            <?php foreach ($areaGraves as $areaGrave): ?>
+                                <option value="<?= $areaGrave['id'] ?>" 
+                                    <?= ($formData['areaGrave_id'] ?? '') == $areaGrave['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($areaGrave['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                
+                <!-- קבר - עם תמיכה בערך הנוכחי -->
+                <div class="col-md-2">
+                    <label for="grave_id" class="form-label">קבר</label>
+                    <select class="form-select" id="grave_id" name="grave_id" 
+                            data-current-value="<?= htmlspecialchars($formData['grave_id'] ?? '') ?>"
+                            data-form-uuid="<?= htmlspecialchars($formData['form_uuid'] ?? '') ?>"
+                            <?= $viewOnly ? 'disabled' : '' ?>>
+                        <option value="">בחר קבר</option>
+                        <?php if (!empty($formData['grave_id'])): ?>
+                            <!-- אם יש ערך קיים, הצג אותו זמנית -->
+                            <option value="<?= $formData['grave_id'] ?>" selected>
+                                קבר נוכחי
+                            </option>
+                        <?php endif; ?>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
     <?php
 }
 
