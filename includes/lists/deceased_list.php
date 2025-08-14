@@ -252,8 +252,8 @@ function exportDeceasedList() {
                                                class="btn btn-info" title="צפייה">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="../../form/?id=<?= $row['form_uuid'] ?>" 
-                                               class="btn btn-warning" title="עריכה">
+                                            <a href="../../form/index_deceased.php?id=<?= $row['form_uuid'] ?>" 
+                                                class="btn btn-warning" title="עריכה">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <?php if ($userPermissionLevel >= 4 || $row['created_by'] == $userId): ?>
