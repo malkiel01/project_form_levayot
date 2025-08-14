@@ -248,7 +248,7 @@ Views.Graves = {
         return labels[status] || status;
     },
 
-    getActionButtons(grave) {
+    getActionButtonsDont(grave) {
         // אם הקבר תפוס או בתהליך, הצג קישור לטופס
         let buttons = '';
         
@@ -277,6 +277,70 @@ Views.Graves = {
         // כפתורי עריכה/מחיקה רק לקברים פנויים
         if (grave.grave_status === 'available' && window.Utils && Utils.createActionButtons) {
             buttons += Utils.createActionButtons('grave', grave.id, true);
+        }
+        
+        return buttons;
+    },
+
+    getActionButtons(grave) {
+        let buttons = '';
+        
+        // אם הקבר תפוס או בתהליך, הצג קישור לטופס
+        if (grave.burial_form_id && grave.grave_status !== 'available') {
+            buttons += `
+                <a href="../form/index_deceased.php?id=${grave.burial_form_id}" 
+                class="btn btn-sm btn-primary" 
+                target="_blank"
+                title="צפה בטופס לוויה">
+                    <i class="fas fa-file-alt"></i>
+                </a>
+            `;
+        }
+        
+        if (grave.purchase_form_id && grave.grave_status === 'reserved') {
+            buttons += `
+                <a href="../form/index_purchase.php?id=${grave.purchase_form_id}" 
+                class="btn btn-sm btn-warning" 
+                target="_blank"
+                title="צפה בטופס רכישה">
+                    <i class="fas fa-shopping-cart"></i>
+                </a>
+            `;
+        }
+        
+        // כפתורי עריכה/מחיקה לקברים פנויים או בהליך
+        if (grave.grave_status === 'available' || grave.grave_status === 'in_process') {
+            // כפתור עריכה - תמיד מופיע
+            buttons += `
+                <button class="btn btn-sm btn-warning" 
+                        onclick="App.editItem('grave', ${grave.id})"
+                        title="ערוך קבר">
+                    <i class="fas fa-edit"></i>
+                </button>
+            `;
+            
+            // כפתור מחיקה - רק לקברים פנויים לגמרי
+            if (grave.grave_status === 'available') {
+                buttons += `
+                    <button class="btn btn-sm btn-danger" 
+                            onclick="App.deleteItem('grave', ${grave.id})"
+                            title="מחק קבר">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+            }
+        }
+        
+        // אם אין כפתורים כלל (קבר תפוס לגמרי), הצג לפחות כפתור עריכה מוגבל
+        if (buttons === '' && grave.grave_status === 'occupied') {
+            buttons += `
+                <button class="btn btn-sm btn-secondary" 
+                        onclick="App.editItem('grave', ${grave.id})"
+                        title="ערוך פרטי קבר (מוגבל)"
+                        data-bs-toggle="tooltip">
+                    <i class="fas fa-edit"></i>
+                </button>
+            `;
         }
         
         return buttons;
