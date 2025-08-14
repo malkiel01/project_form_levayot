@@ -140,50 +140,101 @@ $(document).ready(function() {
         //     }
         // });
 
-        $('#areaGrave_id').on('change', function() {
-            const areaGraveId = $(this).val();
+        // $('#areaGrave_id').on('change', function() {
+        //     const areaGraveId = $(this).val();
             
-            // שמור את הערך הנוכחי לפני שמנקים
+        //     // שמור את הערך הנוכחי לפני שמנקים
+        //     const currentGraveId = $('#grave_id').data('current-value') || $('#grave_id').val();
+            
+        //     // נקה שדה קברים
+        //     $('#grave_id').html('<option value="">בחר קודם אחוזת קבר</option>');
+            
+        //     if (areaGraveId) {
+        //         // הכן את הנתונים לשליחה
+        //         const requestData = {
+        //             areaGrave_id: areaGraveId
+        //         };
+                
+        //         // אם זה לא טופס חדש, שלח את ה-UUID של הטופס
+        //         if (!formConfig.isNewForm && formConfig.formUuid) {
+        //             requestData.current_form_uuid = formConfig.formUuid;
+        //             console.log('Sending current form UUID:', formConfig.formUuid);
+        //         }
+                
+        //         $.get('../ajax/get_graves.php', requestData, function(html) {
+        //             $('#grave_id').html(html);
+                    
+        //             // שחזר את ה-data attribute
+        //             $('#grave_id').data('current-value', currentGraveId);
+                    
+        //             // נסה לבחור את הקבר הנוכחי
+        //             if (currentGraveId) {
+        //                 $('#grave_id').val(currentGraveId);
+                        
+        //                 // בדוק אם הבחירה הצליחה
+        //                 if ($('#grave_id').val() == currentGraveId) {
+        //                     console.log('Current grave selected successfully:', currentGraveId);
+        //                 } else {
+        //                     console.log('Current grave not in list - might be occupied by another form');
+        //                 }
+        //             }
+        //         }).fail(function(xhr, status, error) {
+        //             console.error('Failed to load graves:', error);
+        //             $('#grave_id').html('<option value="">שגיאה בטעינת קברים</option>');
+        //         });
+        //     }
+        // });
+
+        $('#areaGrave_id').off('change').on('change', function() {
+            console.log('=== AREAGRAVE CHANGE EVENT ===');
+            const areaGraveId = $(this).val();
+            console.log('areaGraveId:', areaGraveId);
+            
+            // שמור את הערך הנוכחי
             const currentGraveId = $('#grave_id').data('current-value') || $('#grave_id').val();
+            console.log('currentGraveId before clear:', currentGraveId);
             
             // נקה שדה קברים
             $('#grave_id').html('<option value="">בחר קודם אחוזת קבר</option>');
             
             if (areaGraveId) {
-                // הכן את הנתונים לשליחה
                 const requestData = {
                     areaGrave_id: areaGraveId
                 };
                 
-                // אם זה לא טופס חדש, שלח את ה-UUID של הטופס
                 if (!formConfig.isNewForm && formConfig.formUuid) {
                     requestData.current_form_uuid = formConfig.formUuid;
-                    console.log('Sending current form UUID:', formConfig.formUuid);
+                    console.log('Sending form UUID:', formConfig.formUuid);
                 }
                 
-                $.get('../ajax/get_graves.php', requestData, function(html) {
-                    $('#grave_id').html(html);
-                    
-                    // שחזר את ה-data attribute
-                    $('#grave_id').data('current-value', currentGraveId);
-                    
-                    // נסה לבחור את הקבר הנוכחי
-                    if (currentGraveId) {
-                        $('#grave_id').val(currentGraveId);
+                console.log('Request data:', requestData);
+                
+                $.get('../ajax/get_graves.php', requestData)
+                    .done(function(html) {
+                        console.log('Response received, length:', html.length);
+                        console.log('Response HTML:', html);
                         
-                        // בדוק אם הבחירה הצליחה
-                        if ($('#grave_id').val() == currentGraveId) {
-                            console.log('Current grave selected successfully:', currentGraveId);
-                        } else {
-                            console.log('Current grave not in list - might be occupied by another form');
+                        $('#grave_id').html(html);
+                        $('#grave_id').data('current-value', currentGraveId);
+                        
+                        if (currentGraveId) {
+                            $('#grave_id').val(currentGraveId);
+                            console.log('Set grave value to:', currentGraveId);
+                            console.log('Actual value after set:', $('#grave_id').val());
                         }
-                    }
-                }).fail(function(xhr, status, error) {
-                    console.error('Failed to load graves:', error);
-                    $('#grave_id').html('<option value="">שגיאה בטעינת קברים</option>');
-                });
+                    })
+                    .fail(function(xhr, status, error) {
+                        console.error('AJAX Failed!');
+                        console.error('Status:', status);
+                        console.error('Error:', error);
+                        console.error('Response:', xhr.responseText);
+                    });
             }
         });
+
+        // טריגר ידני לבדיקה
+        console.log('Triggering areaGrave change manually...');
+        $('#areaGrave_id').trigger('change');
 
         // בטעינה הראשונית - אם יש אחוזת קבר נבחרת, טען את הקברים
         setTimeout(function() {
