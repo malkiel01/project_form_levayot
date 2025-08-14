@@ -736,7 +736,7 @@ function getGravesDont2() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getGraves() {
+function getGravesDont3() {
     global $pdo;
     
     $stmt = $pdo->query("
@@ -793,6 +793,97 @@ function getGraves() {
         ORDER BY c.name, b.name, p.name, r.name, ag.name, CAST(g.grave_number AS UNSIGNED), g.grave_number
     ");
     
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getGraves() {
+    global $pdo;
+    
+    // קודם בואו נבדוק אם הטבלה purchase_forms קיימת
+    $purchaseTableExists = false;
+    try {
+        $checkTable = $pdo->query("SHOW TABLES LIKE 'purchase_forms'");
+        $purchaseTableExists = $checkTable->rowCount() > 0;
+    } catch (Exception $e) {
+        // הטבלה לא קיימת
+    }
+    
+    // בנה את השאילתה בהתאם
+    if ($purchaseTableExists) {
+        $sql = "
+            SELECT g.*, 
+                   ag.name as area_grave_name,
+                   r.name as row_name,
+                   p.name as plot_name,
+                   b.name as block_name,
+                   c.name as cemetery_name,
+                   -- פרטי הנפטר
+                   df.deceased_first_name,
+                   df.deceased_last_name,
+                   df.form_uuid as burial_form_id,
+                   df.status as burial_status,
+                   df.burial_date,
+                   -- פרטי רכישה (אם הטבלה קיימת)
+                   pf.form_uuid as purchase_form_id,
+                   pf.status as purchase_status,
+                   -- קביעת סטטוס
+                   CASE 
+                       WHEN df.status = 'completed' THEN 'occupied'
+                       WHEN df.status IN ('draft', 'in_progress') THEN 'in_process'
+                       WHEN pf.status IS NOT NULL AND pf.status NOT IN ('cancelled', 'deleted') THEN 'reserved'
+                       ELSE 'available'
+                   END as grave_status
+            FROM graves g
+            LEFT JOIN areaGraves ag ON ag.id = g.areaGrave_id
+            LEFT JOIN rows r ON r.id = ag.row_id
+            LEFT JOIN plots p ON p.id = r.plot_id
+            LEFT JOIN blocks b ON b.id = p.block_id
+            LEFT JOIN cemeteries c ON c.id = b.cemetery_id
+            LEFT JOIN deceased_forms df ON df.grave_id = g.id 
+                AND df.status NOT IN ('cancelled', 'deleted', 'archived')
+            LEFT JOIN purchase_forms pf ON pf.grave_id = g.id 
+                AND pf.status NOT IN ('cancelled', 'deleted')
+            GROUP BY g.id
+            ORDER BY c.name, b.name, p.name, r.name, ag.name, CAST(g.grave_number AS UNSIGNED), g.grave_number
+        ";
+    } else {
+        // אם אין טבלת רכישות, פשוט בדוק קבורות
+        $sql = "
+            SELECT g.*, 
+                   ag.name as area_grave_name,
+                   r.name as row_name,
+                   p.name as plot_name,
+                   b.name as block_name,
+                   c.name as cemetery_name,
+                   -- פרטי הנפטר
+                   df.deceased_first_name,
+                   df.deceased_last_name,
+                   df.form_uuid as burial_form_id,
+                   df.status as burial_status,
+                   df.burial_date,
+                   -- קביעת סטטוס (ללא רכישות)
+                   CASE 
+                       WHEN df.status = 'completed' THEN 'occupied'
+                       WHEN df.status IN ('draft', 'in_progress') THEN 'in_process'
+                       ELSE 'available'
+                   END as grave_status,
+                   NULL as purchase_form_id,
+                   NULL as purchase_status,
+                   NULL as purchaser_name
+            FROM graves g
+            LEFT JOIN areaGraves ag ON ag.id = g.areaGrave_id
+            LEFT JOIN rows r ON r.id = ag.row_id
+            LEFT JOIN plots p ON p.id = r.plot_id
+            LEFT JOIN blocks b ON b.id = p.block_id
+            LEFT JOIN cemeteries c ON c.id = b.cemetery_id
+            LEFT JOIN deceased_forms df ON df.grave_id = g.id 
+                AND df.status NOT IN ('cancelled', 'deleted', 'archived')
+            GROUP BY g.id
+            ORDER BY c.name, b.name, p.name, r.name, ag.name, CAST(g.grave_number AS UNSIGNED), g.grave_number
+        ";
+    }
+    
+    $stmt = $pdo->query($sql);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
