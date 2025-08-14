@@ -362,9 +362,8 @@ if ($formData['cemetery_id']) {
             <div class="row mt-4 no-print">
                 <div class="col-12 text-center">
                     <?php if ($isLoggedIn && $userPermissionLevel > 1): ?>
-                    <a href="<?= FORM_URL ?>?id=<?= $formData['form_uuid'] ?>" class="btn btn-primary">
+                    <a href="<?= SITE_URL ?>/form/index_deceased.php?id=<?= $formData['form_uuid'] ?>" class="btn btn-primary">
                         <i class="fas fa-edit"></i> ערוך טופס
-                        <p><?= FORM_URL ?>?id=</p>
                     </a>
                     <?php endif; ?>
                     <button type="button" class="btn btn-secondary" onclick="window.print()">
