@@ -290,7 +290,7 @@ function showInvalidLink() {
     exit;
 }
 
-function logLinkAccess($linkUuid, $formUuid) {
+function logLinkAccess2($linkUuid, $formUuid) {
     try {
         $db = getDbConnection();
         $stmt = $db->prepare("
@@ -302,16 +302,65 @@ function logLinkAccess($linkUuid, $formUuid) {
         $stmt->execute([$linkUuid]);
         
         // רישום בלוג
+        // $logStmt = $db->prepare("
+        //     INSERT INTO activity_log (user_id, form_uuid, action, details, ip_address) 
+        //     VALUES (?, ?, 'link_access', ?, ?)
+        // ");
+        // $logStmt->execute([
+        //     getSafeUserId(),
+        //     $formUuid,
+        //     json_encode(['link_uuid' => $linkUuid]),
+        //     $_SERVER['REMOTE_ADDR'] ?? ''
+        // ]);
         $logStmt = $db->prepare("
-            INSERT INTO activity_log (user_id, form_uuid, action, details, ip_address) 
+            INSERT INTO activity_log (user_id, form_id, action, details, ip_address) 
             VALUES (?, ?, 'link_access', ?, ?)
         ");
+
+        // ובהמשך, במקום form_uuid:
         $logStmt->execute([
             getSafeUserId(),
-            $formUuid,
+            null,  // או מצא את ה-form_id האמיתי
             json_encode(['link_uuid' => $linkUuid]),
             $_SERVER['REMOTE_ADDR'] ?? ''
         ]);
+    } catch (Exception $e) {
+        error_log("Failed to log link access: " . $e->getMessage());
+    }
+}
+
+// במקום null, מצא את ה-form_id האמיתי:
+function logLinkAccess($linkUuid, $formUuid) {
+    try {
+        $db = getDbConnection();
+        
+        // עדכן את הקישור
+        $stmt = $db->prepare("
+            UPDATE form_links 
+            SET use_count = use_count + 1, 
+                last_used = CURRENT_TIMESTAMP 
+            WHERE link_uuid = ?
+        ");
+        $stmt->execute([$linkUuid]);
+        
+        // מצא את ה-form_id
+        $formIdStmt = $db->prepare("SELECT id FROM deceased_forms WHERE form_uuid = ?");
+        $formIdStmt->execute([$formUuid]);
+        $formId = $formIdStmt->fetchColumn();
+        
+        // רישום בלוג
+        if ($formId) {
+            $logStmt = $db->prepare("
+                INSERT INTO activity_log (user_id, form_id, action, details, ip_address) 
+                VALUES (?, ?, 'link_access', ?, ?)
+            ");
+            $logStmt->execute([
+                getSafeUserId(),
+                $formId,
+                json_encode(['link_uuid' => $linkUuid, 'form_uuid' => $formUuid]),
+                $_SERVER['REMOTE_ADDR'] ?? ''
+            ]);
+        }
     } catch (Exception $e) {
         error_log("Failed to log link access: " . $e->getMessage());
     }
