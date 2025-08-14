@@ -64,7 +64,7 @@ class GraveStatusManager {
             SELECT 
                 df.id,
                 df.form_uuid,
-                df.deceased_name,
+                CONCAT(IFNULL(df.deceased_first_name, ''), ' ', IFNULL(df.deceased_last_name, '')) as deceased_name,
                 df.death_date,
                 df.burial_date,
                 df.status,

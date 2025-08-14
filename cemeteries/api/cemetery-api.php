@@ -446,7 +446,7 @@ try {
                         p.name as plot_name,
                         b.name as block_name,
                         c.name as cemetery_name,
-                        df.deceased_name,
+                        CONCAT(IFNULL(df.deceased_first_name, ''), ' ', IFNULL(df.deceased_last_name, '')) as deceased_name,
                         df.death_date,
                         df.burial_date
                     FROM graves g
