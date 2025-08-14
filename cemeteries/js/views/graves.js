@@ -285,7 +285,7 @@ Views.Graves = {
     getActionButtons(grave) {
         let buttons = '';
         
-        // אם הקבר תפוס או בתהליך, הצג קישור לטופס
+        // קישורים לטפסים אם קיימים
         if (grave.burial_form_id && grave.grave_status !== 'available') {
             buttons += `
                 <a href="../form/index_deceased.php?id=${grave.burial_form_id}" 
@@ -308,37 +308,22 @@ Views.Graves = {
             `;
         }
         
-        // כפתורי עריכה/מחיקה לקברים פנויים או בהליך
-        if (grave.grave_status === 'available' || grave.grave_status === 'in_process') {
-            // כפתור עריכה - תמיד מופיע
-            buttons += `
-                <button class="btn btn-sm btn-warning" 
-                        onclick="App.editItem('grave', ${grave.id})"
-                        title="ערוך קבר">
-                    <i class="fas fa-edit"></i>
-                </button>
-            `;
-            
-            // כפתור מחיקה - רק לקברים פנויים לגמרי
-            if (grave.grave_status === 'available') {
-                buttons += `
-                    <button class="btn btn-sm btn-danger" 
-                            onclick="App.deleteItem('grave', ${grave.id})"
-                            title="מחק קבר">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                `;
-            }
-        }
+        // כפתור עריכה - תמיד תמיד תמיד מופיע, לכל סטטוס
+        buttons += `
+            <button class="btn btn-sm btn-warning" 
+                    onclick="App.editItem('grave', ${grave.id})"
+                    title="ערוך קבר">
+                <i class="fas fa-edit"></i>
+            </button>
+        `;
         
-        // אם אין כפתורים כלל (קבר תפוס לגמרי), הצג לפחות כפתור עריכה מוגבל
-        if (buttons === '' && grave.grave_status === 'occupied') {
+        // כפתור מחיקה - רק לקברים פנויים לגמרי
+        if (grave.grave_status === 'available') {
             buttons += `
-                <button class="btn btn-sm btn-secondary" 
-                        onclick="App.editItem('grave', ${grave.id})"
-                        title="ערוך פרטי קבר (מוגבל)"
-                        data-bs-toggle="tooltip">
-                    <i class="fas fa-edit"></i>
+                <button class="btn btn-sm btn-danger" 
+                        onclick="App.deleteItem('grave', ${grave.id})"
+                        title="מחק קבר">
+                    <i class="fas fa-trash"></i>
                 </button>
             `;
         }
