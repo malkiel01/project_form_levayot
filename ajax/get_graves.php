@@ -3,7 +3,7 @@
 
 // תיקון הנתיבים - אנחנו ב-ajax/ וצריכים לעלות רמה אחת למעלה
 require_once '../config.php';
-require_once '../includes/functions.php';
+require_once '../DeceasedForm.php';
 
 // בדיקת הרשאות
 if (!isset($_SESSION['user_id']) && !isset($_SESSION['temp_access'])) {
