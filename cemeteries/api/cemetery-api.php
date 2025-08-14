@@ -646,27 +646,6 @@ function getAreaGraves() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getGraves2() {
-    global $pdo;
-    
-    $stmt = $pdo->query("
-        SELECT g.*, 
-               ag.name as area_grave_name,
-               r.name as row_name,
-               p.name as plot_name,
-               b.name as block_name,
-               c.name as cemetery_name
-        FROM graves g
-        LEFT JOIN areaGraves ag ON ag.id = g.areaGrave_id
-        LEFT JOIN rows r ON r.id = ag.row_id
-        LEFT JOIN plots p ON p.id = r.plot_id
-        LEFT JOIN blocks b ON b.id = p.block_id
-        LEFT JOIN cemeteries c ON c.id = b.cemetery_id
-        ORDER BY c.name, b.name, p.name, r.name, ag.name, g.grave_number
-    ");
-    
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
 function getGraves() {
     global $pdo;
     

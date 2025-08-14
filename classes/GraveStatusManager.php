@@ -93,7 +93,7 @@ class GraveStatusManager {
             SELECT 
                 pf.id,
                 pf.form_uuid,
-                pf.purchaser_name,
+                pf.buyer_name as purchaser_name,
                 pf.purchase_date,
                 pf.status,
                 pf.created_at
