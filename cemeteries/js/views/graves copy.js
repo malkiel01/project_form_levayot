@@ -31,51 +31,16 @@ Views.Graves = {
                                 <option value="available">פנויים בלבד</option>
                                 <option value="reserved">שמורים בלבד</option>
                                 <option value="occupied">תפוסים בלבד</option>
-                                <option value="in_process">בהליך קבורה</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">חיפוש:</label>
                             <input type="text" class="form-control" id="searchGrave" 
-                                placeholder="חפש לפי שם, מספר או נפטר..." 
-                                onkeyup="Views.Graves.filterGraves()">
-                        </div>
-                        <div class="mb-3">
-                            <button class="btn btn-sm btn-secondary w-100" onclick="Views.Graves.clearFilters()">
-                                <i class="fas fa-times"></i> נקה סינון
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- סיכום סטטוסים -->
-                    <div class="hierarchy-card mt-3">
-                        <h6>סיכום סטטוסים</h6>
-                        <div class="small">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span><span class="badge bg-success">פנוי</span></span>
-                                <span id="countAvailable">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span><span class="badge bg-warning text-dark">שמור</span></span>
-                                <span id="countReserved">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span><span class="badge bg-info">בהליך</span></span>
-                                <span id="countInProcess">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span><span class="badge bg-danger">תפוס</span></span>
-                                <span id="countOccupied">0</span>
-                            </div>
-                            <hr>
-                            <div class="d-flex justify-content-between">
-                                <strong>סה"כ:</strong>
-                                <strong id="countTotal">0</strong>
-                            </div>
+                                   placeholder="חפש לפי שם או מספר..." 
+                                   onkeyup="Views.Graves.filterGraves()">
                         </div>
                     </div>
                 </div>
-                
                 <div class="col-md-9">
                     <div class="hierarchy-card">
                         <div class="table-responsive">
@@ -120,12 +85,9 @@ Views.Graves = {
         
         // Store data for filtering
         this.gravesData = graves;
-        
-        // עדכן את הסטטיסטיקות
-        this.updateStatusCounts();
     },
     
-    createGraveRowDont(grave) {
+    createGraveRow(grave) {
         // קביעת סטטוס הקבר
         let status = 'available';
         let statusBadge = '<span class="badge bg-success">פנוי</span>';
@@ -168,150 +130,8 @@ Views.Graves = {
                 </td>
             </tr>`;
     },
-
-    createGraveRow(grave) {
-        // קביעת סטטוס וצבע לפי המצב
-        let statusBadge = '';
-        let statusText = '';
-        let additionalInfo = '';
-        
-        switch(grave.grave_status) {
-            case 'occupied':
-                statusBadge = 'bg-danger';
-                statusText = 'תפוס';
-                if (grave.deceased_first_name || grave.deceased_last_name) {
-                    additionalInfo = `<br><small>${grave.deceased_first_name || ''} ${grave.deceased_last_name || ''}</small>`;
-                }
-                break;
-                
-            case 'in_process':
-                statusBadge = 'bg-info';
-                statusText = 'קבורה בהליך';
-                if (grave.deceased_first_name || grave.deceased_last_name) {
-                    additionalInfo = `<br><small class="text-muted">
-                        ${grave.deceased_first_name || ''} ${grave.deceased_last_name || ''}
-                        <br>סטטוס: ${this.getStatusLabel(grave.burial_status)}
-                    </small>`;
-                }
-                break;
-                
-            case 'reserved':
-                statusBadge = 'bg-warning text-dark';
-                statusText = 'שמור';
-                if (grave.purchaser_name) {
-                    additionalInfo = `<br><small>${grave.purchaser_name}</small>`;
-                }
-                break;
-                
-            case 'available':
-            default:
-                statusBadge = 'bg-success';
-                statusText = 'פנוי';
-                break;
-        }
-        
-        return `
-            <tr data-status="${grave.grave_status}" 
-                data-search="${grave.name || ''} ${grave.grave_number || ''} ${grave.deceased_first_name || ''} ${grave.deceased_last_name || ''}">
-                <td>${grave.id}</td>
-                <td>${grave.cemetery_name || '-'}</td>
-                <td>${grave.block_name || '-'}</td>
-                <td>${grave.plot_name || '-'}</td>
-                <td>${grave.row_name || '-'}</td>
-                <td>${grave.area_grave_name || '-'}</td>
-                <td><strong>${grave.name || `קבר ${grave.grave_number}`}</strong></td>
-                <td>${grave.grave_number || '-'}</td>
-                <td>${grave.code || '-'}</td>
-                <td>
-                    <span class="badge ${statusBadge}">${statusText}</span>
-                    ${additionalInfo}
-                </td>
-                <td class="action-buttons">
-                    <button class="btn btn-sm btn-info" 
-                            onclick="Views.Graves.showDetails(${grave.id})"
-                            title="הצג פרטים">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    ${this.getActionButtons(grave)}
-                </td>
-            </tr>`;
-    },
-
-    getStatusLabel(status) {
-        const labels = {
-            'draft': 'טיוטה',
-            'in_progress': 'בתהליך',
-            'completed': 'הושלם',
-            'archived': 'ארכיון',
-            'cancelled': 'בוטל'
-        };
-        return labels[status] || status;
-    },
-
-    getActionButtons(grave) {
-        // אם הקבר תפוס או בתהליך, הצג קישור לטופס
-        let buttons = '';
-        
-        if (grave.burial_form_id && grave.grave_status !== 'available') {
-            buttons += `
-                <a href="../form/index_deceased.php?id=${grave.burial_form_id}" 
-                class="btn btn-sm btn-primary" 
-                target="_blank"
-                title="צפה בטופס לוויה">
-                    <i class="fas fa-file-alt"></i>
-                </a>
-            `;
-        }
-        
-        if (grave.purchase_form_id && grave.grave_status === 'reserved') {
-            buttons += `
-                <a href="../form/index_purchase.php?id=${grave.purchase_form_id}" 
-                class="btn btn-sm btn-warning" 
-                target="_blank"
-                title="צפה בטופס רכישה">
-                    <i class="fas fa-shopping-cart"></i>
-                </a>
-            `;
-        }
-        
-        // כפתורי עריכה/מחיקה רק לקברים פנויים
-        if (grave.grave_status === 'available' && window.Utils && Utils.createActionButtons) {
-            buttons += Utils.createActionButtons('grave', grave.id, true);
-        }
-        
-        return buttons;
-    },
-
-    // עדכון הפילטר לתמוך בסטטוסים החדשים
-    filterGraves() {
-        const status = $('#filterStatus').val();
-        const search = $('#searchGrave').val().toLowerCase();
-        
-        $('#gravesTable tbody tr').each(function() {
-            const $row = $(this);
-            const rowStatus = $row.data('status');
-            const rowSearch = $row.data('search').toLowerCase();
-            
-            let showRow = true;
-            
-            // פילטר לפי סטטוס
-            if (status) {
-                if (status === 'available' && rowStatus !== 'available') showRow = false;
-                if (status === 'reserved' && rowStatus !== 'reserved') showRow = false;
-                if (status === 'occupied' && !['occupied', 'in_process'].includes(rowStatus)) showRow = false;
-                if (status === 'in_process' && rowStatus !== 'in_process') showRow = false;
-            }
-            
-            // פילטר לפי חיפוש
-            if (search && !rowSearch.includes(search)) {
-                showRow = false;
-            }
-            
-            $row.toggle(showRow);
-        });
-    },
     
-    filterGravesDont() {
+    filterGraves() {
         const status = $('#filterStatus').val();
         const search = $('#searchGrave').val().toLowerCase();
         
@@ -629,96 +449,5 @@ Views.Graves = {
             'cancelled': '<span class="badge bg-danger">בוטל</span>'
         };
         return badges[status] || '<span class="badge bg-light text-dark">לא ידוע</span>';
-    },
-
-    // פונקציה לניקוי הפילטרים
-    clearFilters() {
-        $('#filterStatus').val('');
-        $('#searchGrave').val('');
-        this.filterGraves();
-    },
-
-    // פונקציה לעדכון הסטטיסטיקות
-    updateStatusCounts() {
-        let counts = {
-            available: 0,
-            reserved: 0,
-            in_process: 0,
-            occupied: 0,
-            total: 0
-        };
-        
-        if (this.gravesData) {
-            this.gravesData.forEach(grave => {
-                counts.total++;
-                switch(grave.grave_status) {
-                    case 'available':
-                        counts.available++;
-                        break;
-                    case 'reserved':
-                        counts.reserved++;
-                        break;
-                    case 'in_process':
-                        counts.in_process++;
-                        break;
-                    case 'occupied':
-                        counts.occupied++;
-                        break;
-                }
-            });
-        }
-        // עדכן את המספרים בתצוגה
-        $('#countAvailable').text(counts.available);
-        $('#countReserved').text(counts.reserved);
-        $('#countInProcess').text(counts.in_process);
-        $('#countOccupied').text(counts.occupied);
-        $('#countTotal').text(counts.total);
-    },
-
-    // עדכן גם את filterGraves כדי לעדכן את הסטטיסטיקות
-    filterGraves() {
-        const status = $('#filterStatus').val();
-        const search = $('#searchGrave').val().toLowerCase();
-        
-        let visibleCount = 0;
-        
-        $('#gravesTable tr').each(function() {
-            const $row = $(this);
-            const rowStatus = $row.data('status');
-            const rowSearch = ($row.data('search') || '').toLowerCase();
-            
-            let showRow = true;
-            
-            // פילטר לפי סטטוס
-            if (status) {
-                if (status === 'available' && rowStatus !== 'available') showRow = false;
-                if (status === 'reserved' && rowStatus !== 'reserved') showRow = false;
-                if (status === 'occupied' && rowStatus !== 'occupied') showRow = false;
-                if (status === 'in_process' && rowStatus !== 'in_process') showRow = false;
-            }
-            
-            // פילטר לפי חיפוש
-            if (search && !rowSearch.includes(search)) {
-                showRow = false;
-            }
-            
-            $row.toggle(showRow);
-            if (showRow) visibleCount++;
-        });
-        
-        // הצג הודעה אם אין תוצאות
-        if (visibleCount === 0 && $('#gravesTable tr').length > 0) {
-            if ($('#gravesTable .no-results').length === 0) {
-                $('#gravesTable').append(`
-                    <tr class="no-results">
-                        <td colspan="11" class="text-center text-muted">
-                            לא נמצאו תוצאות מתאימות לסינון
-                        </td>
-                    </tr>
-                `);
-            }
-        } else {
-            $('#gravesTable .no-results').remove();
-        }
     }
 };
