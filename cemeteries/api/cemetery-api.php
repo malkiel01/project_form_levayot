@@ -680,7 +680,7 @@ function getGravesDont() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getGraves() {
+function getGravesDont2() {
     global $pdo;
     
     $stmt = $pdo->query("
@@ -730,6 +730,66 @@ function getGraves() {
             ORDER BY created_at DESC
             LIMIT 1
         ) pf ON pf.grave_id = g.id
+        ORDER BY c.name, b.name, p.name, r.name, ag.name, CAST(g.grave_number AS UNSIGNED), g.grave_number
+    ");
+    
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getGraves() {
+    global $pdo;
+    
+    $stmt = $pdo->query("
+        SELECT g.*, 
+               ag.name as area_grave_name,
+               r.name as row_name,
+               p.name as plot_name,
+               b.name as block_name,
+               c.name as cemetery_name,
+               -- פרטי הנפטר אם קיים
+               df.deceased_first_name,
+               df.deceased_last_name,
+               df.form_uuid as burial_form_id,
+               df.status as burial_status,
+               df.burial_date,
+               -- בדיקת קבורה מושלמת
+               CASE 
+                   WHEN df.status = 'completed' THEN 'occupied'
+                   WHEN df.status IN ('draft', 'in_progress') THEN 'in_process'
+                   WHEN pf.status NOT IN ('cancelled', 'deleted') AND pf.status IS NOT NULL THEN 'reserved'
+                   ELSE 'available'
+               END as grave_status,
+               -- פרטי רכישה אם קיים - שים לב לשמות הנכונים של העמודות
+               pf.buyer_first_name,
+               pf.buyer_last_name,
+               CONCAT(IFNULL(pf.buyer_first_name, ''), ' ', IFNULL(pf.buyer_last_name, '')) as purchaser_name,
+               pf.form_uuid as purchase_form_id,
+               pf.status as purchase_status
+        FROM graves g
+        LEFT JOIN areaGraves ag ON ag.id = g.areaGrave_id
+        LEFT JOIN rows r ON r.id = ag.row_id
+        LEFT JOIN plots p ON p.id = r.plot_id
+        LEFT JOIN blocks b ON b.id = p.block_id
+        LEFT JOIN cemeteries c ON c.id = b.cemetery_id
+        -- קבורה - הטופס האחרון שלא בוטל
+        LEFT JOIN LATERAL (
+            SELECT grave_id, deceased_first_name, deceased_last_name, 
+                   form_uuid, status, burial_date
+            FROM deceased_forms
+            WHERE grave_id = g.id 
+                AND status NOT IN ('cancelled', 'deleted', 'archived')
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) df ON TRUE
+        -- רכישה - הטופס האחרון שלא בוטל
+        LEFT JOIN LATERAL (
+            SELECT grave_id, buyer_first_name, buyer_last_name, form_uuid, status
+            FROM purchase_forms
+            WHERE grave_id = g.id 
+                AND status NOT IN ('cancelled', 'deleted')
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) pf ON TRUE
         ORDER BY c.name, b.name, p.name, r.name, ag.name, CAST(g.grave_number AS UNSIGNED), g.grave_number
     ");
     
