@@ -28,8 +28,7 @@ try {
             g.grave_number,
             g.name,
             df.form_uuid,
-            df.status as form_status,
-            CONCAT(IFNULL(df.deceased_first_name, ''), ' ', IFNULL(df.deceased_last_name, '')) as deceased_name
+            df.status as form_status
         FROM graves g
         LEFT JOIN deceased_forms df ON g.id = df.grave_id 
             AND df.status NOT IN ('cancelled', 'deleted', 'archived')
@@ -48,17 +47,14 @@ try {
         
         // קבע אם להציג את הקבר
         $show_grave = false;
-        $grave_status = '';
         $is_selected = false;
         
         if (!$grave['form_uuid']) {
             // קבר פנוי - תמיד הצג
             $show_grave = true;
-            $grave_status = ' (פנוי)';
         } elseif ($current_form_uuid && $grave['form_uuid'] == $current_form_uuid) {
             // הקבר שייך לטופס הנוכחי
             $show_grave = true;
-            $grave_status = ' (קבר נוכחי)';
             $is_selected = true; // סמן אותו כנבחר
         }
         // אחרת - קבר תפוס של טופס אחר, לא מציגים
@@ -66,11 +62,10 @@ try {
         if ($show_grave) {
             $selected = $is_selected ? 'selected' : '';
             $options .= sprintf(
-                '<option value="%s" %s>%s%s</option>',
+                '<option value="%s" %s>%s</option>',
                 htmlspecialchars($grave['id']),
                 $selected,
-                htmlspecialchars($grave_display),
-                $grave_status
+                htmlspecialchars($grave_display)
             );
         }
     }
@@ -81,3 +76,4 @@ try {
     error_log("Error in get_graves.php: " . $e->getMessage());
     echo '<option value="">שגיאה בטעינת קברים</option>';
 }
+?>
