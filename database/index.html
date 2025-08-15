@@ -562,7 +562,7 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <button class="action-btn btn-copy" onclick="copyAllData()">
+                <button class="action-btn btn-copy" onclick="copyAllData(event)">
                     <i class="fas fa-copy"></i> העתק ניתוח מלא
                 </button>
                 <button class="action-btn btn-json" onclick="downloadJSON()">
@@ -1004,7 +1004,7 @@
         }
 
         // Copy all data
-        function copyAllData() {
+        function copyAllData(event) {
             if (!databaseData) return;
             
             let content = `=== ניתוח מסד נתונים ===\n`;
@@ -1015,27 +1015,31 @@
             const data = databaseData.data;
             
             content += `=== סטטיסטיקות ===\n`;
-            content += `טבלאות: ${data.tables.length}\n`;
-            content += `טריגרים: ${data.triggers.length}\n`;
-            content += `Views: ${data.views.length}\n`;
-            content += `Foreign Keys: ${data.foreignKeys.length}\n`;
+            content += `טבלאות: ${data.tables ? data.tables.length : 0}\n`;
+            content += `טריגרים: ${data.triggers ? data.triggers.length : 0}\n`;
+            content += `Views: ${data.views ? data.views.length : 0}\n`;
+            content += `Foreign Keys: ${data.foreignKeys ? data.foreignKeys.length : 0}\n`;
             content += `גודל כולל: ${data.databaseSize ? data.databaseSize.total_mb + ' MB' : 'N/A'}\n\n`;
             
-            content += `=== טבלאות ===\n`;
-            data.tables.forEach(table => {
-                content += `\n${table.name}:\n`;
-                content += `  רשומות: ${table.rows}\n`;
-                content += `  עמודות: ${table.columns.length}\n`;
-                content += `  גודל: ${table.size_mb} MB\n`;
-                content += `  מנוע: ${table.engine}\n`;
-                
-                content += `  עמודות:\n`;
-                table.columns.forEach(col => {
-                    content += `    - ${col.Field} (${col.Type})${col.Key === 'PRI' ? ' [PRIMARY KEY]' : ''}${col.Key === 'UNI' ? ' [UNIQUE]' : ''}\n`;
+            if (data.tables && data.tables.length > 0) {
+                content += `=== טבלאות ===\n`;
+                data.tables.forEach(table => {
+                    content += `\n${table.name}:\n`;
+                    content += `  רשומות: ${table.rows}\n`;
+                    content += `  עמודות: ${table.columns ? table.columns.length : 0}\n`;
+                    content += `  גודל: ${table.size_mb} MB\n`;
+                    content += `  מנוע: ${table.engine}\n`;
+                    
+                    if (table.columns && table.columns.length > 0) {
+                        content += `  עמודות:\n`;
+                        table.columns.forEach(col => {
+                            content += `    - ${col.Field} (${col.Type})${col.Key === 'PRI' ? ' [PRIMARY KEY]' : ''}${col.Key === 'UNI' ? ' [UNIQUE]' : ''}\n`;
+                        });
+                    }
                 });
-            });
+            }
             
-            if (data.triggers.length > 0) {
+            if (data.triggers && data.triggers.length > 0) {
                 content += `\n=== טריגרים ===\n`;
                 data.triggers.forEach(trigger => {
                     content += `${trigger.name} (${trigger.table}): ${trigger.timing} ${trigger.event}\n`;
@@ -1043,36 +1047,64 @@
                 });
             }
             
-            if (data.views.length > 0) {
+            if (data.views && data.views.length > 0) {
                 content += `\n=== Views ===\n`;
                 data.views.forEach(view => {
                     content += `${view.name}:\n${view.definition}\n\n`;
                 });
             }
             
-            if (data.foreignKeys.length > 0) {
+            if (data.foreignKeys && data.foreignKeys.length > 0) {
                 content += `\n=== Foreign Keys ===\n`;
                 data.foreignKeys.forEach(fk => {
                     content += `${fk.TABLE_NAME}.${fk.COLUMN_NAME} -> ${fk.REFERENCED_TABLE_NAME}.${fk.REFERENCED_COLUMN_NAME}\n`;
                 });
             }
             
-            if (data.issues.length > 0) {
+            if (data.issues && data.issues.length > 0) {
                 content += `\n=== בעיות וממצאים ===\n`;
                 data.issues.forEach(issue => {
                     content += `[${issue.type.toUpperCase()}] ${issue.message}\n`;
                 });
             }
             
+            // Get the button element
+            const btn = event ? event.currentTarget : document.querySelector('.btn-copy');
+            const originalHTML = btn.innerHTML;
+            
             navigator.clipboard.writeText(content).then(() => {
-                const btn = event.target.closest('button');
-                const originalHTML = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-check"></i> הועתק בהצלחה!';
+                btn.classList.remove('btn-copy');
+                btn.classList.add('btn-success');
                 setTimeout(() => {
                     btn.innerHTML = originalHTML;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-copy');
                 }, 2000);
             }).catch(err => {
-                alert('שגיאה בהעתקה: ' + err);
+                console.error('Copy failed:', err);
+                // Fallback method for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = content;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    btn.innerHTML = '<i class="fas fa-check"></i> הועתק בהצלחה!';
+                    btn.classList.remove('btn-copy');
+                    btn.classList.add('btn-success');
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-copy');
+                    }, 2000);
+                } catch (err) {
+                    alert('שגיאה בהעתקה. נסה להעתיק ידנית.');
+                } finally {
+                    document.body.removeChild(textArea);
+                }
             });
         }
 
