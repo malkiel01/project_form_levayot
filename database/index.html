@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Analyzer - מנתח מסד נתונים מקצועי</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Modal Styles */
+        #connectionModal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+            direction: rtl;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            direction: rtl;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-connect {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            direction: rtl;
+        }
+
+        .btn-connect:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .btn-connect:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8d7da;
+            border-radius: 5px;
+            display: none;
+            direction: rtl;
+        }
+
+        .success-message {
+            color: #155724;
+            margin-top: 10px;
+            padding: 10px;
+            background: #d4edda;
+            border-radius: 5px;
+            display: none;
+            direction: rtl;
+        }
+
+        /* Main Content */
+        #mainContent {
+            display: none;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container-main {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .db-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-right: 4px solid #667eea;
+        }
+
+        .info-card h6 {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .info-card p {
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-copy {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-json {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-sql {
+            background: #6610f2;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .table-card {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .table-card:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .table-card h5 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .table-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            position: relative;
+            margin-top: 15px;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .copy-code-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .alert-box {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-right: 4px solid;
+        }
+
+        .alert-danger {
+            background: #fee;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .trigger-box, .view-box, .procedure-box {
+            background: #f8f9fa;
+            border-right: 4px solid #17a2b8;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .view-box {
+            border-color: #28a745;
+        }
+
+        .procedure-box {
+            border-color: #6610f2;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .column-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .column-item {
+            padding: 8px;
+            background: #fff;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            border-right: 3px solid #667eea;
+            font-size: 14px;
+        }
+
+        .column-type {
+            color: #6610f2;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .key-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .key-primary {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .key-unique {
+            background: #17a2b8;
+            color: #fff;
+        }
+
+        .key-index {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            direction: rtl;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .table-detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            overflow-y: auto;
+        }
+
+        .table-detail-content {
+            background: white;
+            margin: 50px auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 1000px;
+            border-radius: 15px;
+            direction: rtl;
+        }
+
+        .close-modal {
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .table-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .db-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Connection Modal -->
+    <div id="connectionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔐 התחברות למסד נתונים</h2>
+                <p style="color: #666; font-size: 14px;">הזן את פרטי ההתחברות למסד הנתונים MySQL</p>
+            </div>
+            <form id="connectionForm">
+                <div class="form-group">
+                    <label for="host">
+                        <i class="fas fa-server"></i> כתובת שרת
+                    </label>
+                    <input type="text" id="host" class="form-control" value="localhost" required>
+                </div>
+                <div class="form-group">
+                    <label for="database">
+                        <i class="fas fa-database"></i> שם מסד נתונים
+                    </label>
+                    <input type="text" id="database" class="form-control" required placeholder="database_name">
+                </div>
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i> שם משתמש
+                    </label>
+                    <input type="text" id="username" class="form-control" required placeholder="root">
+                </div>
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i> סיסמה
+                    </label>
+                    <input type="password" id="password" class="form-control" placeholder="הכנס סיסמה">
+                </div>
+                <button type="submit" class="btn-connect" id="connectBtn">
+                    <i class="fas fa-plug"></i> התחבר למסד הנתונים
+                </button>
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent">
+        <div class="container-main">
+            <!-- Header Section -->
+            <div class="header-section">
+                <h1 style="color: #333; font-size: 32px; margin-bottom: 20px;">
+                    <i class="fas fa-database"></i>
+                    מנתח מסד נתונים
+                </h1>
+                <div class="db-info">
+                    <div class="info-card">
+                        <h6>מסד נתונים</h6>
+                        <p id="dbName">-</p>
+                    </div>
+                    <div class="info-card">
+                        <h6>שרת</h6>
+                        <p id="serverName">-</p>
+                    </div>
+                    <div class="info-card">
+                        <h6>גודל כולל</h6>
+                        <p id="dbSize">-</p>
+                    </div>
+                    <div class="info-card">
+                        <h6>טבלאות</h6>
+                        <p id="totalTables">0</p>
+                    </div>
+                    <div class="info-card">
+                        <h6>טריגרים</h6>
+                        <p id="totalTriggers">0</p>
+                    </div>
+                    <div class="info-card">
+                        <h6>Views</h6>
+                        <p id="totalViews">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn btn-copy" onclick="copyAllData()">
+                    <i class="fas fa-copy"></i> העתק ניתוח מלא
+                </button>
+                <button class="action-btn btn-json" onclick="downloadJSON()">
+                    <i class="fas fa-download"></i> הורד JSON
+                </button>
+                <button class="action-btn btn-sql" onclick="downloadSQL()">
+                    <i class="fas fa-database"></i> הורד SQL Dump
+                </button>
+            </div>
+
+            <!-- Search -->
+            <div class="section-card">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="חפש טבלה, עמודה, טריגר או view..." onkeyup="performSearch()">
+                    <i class="fas fa-search"></i>
+                </div>
+            </div>
+
+            <!-- Tables -->
+            <div class="section-card">
+                <h3 class="section-title">
+                    <i class="fas fa-table"></i> טבלאות במסד הנתונים
+                </h3>
+                <div class="table-grid" id="tablesList">
+                    <!-- Tables will be populated here -->
+                </div>
+            </div>
+
+            <!-- Triggers -->
+            <div class="section-card" id="triggersSection">
+                <h3 class="section-title">
+                    <i class="fas fa-bolt"></i> טריגרים (Triggers)
+                </h3>
+                <div id="triggersList">
+                    <!-- Triggers will be populated here -->
+                </div>
+            </div>
+
+            <!-- Views -->
+            <div class="section-card" id="viewsSection">
+                <h3 class="section-title">
+                    <i class="fas fa-eye"></i> תצוגות (Views)
+                </h3>
+                <div id="viewsList">
+                    <!-- Views will be populated here -->
+                </div>
+            </div>
+
+            <!-- Foreign Keys -->
+            <div class="section-card" id="foreignKeysSection">
+                <h3 class="section-title">
+                    <i class="fas fa-link"></i> קשרים בין טבלאות (Foreign Keys)
+                </h3>
+                <div id="foreignKeysList">
+                    <!-- Foreign keys will be populated here -->
+                </div>
+            </div>
+
+            <!-- Procedures & Functions -->
+            <div class="section-card" id="proceduresSection">
+                <h3 class="section-title">
+                    <i class="fas fa-code"></i> פרוצדורות ופונקציות
+                </h3>
+                <div id="proceduresList">
+                    <!-- Procedures will be populated here -->
+                </div>
+            </div>
+
+            <!-- Issues -->
+            <div class="section-card" id="issuesSection">
+                <h3 class="section-title">
+                    <i class="fas fa-exclamation-triangle"></i> בעיות וממצאים
+                </h3>
+                <div id="issuesList">
+                    <!-- Issues will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Detail Modal -->
+    <div id="tableDetailModal" class="table-detail-modal">
+        <div class="table-detail-content">
+            <span class="close-modal" onclick="closeTableModal()">&times;</span>
+            <div id="tableDetailContent">
+                <!-- Table details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global database data
+        let databaseData = null;
+
+        // PHP backend URL - change this to your actual PHP file location
+        const API_URL = 'analyze_database.php';
+
+        // Connection form handler
+        document.getElementById('connectionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const connectBtn = document.getElementById('connectBtn');
+            const errorMsg = document.getElementById('errorMessage');
+            const successMsg = document.getElementById('successMessage');
+            
+            // Reset messages
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            
+            // Show loading
+            connectBtn.innerHTML = '<span class="loading-spinner"></span> מתחבר...';
+            connectBtn.disabled = true;
+            
+            // Get form data
+            const formData = {
+                host: document.getElementById('host').value,
+                database: document.getElementById('database').value,
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                action: 'analyze'
+            };
+            
+            try {
+                // Send request to PHP backend
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Store data
+                    databaseData = result;
+                    
+                    // Show success message
+                    successMsg.textContent = 'התחברות הצליחה! טוען נתונים...';
+                    successMsg.style.display = 'block';
+                    
+                    // Load data into UI
+                    setTimeout(() => {
+                        loadDatabaseData();
+                        document.getElementById('connectionModal').style.display = 'none';
+                        document.getElementById('mainContent').style.display = 'block';
+                    }, 1000);
+                    
+                } else {
+                    throw new Error(result.error || 'Connection failed');
+                }
+                
+            } catch (error) {
+                console.error('Connection error:', error);
+                errorMsg.textContent = 'שגיאה: ' + error.message;
+                errorMsg.style.display = 'block';
+            } finally {
+                connectBtn.innerHTML = '<i class="fas fa-plug"></i> התחבר למסד הנתונים';
+                connectBtn.disabled = false;
+            }
+        });
+
+        // Load database data into UI
+        function loadDatabaseData() {
+            if (!databaseData || !databaseData.data) return;
+            
+            const data = databaseData.data;
+            
+            // Update header info
+            document.getElementById('dbName').textContent = databaseData.database;
+            document.getElementById('serverName').textContent = databaseData.host;
+            
+            // Update statistics
+            document.getElementById('totalTables').textContent = data.tables ? data.tables.length : 0;
+            document.getElementById('totalTriggers').textContent = data.triggers ? data.triggers.length : 0;
+            document.getElementById('totalViews').textContent = data.views ? data.views.length : 0;
+            
+            if (data.databaseSize) {
+                document.getElementById('dbSize').textContent = data.databaseSize.total_mb + ' MB';
+            }
+            
+            // Load tables
+            loadTables(data.tables);
+            
+            // Load triggers
+            loadTriggers(data.triggers);
+            
+            // Load views
+            loadViews(data.views);
+            
+            // Load foreign keys
+            loadForeignKeys(data.foreignKeys);
+            
+            // Load procedures
+            loadProcedures(data.procedures);
+            
+            // Load issues
+            loadIssues(data.issues);
+        }
+
+        // Load tables
+        function loadTables(tables) {
+            const container = document.getElementById('tablesList');
+            container.innerHTML = '';
+            
+            if (!tables || tables.length === 0) {
+                container.innerHTML = '<p>לא נמצאו טבלאות</p>';
+                return;
+            }
+            
+            tables.forEach(table => {
+                const card = document.createElement('div');
+                card.className = 'table-card';
+                card.innerHTML = `
+                    <h5><i class="fas fa-table"></i> ${table.name}</h5>
+                    <div class="table-stats">
+                        <span><i class="fas fa-columns"></i> ${table.columns.length} עמודות</span>
+                        <span><i class="fas fa-list"></i> ${Number(table.rows).toLocaleString()} רשומות</span>
+                    </div>
+                    <div class="table-stats">
+                        <span><i class="fas fa-cog"></i> ${table.engine || 'N/A'}</span>
+                        <span><i class="fas fa-weight"></i> ${table.size_mb} MB</span>
+                    </div>
+                `;
+                card.onclick = () => showTableDetails(table);
+                container.appendChild(card);
+            });
+        }
+
+        // Show table details
+        function showTableDetails(table) {
+            const modal = document.getElementById('tableDetailModal');
+            const content = document.getElementById('tableDetailContent');
+            
+            let columnsHtml = '';
+            table.columns.forEach(col => {
+                let keyBadge = '';
+                if (col.Key === 'PRI') keyBadge = '<span class="key-badge key-primary">PRIMARY</span>';
+                else if (col.Key === 'UNI') keyBadge = '<span class="key-badge key-unique">UNIQUE</span>';
+                else if (col.Key === 'MUL') keyBadge = '<span class="key-badge key-index">INDEX</span>';
+                
+                columnsHtml += `
+                    <div class="column-item">
+                        ${keyBadge}
+                        <strong>${col.Field}</strong>
+                        <span class="column-type">${col.Type}</span>
+                        ${col.Null === 'YES' ? '<small>(Nullable)</small>' : ''}
+                        ${col.Default ? `<small>Default: ${col.Default}</small>` : ''}
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = `
+                <h2>${table.name}</h2>
+                <div class="info-card" style="margin: 20px 0;">
+                    <p>מנוע: ${table.engine} | קידוד: ${table.collation || 'N/A'}</p>
+                    <p>רשומות: ${Number(table.rows).toLocaleString()} | גודל: ${table.size_mb} MB</p>
+                    <p>נוצר: ${table.create_time || 'N/A'} | עודכן: ${table.update_time || 'N/A'}</p>
+                </div>
+                <h4>עמודות:</h4>
+                <div class="column-list">${columnsHtml}</div>
+                <h4>CREATE Statement:</h4>
+                <div class="code-block">
+                    <button class="copy-code-btn" onclick="copyCode(this)">העתק</button>
+                    <pre>${table.create_statement}</pre>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        // Close table modal
+        function closeTableModal() {
+            document.getElementById('tableDetailModal').style.display = 'none';
+        }
+
+        // Load triggers
+        function loadTriggers(triggers) {
+            const container = document.getElementById('triggersList');
+            
+            if (!triggers || triggers.length === 0) {
+                container.innerHTML = '<p>לא נמצאו טריגרים</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            triggers.forEach(trigger => {
+                const box = document.createElement('div');
+                box.className = 'trigger-box';
+                box.innerHTML = `
+                    <h5><strong>${trigger.name}</strong></h5>
+                    <p>טבלה: <strong>${trigger.table}</strong> | 
+                       אירוע: <strong>${trigger.event}</strong> | 
+                       תזמון: <strong>${trigger.timing}</strong></p>
+                    <div class="code-block">
+                        <button class="copy-code-btn" onclick="copyCode(this)">העתק</button>
+                        <pre>${trigger.statement}</pre>
+                    </div>
+                `;
+                container.appendChild(box);
+            });
+        }
+
+        // Load views
+        function loadViews(views) {
+            const container = document.getElementById('viewsList');
+            
+            if (!views || views.length === 0) {
+                container.innerHTML = '<p>לא נמצאו Views</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            views.forEach(view => {
+                const box = document.createElement('div');
+                box.className = 'view-box';
+                box.innerHTML = `
+                    <h5><strong>${view.name}</strong></h5>
+                    <p>ניתן לעדכון: ${view.is_updatable} | אבטחה: ${view.security_type}</p>
+                    <div class="code-block">
+                        <button class="copy-code-btn" onclick="copyCode(this)">העתק</button>
+                        <pre>${view.definition}</pre>
+                    </div>
+                `;
+                container.appendChild(box);
+            });
+        }
+
+        // Load foreign keys
+        function loadForeignKeys(foreignKeys) {
+            const container = document.getElementById('foreignKeysList');
+            
+            if (!foreignKeys || foreignKeys.length === 0) {
+                container.innerHTML = '<p>לא נמצאו קשרי Foreign Key</p>';
+                return;
+            }
+            
+            let html = '<table class="table table-bordered"><thead><tr>';
+            html += '<th>טבלה</th><th>עמודה</th><th>מפנה לטבלה</th><th>עמודה</th><th>ON UPDATE</th><th>ON DELETE</th>';
+            html += '</tr></thead><tbody>';
+            
+            foreignKeys.forEach(fk => {
+                html += `<tr>
+                    <td>${fk.TABLE_NAME}</td>
+                    <td>${fk.COLUMN_NAME}</td>
+                    <td>${fk.REFERENCED_TABLE_NAME}</td>
+                    <td>${fk.REFERENCED_COLUMN_NAME}</td>
+                    <td>${fk.UPDATE_RULE || 'N/A'}</td>
+                    <td>${fk.DELETE_RULE || 'N/A'}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Load procedures
+        function loadProcedures(procedures) {
+            const container = document.getElementById('proceduresList');
+            
+            if (!procedures || procedures.length === 0) {
+                container.innerHTML = '<p>לא נמצאו פרוצדורות או פונקציות</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            procedures.forEach(proc => {
+                const box = document.createElement('div');
+                box.className = 'procedure-box';
+                box.innerHTML = `
+                    <h5><strong>${proc.ROUTINE_NAME}</strong> (${proc.ROUTINE_TYPE})</h5>
+                    <p>נוצר: ${proc.CREATED} | עודכן: ${proc.LAST_ALTERED}</p>
+                    ${proc.ROUTINE_COMMENT ? `<p>הערה: ${proc.ROUTINE_COMMENT}</p>` : ''}
+                    <div class="code-block">
+                        <button class="copy-code-btn" onclick="copyCode(this)">העתק</button>
+                        <pre>${proc.ROUTINE_DEFINITION || 'Definition not available'}</pre>
+                    </div>
+                `;
+                container.appendChild(box);
+            });
+        }
+
+        // Load issues
+        function loadIssues(issues) {
+            const container = document.getElementById('issuesList');
+            
+            if (!issues || issues.length === 0) {
+                container.innerHTML = '<div class="alert-success alert-box">✅ לא נמצאו בעיות או אזהרות</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            // Group issues by type
+            const errors = issues.filter(i => i.type === 'error');
+            const warnings = issues.filter(i => i.type === 'warning');
+            const info = issues.filter(i => i.type === 'info');
+            
+            if (errors.length > 0) {
+                container.innerHTML += '<h5>❌ שגיאות:</h5>';
+                errors.forEach(issue => {
+                    container.innerHTML += `<div class="alert-danger alert-box">${issue.message}</div>`;
+                });
+            }
+            
+            if (warnings.length > 0) {
+                container.innerHTML += '<h5>⚠️ אזהרות:</h5>';
+                warnings.forEach(issue => {
+                    container.innerHTML += `<div class="alert-warning alert-box">${issue.message}</div>`;
+                });
+            }
+            
+            if (info.length > 0) {
+                container.innerHTML += '<h5>ℹ️ מידע:</h5>';
+                info.forEach(issue => {
+                    container.innerHTML += `<div class="alert-info alert-box">${issue.message}</div>`;
+                });
+            }
+        }
+
+        // Search functionality
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                // Show all elements if search is empty
+                document.querySelectorAll('.table-card, .trigger-box, .view-box, .procedure-box').forEach(el => {
+                    el.style.display = 'block';
+                });
+                return;
+            }
+            
+            // Search in all relevant elements
+            document.querySelectorAll('.table-card, .trigger-box, .view-box, .procedure-box').forEach(el => {
+                const text = el.textContent.toLowerCase();
+                el.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+
+        // Copy all data
+        function copyAllData() {
+            if (!databaseData) return;
+            
+            let content = `=== ניתוח מסד נתונים ===\n`;
+            content += `תאריך: ${new Date().toLocaleString('he-IL')}\n`;
+            content += `מסד נתונים: ${databaseData.database}\n`;
+            content += `שרת: ${databaseData.host}\n\n`;
+            
+            const data = databaseData.data;
+            
+            content += `=== סטטיסטיקות ===\n`;
+            content += `טבלאות: ${data.tables.length}\n`;
+            content += `טריגרים: ${data.triggers.length}\n`;
+            content += `Views: ${data.views.length}\n`;
+            content += `Foreign Keys: ${data.foreignKeys.length}\n`;
+            content += `גודל כולל: ${data.databaseSize ? data.databaseSize.total_mb + ' MB' : 'N/A'}\n\n`;
+            
+            content += `=== טבלאות ===\n`;
+            data.tables.forEach(table => {
+                content += `\n${table.name}:\n`;
+                content += `  רשומות: ${table.rows}\n`;
+                content += `  עמודות: ${table.columns.length}\n`;
+                content += `  גודל: ${table.size_mb} MB\n`;
+                content += `  מנוע: ${table.engine}\n`;
+                
+                content += `  עמודות:\n`;
+                table.columns.forEach(col => {
+                    content += `    - ${col.Field} (${col.Type})${col.Key === 'PRI' ? ' [PRIMARY KEY]' : ''}${col.Key === 'UNI' ? ' [UNIQUE]' : ''}\n`;
+                });
+            });
+            
+            if (data.triggers.length > 0) {
+                content += `\n=== טריגרים ===\n`;
+                data.triggers.forEach(trigger => {
+                    content += `${trigger.name} (${trigger.table}): ${trigger.timing} ${trigger.event}\n`;
+                    content += `${trigger.statement}\n\n`;
+                });
+            }
+            
+            if (data.views.length > 0) {
+                content += `\n=== Views ===\n`;
+                data.views.forEach(view => {
+                    content += `${view.name}:\n${view.definition}\n\n`;
+                });
+            }
+            
+            if (data.foreignKeys.length > 0) {
+                content += `\n=== Foreign Keys ===\n`;
+                data.foreignKeys.forEach(fk => {
+                    content += `${fk.TABLE_NAME}.${fk.COLUMN_NAME} -> ${fk.REFERENCED_TABLE_NAME}.${fk.REFERENCED_COLUMN_NAME}\n`;
+                });
+            }
+            
+            if (data.issues.length > 0) {
+                content += `\n=== בעיות וממצאים ===\n`;
+                data.issues.forEach(issue => {
+                    content += `[${issue.type.toUpperCase()}] ${issue.message}\n`;
+                });
+            }
+            
+            navigator.clipboard.writeText(content).then(() => {
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> הועתק בהצלחה!';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            }).catch(err => {
+                alert('שגיאה בהעתקה: ' + err);
+            });
+        }
+
+        // Download JSON
+        function downloadJSON() {
+            if (!databaseData) return;
+            
+            const dataStr = JSON.stringify(databaseData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `database_${databaseData.database}_${Date.now()}.json`;
+            link.click();
+        }
+
+        // Download SQL
+        function downloadSQL() {
+            if (!databaseData) return;
+            
+            let sql = `-- Database: ${databaseData.database}\n`;
+            sql += `-- Generated: ${new Date().toISOString()}\n\n`;
+            
+            databaseData.data.tables.forEach(table => {
+                sql += `-- Table: ${table.name}\n`;
+                sql += table.create_statement + ';\n\n';
+            });
+            
+            const dataBlob = new Blob([sql], {type: 'text/sql'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `database_${databaseData.database}_structure.sql`;
+            link.click();
+        }
+
+        // Copy code snippet
+        function copyCode(btn) {
+            const code = btn.parentElement.querySelector('pre').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = 'הועתק!';
+                setTimeout(() => {
+                    btn.textContent = 'העתק';
+                }, 2000);
+            });
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('tableDetailModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
