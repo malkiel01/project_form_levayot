@@ -78,17 +78,25 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// הגדרות חיבור למסד נתונים מה-ENV
-define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
-define('DB_NAME', $_ENV['DB_NAME'] ?? 'database');
-define('DB_USER', $_ENV['DB_USER'] ?? 'root');
-define('DB_PASS', $_ENV['DB_PASS'] ?? '');
-define('DB_CHARSET', $_ENV['DB_CHARSET'] ?? 'utf8mb4');
-// אל תשתמש בפורט 8080! זה לא פורט של MySQL
-// define('DB_PORT', $_ENV['PORT'] ?? '3306'); // <- מחק את זה!
+// // הגדרות חיבור למסד נתונים מה-ENV
+// define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
+// define('DB_NAME', $_ENV['DB_NAME'] ?? 'database');
+// define('DB_USER', $_ENV['DB_USER'] ?? 'root');
+// define('DB_PASS', $_ENV['DB_PASS'] ?? '');
+// define('DB_CHARSET', $_ENV['DB_CHARSET'] ?? 'utf8mb4');
+// // אל תשתמש בפורט 8080! זה לא פורט של MySQL
+// // define('DB_PORT', $_ENV['PORT'] ?? '3306'); // <- מחק את זה!
 
-// הגדרות Google Auth
-define('GOOGLE_CLIENT_ID', $_ENV['CLIENT_ID'] ?? '');
+// // הגדרות Google Auth
+// define('GOOGLE_CLIENT_ID', $_ENV['CLIENT_ID'] ?? '');
+
+
+// הגדרות חיבור לדטהבייס
+define('DB_HOST', 'mbe-plus.com');
+define('DB_NAME', 'mbeplusc_kadisha_v7');
+define('DB_USER', 'mbeplusc_test');
+define('DB_PASS', 'Gxfv16be');
+define('DB_CHARSET', 'utf8mb4');
 
 // הגדרות כלליות
 define('SITE_URL', 'https://vaadma.cemeteries.mbe-plus.com/project_form_levayot');
