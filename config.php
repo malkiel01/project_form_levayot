@@ -2,6 +2,39 @@
 
 // config.php - קובץ הגדרות משופר
 
+// פונקציה פשוטה לטעינת קובץ .env
+function loadEnv($path = __DIR__ . '/.env') {
+    if (!file_exists($path)) {
+        die("Error: .env file not found at: $path");
+    }
+    
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        // דלג על הערות
+        if (strpos(trim($line), '#') === 0) {
+            continue;
+        }
+        
+        // פרק את השורה ל-key=value
+        $parts = explode('=', $line, 2);
+        if (count($parts) == 2) {
+            $key = trim($parts[0]);
+            $value = trim($parts[1]);
+            
+            // הסר מרכאות אם יש
+            $value = trim($value, '"\'');
+            
+            // הגדר כמשתנה סביבה
+            putenv("$key=$value");
+            $_ENV[$key] = $value;
+            $_SERVER[$key] = $value;
+        }
+    }
+}
+
+// טען את קובץ ה-ENV
+loadEnv();
+
 // תיקון לבעיות Session במובייל
 ini_set('session.use_cookies', '1');
 ini_set('session.use_only_cookies', '1');
@@ -45,13 +78,17 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+// הגדרות חיבור למסד נתונים מה-ENV
+define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
+define('DB_NAME', $_ENV['DB_NAME'] ?? 'database');
+define('DB_USER', $_ENV['DB_USER'] ?? 'root');
+define('DB_PASS', $_ENV['DB_PASS'] ?? '');
+define('DB_CHARSET', $_ENV['DB_CHARSET'] ?? 'utf8mb4');
+// אל תשתמש בפורט 8080! זה לא פורט של MySQL
+// define('DB_PORT', $_ENV['PORT'] ?? '3306'); // <- מחק את זה!
 
-// הגדרות חיבור לדטהבייס
-define('DB_HOST', 'mbe-plus.com');
-define('DB_NAME', 'mbeplusc_kadisha_v7');
-define('DB_USER', 'mbeplusc_test');
-define('DB_PASS', 'Gxfv16be');
-define('DB_CHARSET', 'utf8mb4');
+// הגדרות Google Auth
+define('GOOGLE_CLIENT_ID', $_ENV['CLIENT_ID'] ?? '');
 
 // הגדרות כלליות
 define('SITE_URL', 'https://vaadma.cemeteries.mbe-plus.com/project_form_levayot');

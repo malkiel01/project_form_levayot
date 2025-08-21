@@ -24,7 +24,7 @@ if (!isset($data['credential'])) {
 
 try {
     // Google Client ID
-    $CLIENT_ID = '453102975463-3fhe60iqfqh7bgprufpkddv4v29cobfb.apps.googleusercontent.com';
+    $CLIENT_ID = GOOGLE_CLIENT_ID;
     
     // אימות הטוקן מול Google
     $id_token = $data['credential'];

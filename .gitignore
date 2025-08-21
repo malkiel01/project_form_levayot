@@ -1,1 +1,48 @@
 **/.DS_Store
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Composer
+vendor/
+composer.lock
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Cache
+cache/*
+!cache/.gitkeep
+
+# Logs
+logs/*
+!logs/.gitkeep
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Config files with sensitive data
+config.local.php
+database.ini
+
+# Backup files
+*.bak
+*.backup
+*.sql
+
+# Session files
+sessions/*
+!sessions/.gitkeep
