@@ -110,7 +110,7 @@ define('REGISTER_URL', AUTH_URL . '/register.php');
 
 // הגדרות דשבורדים - מתוקן לכלול את תיקיית includes!
 // define('DASHBOARD_URL', BASE_URL . '/includes/dashboard.php');
-define('DASHBOARD_URL', 'includes/dashboard.php');
+define('DASHBOARD_URL', '/includes/dashboard.php');
 define('DASHBOARD_FULL_URL', DASHBOARD_URL); 
 define('CEMETERIES_DASHBOARD_URL', BASE_URL . '/includes/dashboard_cemeteries.php'); // או השם הנכון
 define('ADMIN_DASHBOARD_URL', BASE_URL . '/includes/dashboard_admin.php'); // או השם הנכון
