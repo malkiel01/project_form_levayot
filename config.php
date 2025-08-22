@@ -1,6 +1,5 @@
 <?php
 /**
- * קונפיג חדש
  * config.php - קובץ הגדרות ראשי למערכת ניהול בית עלמין
  */
 
@@ -87,12 +86,15 @@ if (empty(DB_USER)) {
     die("שגיאה: חסר שם משתמש (DB_USER) בקובץ .env");
 }
 
-// הגדרות אתר - חשוב לכלול את אלה!
+// הגדרות אתר
 define('SITE_URL', rtrim($_ENV['SITE_URL'] ?? 'https://mbe-plus.com/cemeteries/vaadma/project_form_levayot', '/'));
 define('SITE_NAME', $_ENV['SITE_NAME'] ?? 'מערכת ניהול טפסי נפטרים');
 define('SITE_EMAIL', $_ENV['SITE_EMAIL'] ?? 'info@example.com');
 
-// הגדרות נתיבים
+// הגדר את הנתיב הבסיסי של האתר (החלק אחרי הדומיין)
+define('BASE_PATH', '/cemeteries/vaadma/project_form_levayot');
+
+// הגדרות נתיבים בשרת
 define('ROOT_PATH', dirname(__DIR__)); // תיקיית השורש של הפרויקט
 define('AUTH_PATH', ROOT_PATH . '/auth/');
 define('ADMIN_PATH', ROOT_PATH . '/admin/');
@@ -100,37 +102,38 @@ define('INCLUDES_PATH', ROOT_PATH . '/includes/');
 define('UPLOAD_PATH', $_ENV['UPLOAD_PATH'] ?? (ROOT_PATH . '/uploads/'));
 define('LOGS_PATH', $_ENV['LOG_PATH'] ?? (ROOT_PATH . '/logs/'));
 
-// הגדרות URLs - חשוב מאוד!
+// הגדרות URLs - נתיבים יחסיים מהדומיין הראשי!
 define('BASE_URL', SITE_URL);
-define('AUTH_URL', BASE_URL . '/auth');
-define('ADMIN_URL', BASE_URL . '/admin');
-define('LOGIN_URL', AUTH_URL . '/login.php');
-define('LOGOUT_URL', AUTH_URL . '/logout.php');
-define('REGISTER_URL', AUTH_URL . '/register.php');
 
-// הגדרות דשבורדים - מתוקן לכלול את תיקיית includes!
-define('DASHBOARD_URL', BASE_URL . '/includes/dashboard.php');
+// נתיבי תיקיות - יחסיים לאתר
+define('AUTH_URL', BASE_PATH . '/auth');
+define('ADMIN_URL', BASE_PATH . '/admin');
+define('INCLUDES_URL', BASE_PATH . '/includes');
+define('FORM_URL', BASE_PATH . '/form');
+
+// נתיבי קבצים ספציפיים - יחסיים לאתר
+define('LOGIN_URL', BASE_PATH . '/auth/login.php');
+define('LOGOUT_URL', BASE_PATH . '/auth/logout.php');
+define('REGISTER_URL', BASE_PATH . '/auth/register.php');
+
+// דשבורדים - נתיבים יחסיים
+define('DASHBOARD_URL', BASE_PATH . '/includes/dashboard.php');
 define('DASHBOARD_FULL_URL', DASHBOARD_URL); 
-define('CEMETERIES_DASHBOARD_URL', BASE_URL . '/includes/dashboard_cemeteries.php'); // או השם הנכון
-define('ADMIN_DASHBOARD_URL', BASE_URL . '/includes/dashboard_admin.php'); // או השם הנכון
+define('CEMETERIES_DASHBOARD_URL', BASE_PATH . '/includes/dashboard_cemeteries.php');
+define('ADMIN_DASHBOARD_URL', BASE_PATH . '/includes/dashboard_admin.php');
+define('DASHBOARD_DECEASED_URL', BASE_PATH . '/includes/dashboard_deceased.php');
+define('DASHBOARD_PURCHASES_URL', BASE_PATH . '/includes/dashboard_purchases.php');
+define('DASHBOARD_VIEW_ONLY_URL', BASE_PATH . '/includes/dashboard_view_only.php');
 
-// אם יש לך דשבורדים נוספים בתיקיית includes:
-define('DASHBOARD_DECEASED_URL', BASE_URL . '/includes/dashboard_deceased.php');
-define('DASHBOARD_PURCHASES_URL', BASE_URL . '/includes/dashboard_purchases.php');
-define('DASHBOARD_VIEW_ONLY_URL', BASE_URL . '/includes/dashboard_view_only.php');
+// רשימות - נתיבים יחסיים
+define('DECEASED_LIST_URL', BASE_PATH . '/includes/lists/deceased_list.php');
+define('PURCHASE_LIST_URL', BASE_PATH . '/includes/lists/purchase_list.php');
 
-// אם יש רשימות בתיקיית includes/lists:
-define('DECEASED_LIST_URL', BASE_URL . '/includes/lists/deceased_list.php');
-define('PURCHASE_LIST_URL', BASE_URL . '/includes/lists/purchase_list.php');
+// טפסים - נתיבים יחסיים
+define('FORM_DECEASED_URL', BASE_PATH . '/form/index_deceased.php');
+define('FORM_PURCHASE_URL', BASE_PATH . '/form/index_purchase.php');
 
-// ואם יש טפסים בתיקיית form:
-define('FORM_URL', BASE_URL . '/form/index_deceased.php');
-define('FORM_DECEASED_URL', BASE_URL . '/form/index_deceased.php');
-define('FORM_PURCHASE_URL', BASE_URL . '/form/index_purchase.php');
-
-
-
-// הגדרות Google Auth (אם בשימוש)
+// הגדרות Google Auth
 define('GOOGLE_CLIENT_ID', $_ENV['GOOGLE_CLIENT_ID'] ?? '');
 define('GOOGLE_CLIENT_SECRET', $_ENV['GOOGLE_CLIENT_SECRET'] ?? '');
 
@@ -210,76 +213,23 @@ function verifyCsrfToken($token) {
            hash_equals($_SESSION['csrf_token'], $token);
 }
 
-// קבלת URL של דשבורד לפי הרשאות
-function getUserDashboardUrl2($userId, $permissionLevel) {
-    // ברירת מחדל
-    $dashboard = DASHBOARD_FULL_URL;
-    
-    // לפי רמת הרשאה
-    switch ($permissionLevel) {
-        case 4: // מנהל ראשי
-        case 3: // מנהל
-            $dashboard = ADMIN_DASHBOARD_URL;
-            break;
-        case 2: // עורך
-            $dashboard = CEMETERIES_DASHBOARD_URL;
-            break;
-        case 1: // צופה
-        default:
-            $dashboard = DASHBOARD_FULL_URL;
-            break;
-    }
-    
-    return $dashboard;
-}
-
-// קבלת רשימת דשבורדים מותרים למשתמש
-function getUserAllowedDashboards2($userId) {
-    $db = getDbConnection();
-    $stmt = $db->prepare("
-        SELECT permission 
-        FROM users 
-        WHERE id = ?
-    ");
-    $stmt->execute([$userId]);
-    $user = $stmt->fetch();
-    
-    $dashboards = [];
-    
-    if ($user) {
-        // תמיד יש גישה לדשבורד הראשי
-        $dashboards[] = ['name' => 'דשבורד ראשי', 'url' => DASHBOARD_FULL_URL];
-        
-        // לפי רמת הרשאה - שימוש ב-permission במקום permission_level
-        if ($user['permission'] >= 2) {
-            $dashboards[] = ['name' => 'דשבורד בתי עלמין', 'url' => CEMETERIES_DASHBOARD_URL];
-        }
-        
-        if ($user['permission'] >= 3) {
-            $dashboards[] = ['name' => 'דשבורד ניהול', 'url' => ADMIN_DASHBOARD_URL];
-        }
-    }
-    
-    return $dashboards;
-}
-
-// 6767676767676
-
 // קבלת רשימת דשבורדים מותרים למשתמש
 function getUserAllowedDashboards($userId) {
-    // כיוון שאין עמודת permission בטבלת users
-    // נניח שיש טבלה נפרדת להרשאות או שכולם מקבלים גישה בסיסית
-    
     $dashboards = [];
     
     // ברירת מחדל - כולם יכולים לגשת לדשבורד הראשי
-    $dashboards[] = ['name' => 'דשבורד ראשי', 'url' => DASHBOARD_FULL_URL];
+    $dashboards[] = [
+        'name' => 'דשבורד ראשי', 
+        'url' => DASHBOARD_FULL_URL,
+        'type' => 'main',
+        'icon' => 'fas fa-home'
+    ];
     
     // בדוק אם יש טבלת הרשאות
     try {
         $db = getDbConnection();
         
-        // נסה לבדוק אם יש טבלת user_permissions או משהו דומה
+        // נסה לבדוק אם יש טבלת user_permissions
         $stmt = $db->prepare("
             SELECT permission_level 
             FROM user_permissions 
@@ -288,26 +238,39 @@ function getUserAllowedDashboards($userId) {
         $stmt->execute([$userId]);
         $perm = $stmt->fetch();
         
-        if ($perm && $perm['permission_level'] >= 2) {
-            $dashboards[] = ['name' => 'דשבורד בתי עלמין', 'url' => CEMETERIES_DASHBOARD_URL];
-        }
-        
-        if ($perm && $perm['permission_level'] >= 3) {
-            $dashboards[] = ['name' => 'דשבורד ניהול', 'url' => ADMIN_DASHBOARD_URL];
+        if ($perm) {
+            $permissionLevel = $perm['permission_level'];
+            
+            // הוסף דשבורדים לפי רמת הרשאה
+            if ($permissionLevel >= 2) {
+                $dashboards[] = [
+                    'name' => 'דשבורד נפטרים',
+                    'url' => DASHBOARD_DECEASED_URL,
+                    'type' => 'deceased',
+                    'icon' => 'fas fa-user-alt-slash'
+                ];
+                
+                $dashboards[] = [
+                    'name' => 'דשבורד רכישות',
+                    'url' => DASHBOARD_PURCHASES_URL,
+                    'type' => 'purchases',
+                    'icon' => 'fas fa-shopping-cart'
+                ];
+            }
+            
+            if ($permissionLevel >= 3) {
+                $dashboards[] = [
+                    'name' => 'דשבורד ניהול',
+                    'url' => ADMIN_DASHBOARD_URL,
+                    'type' => 'admin',
+                    'icon' => 'fas fa-cog'
+                ];
+            }
         }
         
     } catch (Exception $e) {
         // אם אין טבלת הרשאות, תן גישה בסיסית בלבד
         error_log("No permissions table found: " . $e->getMessage());
-    }
-    
-    // הוסף דשבורדים נוספים אם קיימים
-    if (defined('DASHBOARD_DECEASED_URL')) {
-        $dashboards[] = ['name' => 'דשבורד נפטרים', 'url' => DASHBOARD_DECEASED_URL];
-    }
-    
-    if (defined('DASHBOARD_PURCHASES_URL')) {
-        $dashboards[] = ['name' => 'דשבורד רכישות', 'url' => DASHBOARD_PURCHASES_URL];
     }
     
     return $dashboards;
@@ -338,14 +301,38 @@ function getUserDashboardUrl($userId, $permissionLevel = null) {
         case 3: // מנהל
             return ADMIN_DASHBOARD_URL;
         case 2: // עורך
-            return CEMETERIES_DASHBOARD_URL;
+            return DASHBOARD_DECEASED_URL;
         case 1: // צופה
         default:
             return DASHBOARD_FULL_URL;
     }
 }
 
-// 6767676767676
+// פונקציה לבניית URL מלא (אם צריך)
+function buildFullUrl($path) {
+    // אם זה כבר URL מלא, החזר אותו
+    if (strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0) {
+        return $path;
+    }
+    // אם זה נתיב יחסי שמתחיל ב-/, החזר אותו כמו שהוא
+    if (strpos($path, '/') === 0) {
+        return $path;
+    }
+    // אחרת, הוסף את BASE_PATH
+    return BASE_PATH . '/' . $path;
+}
+
+// פונקציה למעבר לדף
+function redirectTo($path) {
+    // אם זה URL מלא, השתמש בו
+    if (strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0) {
+        header('Location: ' . $path);
+    } else {
+        // אחרת, השתמש בנתיב יחסי
+        header('Location: ' . $path);
+    }
+    exit;
+}
 
 // התחלת SESSION
 if (session_status() === PHP_SESSION_NONE) {
@@ -415,6 +402,33 @@ if (($_ENV['CHECK_DB_ON_LOAD'] ?? false) == 'true') {
         $db->query("SELECT 1");
     } catch (Exception $e) {
         error_log("Database check failed: " . $e->getMessage());
+    }
+}
+
+// רישום פעילות
+function logActivity($action, $details = [], $userId = null) {
+    try {
+        $db = getDbConnection();
+        
+        // בדוק אם טבלת activity_log קיימת
+        $stmt = $db->prepare("
+            INSERT INTO activity_log (user_id, action, details, ip_address, created_at) 
+            VALUES (?, ?, ?, ?, NOW())
+        ");
+        
+        $userId = $userId ?: ($_SESSION['user_id'] ?? null);
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        
+        $stmt->execute([
+            $userId,
+            $action,
+            json_encode($details),
+            $ip
+        ]);
+        
+    } catch (Exception $e) {
+        // אם אין טבלת לוג, פשוט תעד ב-error log
+        error_log("Activity log: $action - " . json_encode($details));
     }
 }
 ?>

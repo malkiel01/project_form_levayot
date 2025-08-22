@@ -226,8 +226,6 @@ try {
         ]);
     }
 
-    alert($redirect);
-
     // החזרת תגובה
     echo json_encode([
         'success' => true,
