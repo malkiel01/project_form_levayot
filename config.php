@@ -87,7 +87,7 @@ if (empty(DB_USER)) {
 }
 
 // הגדרות אתר
-define('SITE_URL', rtrim($_ENV['SITE_URL'] ?? 'https://mbe-plus.com/cemeteries/vaadma/project_form_levayot', '/'));
+define('SITE_URL', rtrim($_ENV['SITE_URL'] ?? 'https://vaadma.cemeteries.mbe-plus.com/project_form_levayot', '/'));
 define('SITE_NAME', $_ENV['SITE_NAME'] ?? 'מערכת ניהול טפסי נפטרים');
 define('SITE_EMAIL', $_ENV['SITE_EMAIL'] ?? 'info@example.com');
 
