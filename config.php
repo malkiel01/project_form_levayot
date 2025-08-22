@@ -1,5 +1,6 @@
 <?php
 /**
+ * קונפיג חדש
  * config.php - קובץ הגדרות ראשי למערכת ניהול בית עלמין
  */
 
@@ -220,7 +221,7 @@ function getUserDashboardUrl($userId, $permissionLevel) {
 function getUserAllowedDashboards($userId) {
     $db = getDbConnection();
     $stmt = $db->prepare("
-        SELECT permission_level 
+        SELECT permission 
         FROM users 
         WHERE id = ?
     ");
@@ -233,12 +234,12 @@ function getUserAllowedDashboards($userId) {
         // תמיד יש גישה לדשבורד הראשי
         $dashboards[] = ['name' => 'דשבורד ראשי', 'url' => DASHBOARD_FULL_URL];
         
-        // לפי רמת הרשאה
-        if ($user['permission_level'] >= 2) {
+        // לפי רמת הרשאה - שימוש ב-permission במקום permission_level
+        if ($user['permission'] >= 2) {
             $dashboards[] = ['name' => 'דשבורד בתי עלמין', 'url' => CEMETERIES_DASHBOARD_URL];
         }
         
-        if ($user['permission_level'] >= 3) {
+        if ($user['permission'] >= 3) {
             $dashboards[] = ['name' => 'דשבורד ניהול', 'url' => ADMIN_DASHBOARD_URL];
         }
     }
