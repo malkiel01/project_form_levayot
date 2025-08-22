@@ -383,7 +383,7 @@
             <!-- Google Sign-In Button -->
             <div class="google-signin">
                 <div id="g_id_onload"
-                    data-client_id="453102975463-3fhe60iqfqh7bgprufpkddv4v29cobfb.apps.googleusercontent.com"
+                    data-client_id="<?= CLIENT_ID ?>"
                     data-callback="handleGoogleSignIn"
                     data-auto_prompt="false"
                     data-cancel_on_tap_outside="false">

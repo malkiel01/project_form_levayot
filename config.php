@@ -114,6 +114,8 @@ define('DB_USER', $env['DB_USER'] ?? '');
 define('DB_PASS', $env['DB_PASS'] ?? '');
 define('DB_CHARSET', $env['DB_CHARSET'] ?? 'utf8mb4');
 
+define('CLIENT_ID', $env['CLIENT_ID'] ?? '');
+
 
 
 // הגדרות כלליות
