@@ -108,11 +108,27 @@ define('LOGIN_URL', AUTH_URL . '/login.php');
 define('LOGOUT_URL', AUTH_URL . '/logout.php');
 define('REGISTER_URL', AUTH_URL . '/register.php');
 
-// הגדרות דשבורדים - זה מה שחסר!
-define('DASHBOARD_URL', BASE_URL . '/dashboard.php');
-define('DASHBOARD_FULL_URL', DASHBOARD_URL); // זה הקבוע שחסר!
-define('CEMETERIES_DASHBOARD_URL', BASE_URL . '/cemeteries/dashboard.php');
-define('ADMIN_DASHBOARD_URL', ADMIN_URL . '/dashboard.php');
+// הגדרות דשבורדים - מתוקן לכלול את תיקיית includes!
+define('DASHBOARD_URL', BASE_URL . '/includes/dashboard.php');
+define('DASHBOARD_FULL_URL', DASHBOARD_URL); 
+define('CEMETERIES_DASHBOARD_URL', BASE_URL . '/includes/dashboard_cemeteries.php'); // או השם הנכון
+define('ADMIN_DASHBOARD_URL', BASE_URL . '/includes/dashboard_admin.php'); // או השם הנכון
+
+// אם יש לך דשבורדים נוספים בתיקיית includes:
+define('DASHBOARD_DECEASED_URL', BASE_URL . '/includes/dashboard_deceased.php');
+define('DASHBOARD_PURCHASES_URL', BASE_URL . '/includes/dashboard_purchases.php');
+define('DASHBOARD_VIEW_ONLY_URL', BASE_URL . '/includes/dashboard_view_only.php');
+
+// אם יש רשימות בתיקיית includes/lists:
+define('DECEASED_LIST_URL', BASE_URL . '/includes/lists/deceased_list.php');
+define('PURCHASE_LIST_URL', BASE_URL . '/includes/lists/purchase_list.php');
+
+// ואם יש טפסים בתיקיית form:
+define('FORM_URL', BASE_URL . '/form/index_deceased.php');
+define('FORM_DECEASED_URL', BASE_URL . '/form/index_deceased.php');
+define('FORM_PURCHASE_URL', BASE_URL . '/form/index_purchase.php');
+
+
 
 // הגדרות Google Auth (אם בשימוש)
 define('GOOGLE_CLIENT_ID', $_ENV['GOOGLE_CLIENT_ID'] ?? '');
@@ -195,7 +211,7 @@ function verifyCsrfToken($token) {
 }
 
 // קבלת URL של דשבורד לפי הרשאות
-function getUserDashboardUrl($userId, $permissionLevel) {
+function getUserDashboardUrl2($userId, $permissionLevel) {
     // ברירת מחדל
     $dashboard = DASHBOARD_FULL_URL;
     
@@ -218,7 +234,7 @@ function getUserDashboardUrl($userId, $permissionLevel) {
 }
 
 // קבלת רשימת דשבורדים מותרים למשתמש
-function getUserAllowedDashboards($userId) {
+function getUserAllowedDashboards2($userId) {
     $db = getDbConnection();
     $stmt = $db->prepare("
         SELECT permission 
@@ -246,6 +262,90 @@ function getUserAllowedDashboards($userId) {
     
     return $dashboards;
 }
+
+// 6767676767676
+
+// קבלת רשימת דשבורדים מותרים למשתמש
+function getUserAllowedDashboards($userId) {
+    // כיוון שאין עמודת permission בטבלת users
+    // נניח שיש טבלה נפרדת להרשאות או שכולם מקבלים גישה בסיסית
+    
+    $dashboards = [];
+    
+    // ברירת מחדל - כולם יכולים לגשת לדשבורד הראשי
+    $dashboards[] = ['name' => 'דשבורד ראשי', 'url' => DASHBOARD_FULL_URL];
+    
+    // בדוק אם יש טבלת הרשאות
+    try {
+        $db = getDbConnection();
+        
+        // נסה לבדוק אם יש טבלת user_permissions או משהו דומה
+        $stmt = $db->prepare("
+            SELECT permission_level 
+            FROM user_permissions 
+            WHERE user_id = ?
+        ");
+        $stmt->execute([$userId]);
+        $perm = $stmt->fetch();
+        
+        if ($perm && $perm['permission_level'] >= 2) {
+            $dashboards[] = ['name' => 'דשבורד בתי עלמין', 'url' => CEMETERIES_DASHBOARD_URL];
+        }
+        
+        if ($perm && $perm['permission_level'] >= 3) {
+            $dashboards[] = ['name' => 'דשבורד ניהול', 'url' => ADMIN_DASHBOARD_URL];
+        }
+        
+    } catch (Exception $e) {
+        // אם אין טבלת הרשאות, תן גישה בסיסית בלבד
+        error_log("No permissions table found: " . $e->getMessage());
+    }
+    
+    // הוסף דשבורדים נוספים אם קיימים
+    if (defined('DASHBOARD_DECEASED_URL')) {
+        $dashboards[] = ['name' => 'דשבורד נפטרים', 'url' => DASHBOARD_DECEASED_URL];
+    }
+    
+    if (defined('DASHBOARD_PURCHASES_URL')) {
+        $dashboards[] = ['name' => 'דשבורד רכישות', 'url' => DASHBOARD_PURCHASES_URL];
+    }
+    
+    return $dashboards;
+}
+
+// קבלת URL של דשבורד לפי הרשאות
+function getUserDashboardUrl($userId, $permissionLevel = null) {
+    // אם לא נשלחה רמת הרשאה, נסה לקבל אותה
+    if ($permissionLevel === null) {
+        try {
+            $db = getDbConnection();
+            $stmt = $db->prepare("
+                SELECT permission_level 
+                FROM user_permissions 
+                WHERE user_id = ?
+            ");
+            $stmt->execute([$userId]);
+            $perm = $stmt->fetch();
+            $permissionLevel = $perm ? $perm['permission_level'] : 1;
+        } catch (Exception $e) {
+            $permissionLevel = 1; // ברירת מחדל
+        }
+    }
+    
+    // החזר דשבורד לפי רמת הרשאה
+    switch ($permissionLevel) {
+        case 4: // מנהל ראשי
+        case 3: // מנהל
+            return ADMIN_DASHBOARD_URL;
+        case 2: // עורך
+            return CEMETERIES_DASHBOARD_URL;
+        case 1: // צופה
+        default:
+            return DASHBOARD_FULL_URL;
+    }
+}
+
+// 6767676767676
 
 // התחלת SESSION
 if (session_status() === PHP_SESSION_NONE) {
