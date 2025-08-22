@@ -1,0 +1,30 @@
+DB_HOST=mbe-plus.com
+PORT=8080
+DB_NAME=mbeplusc_test
+DB_USER=mbeplusc_test
+DB_PASS=Gxfv16be
+DB_CHARSET=utf8mb4
+CLIENT_ID=453102975463-3fhe60iqfqh7bgprufpkddv4v29cobfb.apps.googleusercontent.com
+
+
+# הגדרות אתר
+SITE_URL=https://mbe-plus.com/cemeteries/vaadma/project_form_levayot
+SITE_NAME="מערכת ניהול טפסי נפטרים"
+SITE_EMAIL=info@mbe-plus.com
+
+# הגדרות Google (אם משתמשים)
+GOOGLE_CLIENT_ID=453102975463-3fhe60iqfqh7bgprufpkddv4v29cobfb.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+
+# הגדרות סביבה
+APP_ENV=development
+APP_DEBUG=true
+
+# הגדרות אבטחה
+SESSION_LIFETIME=3600
+CSRF_TOKEN_LIFETIME=3600
+ENCRYPTION_KEY=your-32-character-encryption-key-here
+
+# הגדרות נתיבים (אופציונלי)
+UPLOAD_PATH=/home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/uploads/
+LOG_PATH=/home2/mbeplusc/public_html/cemeteries/vaadma/project_form_levayot/logs/

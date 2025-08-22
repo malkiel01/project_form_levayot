@@ -2,6 +2,60 @@
 
 // config.php - קובץ הגדרות משופר
 
+/**
+ * פונקציה פשוטה לטעינת קובץ .env
+ * 
+ * @param string $path נתיב לקובץ .env (ברירת מחדל: .env בתיקייה הנוכחית)
+ * @return array מערך עם המשתנים שנטענו
+ */
+function loadEnv($path = '.env') {
+    $envVars = [];
+    
+    // בדיקה אם הקובץ קיים
+    if (!file_exists($path)) {
+        error_log("קובץ .env לא נמצא בנתיב: " . $path);
+        return $envVars;
+    }
+    
+    // קריאת הקובץ שורה שורה
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    
+    foreach ($lines as $line) {
+        // דילוג על הערות (שורות שמתחילות ב-#)
+        if (strpos(trim($line), '#') === 0) {
+            continue;
+        }
+        
+        // בדיקה שיש סימן =
+        if (strpos($line, '=') === false) {
+            continue;
+        }
+        
+        // פיצול למפתח וערך
+        list($key, $value) = explode('=', $line, 2);
+        
+        // ניקוי רווחים
+        $key = trim($key);
+        $value = trim($value);
+        
+        // הסרת גרשיים אם יש
+        if ((substr($value, 0, 1) === '"' && substr($value, -1) === '"') ||
+            (substr($value, 0, 1) === "'" && substr($value, -1) === "'")) {
+            $value = substr($value, 1, -1);
+        }
+        
+        // שמירה במערך
+        $envVars[$key] = $value;
+        
+        // הגדרה כ-environment variable
+        putenv("$key=$value");
+        $_ENV[$key] = $value;
+    }
+    
+    return $envVars;
+}
+
+
 // תיקון לבעיות Session במובייל
 ini_set('session.use_cookies', '1');
 ini_set('session.use_only_cookies', '1');
@@ -46,12 +100,27 @@ if (empty($_SESSION['csrf_token'])) {
 }
 
 
+// ========================================
+// שימוש בתחילת config.php:
+// ========================================
+
+// טעינת משתני סביבה
+$env = loadEnv(__DIR__ . '/.env');
+
+// עכשיו תוכל להשתמש בערכים:
+define('DB_HOST', $env['DB_HOST'] ?? 'localhost');
+define('DB_NAME', $env['DB_NAME'] ?? '');
+define('DB_USER', $env['DB_USER'] ?? '');
+define('DB_PASS', $env['DB_PASS'] ?? '');
+define('DB_CHARSET', $env['DB_CHARSET'] ?? 'utf8mb4');
+
+
 // הגדרות חיבור לדטהבייס
-define('DB_HOST', 'mbe-plus.com');
-define('DB_NAME', 'mbeplusc_kadisha_v7');
-define('DB_USER', 'mbeplusc_test');
-define('DB_PASS', 'Gxfv16be');
-define('DB_CHARSET', 'utf8mb4');
+// define('DB_HOST', 'mbe-plus.com');
+// define('DB_NAME', 'mbeplusc_kadisha_v7');
+// define('DB_USER', 'mbeplusc_test');
+// define('DB_PASS', 'Gxfv16be');
+// define('DB_CHARSET', 'utf8mb4');
 
 // הגדרות כלליות
 define('SITE_URL', 'https://vaadma.cemeteries.mbe-plus.com/project_form_levayot');
