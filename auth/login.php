@@ -12,11 +12,10 @@
         $userDashboard = getUserDashboardUrl($_SESSION['user_id'], $_SESSION['permission_level']);
         $redirect = $_GET['redirect'] ?? $userDashboard;
         
-        // בדיקה - אם זה כבר URL מלא, השאר אותו
-        // אם לא, זה כנראה נתיב יחסי
-        if (strpos($redirect, 'http://') !== 0 && strpos($redirect, 'https://') !== 0) {
-            // זה נתיב יחסי - תקן אותו
-            $redirect = $userDashboard;
+        // בדיקת תקינות ה-redirect
+        if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
+            // אם זה לא URL מלא, תקן אותו
+            $redirect = SITE_URL . '/' . ltrim($redirect, '/');
         }
         
         // בדוק אם למשתמש יש הרשאה ל-redirect
@@ -35,7 +34,7 @@
             $redirect = $userDashboard;
         }
         
-        // פשוט הפנה ל-URL המלא
+        // תיקון קריטי - השתמש ב-URL מלא!
         header('Location: ' . $redirect);
         exit;
     }
@@ -47,6 +46,8 @@
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
         error_log("===== LOGIN ATTEMPT =====");
         // בדיקת CSRF token
+        error_log("POST CSRF: " . ($_POST['csrf_token'] ?? 'NULL'));
+        error_log("SESSION CSRF: " . ($_SESSION['csrf_token'] ?? 'NULL'));
         if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
             error_log("ERROR: CSRF mismatch!");
             die('Invalid CSRF token');
@@ -56,8 +57,12 @@
         $password = $_POST['password'] ?? '';
         $redirect = sanitizeInput($_POST['redirect'] ?? DASHBOARD_FULL_URL);
 
+        error_log("Username entered: $username");
+        error_log("Password entered: [$password] (len=" . strlen($password) . ")");
+
         if (empty($username) || empty($password)) {
             $error = 'יש להזין שם משתמש וסיסמה';
+            error_log("ERROR: Username or password empty");
         } else {
             try {
                 $db = getDbConnection();
@@ -71,16 +76,27 @@
                 $user = $stmt->fetch();
                 
                 if ($user) {
+                    error_log("User found: id=" . $user['id'] . ", username=" . $user['username']);
+                    error_log("DB password hash: " . $user['password'] . " (len=" . strlen($user['password']) . ")");
+                    error_log("is_active: " . $user['is_active'] . ", locked_until: " . $user['locked_until']);
+                    
                     // בדיקה אם החשבון נעול
                     if ($user['locked_until'] && strtotime($user['locked_until']) > time()) {
                         $remainingTime = ceil((strtotime($user['locked_until']) - time()) / 60);
                         $error = "החשבון נעול. נסה שוב בעוד $remainingTime דקות";
+                        error_log("ERROR: Account locked until " . $user['locked_until']);
                     } elseif (!$user['is_active']) {
                         $error = 'החשבון אינו פעיל. פנה למנהל המערכת';
+                        error_log("ERROR: Account not active");
                     } else {
                         // בדיקת סיסמה
-                        if (password_verify($password, $user['password'])) {
+                        error_log("Verifying password...");
+                        $pwResult = password_verify($password, $user['password']);
+                        error_log("Password verification result: " . ($pwResult ? "TRUE" : "FALSE"));
+
+                        if ($pwResult) {
                             // התחברות מוצלחת
+                            error_log("LOGIN SUCCESS for user " . $user['username']);
                             $db->prepare("
                                 UPDATE users 
                                 SET failed_login_attempts = 0, 
@@ -95,17 +111,24 @@
                             $_SESSION['full_name'] = $user['full_name'];
                             $_SESSION['permission_level'] = $user['permission_level'];
                             $_SESSION['login_time'] = time();
+                            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                             
                             // רישום בלוג
-                            logActivity('login_success', [
-                                'method' => 'regular',
-                                'redirect' => $redirect
-                            ], $user['id']);
+                            $db->prepare("
+                                INSERT INTO activity_log 
+                                (user_id, action, details, ip_address, user_agent) 
+                                VALUES (?, 'login_success', ?, ?, ?)
+                            ")->execute([
+                                $user['id'], 
+                                json_encode(['redirect' => $redirect]), 
+                                $_SERVER['REMOTE_ADDR'] ?? '', 
+                                $_SERVER['HTTP_USER_AGENT'] ?? ''
+                            ]);
                             
                             // קבלת הדשבורד המתאים למשתמש
                             $userDashboard = getUserDashboardUrl($user['id'], $user['permission_level']);
                             
-                            // בדיקה אם יש redirect ספציפי
+                            // אם יש redirect ספציפי ולמשתמש יש הרשאה אליו, השתמש בו
                             if ($redirect && $redirect !== DASHBOARD_FULL_URL) {
                                 // בדוק אם המשתמש יכול לגשת ל-redirect המבוקש
                                 $allowedDashboards = getUserAllowedDashboards($user['id']);
@@ -119,16 +142,20 @@
                                 }
                                 
                                 if ($canAccessRedirect) {
+                                    // תיקון קריטי - השתמש ב-URL מלא!
                                     header('Location: ' . $redirect);
                                 } else {
+                                    // אם אין הרשאה, הפנה לדשבורד המתאים
                                     header('Location: ' . $userDashboard);
                                 }
                             } else {
+                                // הפנה לדשבורד המתאים
                                 header('Location: ' . $userDashboard);
                             }
                             exit;
                         } else {
                             // סיסמה שגויה
+                            error_log("ERROR: Invalid password");
                             $attempts = $user['failed_login_attempts'] + 1;
                             
                             if ($attempts >= 5) {
@@ -139,6 +166,7 @@
                                     WHERE id = ?
                                 ")->execute([$attempts, $lockUntil, $user['id']]);
                                 $error = 'יותר מדי ניסיונות כושלים. החשבון ננעל ל-30 דקות';
+                                error_log("ERROR: Account locked due to too many failed attempts");
                             } else {
                                 $db->prepare("
                                     UPDATE users 
@@ -147,11 +175,13 @@
                                 ")->execute([$attempts, $user['id']]);
                                 $remaining = 5 - $attempts;
                                 $error = "שם משתמש או סיסמה שגויים. נותרו $remaining ניסיונות";
+                                error_log("ERROR: Failed attempts: $attempts");
                             }
                         }
                     }
                 } else {
                     $error = 'שם משתמש או סיסמה שגויים';
+                    error_log("ERROR: User not found in database");
                 }
                 
             } catch (PDOException $e) {
@@ -173,9 +203,9 @@
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
             display: flex;
             align-items: center;
+            min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
@@ -211,6 +241,47 @@
             border-color: #5a67d8;
         }
         
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .demo-users, .redirect-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .redirect-info {
+            background-color: #e3f2fd;
+            font-size: 0.9rem;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .divider:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #ddd;
+        }
+        
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            position: relative;
+            color: #666;
+        }
+        
         .google-signin {
             margin: 20px 0;
             display: flex;
@@ -237,6 +308,20 @@
                 <p class="text-muted">מערכת ניהול בית עלמין</p>
             </div>
             
+            <?php if ($redirect !== DASHBOARD_FULL_URL): ?>
+                <div class="redirect-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>הודעה:</strong> תועבר לטופס לאחר ההתחברות
+                </div>
+            <?php endif; ?>
+            
+            <?php if ($success): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> <?= $success ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <?php endif; ?>
+            
             <?php if ($error): ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-exclamation-circle"></i> <?= $error ?>
@@ -253,7 +338,7 @@
                     <label for="username" class="form-label">
                         <i class="fas fa-user"></i> שם משתמש או מייל
                     </label>
-                    <input type="text" class="form-control" id="username" name="username" required autofocus>
+                    <input type="text" class="form-control" id="username" name="username" required>
                 </div>
                 
                 <div class="mb-3">
@@ -263,13 +348,13 @@
                     <input type="password" class="form-control" id="password" name="password" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary w-100">
+                <button type="submit" id="loginBtn" class="btn btn-primary w-100">
                     <i class="fas fa-sign-in-alt"></i> התחבר
                 </button>
             </form>
             
-            <div class="divider" style="text-align: center; margin: 20px 0; position: relative;">
-                <span style="background: white; padding: 0 15px; position: relative; color: #666;">או</span>
+            <div class="divider">
+                <span>או</span>
             </div>
             
             <!-- Google Sign-In Button -->
@@ -294,15 +379,36 @@
                 <a href="register.php" class="text-decoration-none">
                     <i class="fas fa-user-plus"></i> משתמש חדש? הרשם כאן
                 </a>
+                <br>
+                <a href="forgot_password.php" class="text-decoration-none">
+                    <i class="fas fa-key"></i> שכחת סיסמה?
+                </a>
             </div>
         </div>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Google Sign-In callback
+        document.getElementById('loginBtn').addEventListener('click', function(e) {
+            const btn = this;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מתחבר...';
+            
+            setTimeout(function() {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }, 5000);
+        });
+
+        // Google Sign-In callback - גרסה מתוקנת
         async function handleCredentialResponse(response) {
             console.log('Google Sign-In response received');
+            
+            // הצג אינדיקטור טעינה
+            const loadingDiv = document.createElement('div');
+            loadingDiv.innerHTML = '<div class="text-center my-3"><i class="fas fa-spinner fa-spin"></i> מתחבר עם Google...</div>';
+            document.querySelector('.google-signin').appendChild(loadingDiv);
             
             try {
                 const result = await fetch('google_auth.php', {
@@ -311,25 +417,58 @@
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify({
                         credential: response.credential,
-                        redirect: '<?= htmlspecialchars($redirect) ?>'
+                        redirect: '<?= htmlspecialchars($redirect) ?>',
+                        action: 'login'
                     })
                 });
                 
-                const data = await result.json();
-                console.log('Response data:', data);
+                console.log('Response status:', result.status);
                 
-                if (data.success) {
-                    // פשוט הפנה ל-URL שחזר מהשרת
-                    window.location.href = data.redirect;
+                // בדוק אם התגובה היא JSON
+                const contentType = result.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const data = await result.json();
+                    console.log('Response data:', data);
+                    
+                    if (data.success) {
+                        // הצלחה - הפנה למיקום המבוקש
+                        window.location.href = data.redirect;
+                    } else {
+                        // הצג הודעת שגיאה
+                        showGoogleError(data.message || 'שגיאה בהתחברות עם Google');
+                        loadingDiv.remove();
+                    }
                 } else {
-                    alert(data.message || 'שגיאה בהתחברות עם Google');
+                    // אם התגובה אינה JSON, נסה לקרוא כטקסט
+                    const text = await result.text();
+                    console.error('Non-JSON response:', text);
+                    showGoogleError('שגיאה בתקשורת עם השרת');
+                    loadingDiv.remove();
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('שגיאה בהתחברות. אנא נסה שוב.');
+                console.error('Fetch error:', error);
+                showGoogleError('שגיאה בהתחברות. אנא נסה שוב.');
+                loadingDiv.remove();
             }
+        }
+        
+        // פונקציה להצגת שגיאות Google
+        function showGoogleError(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.auth-header').after(alertDiv);
+            
+            // הסר אחרי 5 שניות
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
         }
     </script>
 </body>
