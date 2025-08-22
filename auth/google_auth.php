@@ -227,31 +227,18 @@ try {
     }
     
 
-    if (strpos($redirect, 'http://') === 0 || strpos($redirect, 'https://') === 0) {
-        // אם כן, השתמש בו כמו שהוא
-        $finalRedirect = $redirect;
-    } else {
-        // אם לא, הוסף את ה-BASE_URL
-        $finalRedirect = BASE_URL . '/' . ltrim($redirect, '/');
-    }
+    // if (strpos($redirect, 'http://') === 0 || strpos($redirect, 'https://') === 0) {
+    //     // אם כן, השתמש בו כמו שהוא
+    //     $finalRedirect = $redirect;
+    // } else {
+    //     // אם לא, הוסף את ה-BASE_URL
+    //     $finalRedirect = BASE_URL . '/' . ltrim($redirect, '/');
+    // }
 
-    // החזרת תגובה
-    echo json_encode([
-        'success' => true,
-        'redirect' => $finalRedirect,
-        'message' => 'התחברת בהצלחה',
-        'user' => [
-            'name' => $user['name'],
-            'email' => $user['email'],
-            'picture' => $user['profile_picture'] ?? $picture
-        ]
-    ]);
-
-
-    // החזרת תגובה
+    // // החזרת תגובה
     // echo json_encode([
     //     'success' => true,
-    //     'redirect' => $redirect,
+    //     'redirect' => $finalRedirect,
     //     'message' => 'התחברת בהצלחה',
     //     'user' => [
     //         'name' => $user['name'],
@@ -259,6 +246,19 @@ try {
     //         'picture' => $user['profile_picture'] ?? $picture
     //     ]
     // ]);
+
+
+    // החזרת תגובה
+    echo json_encode([
+        'success' => true,
+        'redirect' => $redirect,
+        'message' => 'התחברת בהצלחה',
+        'user' => [
+            'name' => $user['name'],
+            'email' => $user['email'],
+            'picture' => $user['profile_picture'] ?? $picture
+        ]
+    ]);
     
 } catch (Exception $e) {
     error_log('Google Auth Error: ' . $e->getMessage());
