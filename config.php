@@ -1,23 +1,11 @@
 <?php
 /**
  * config.php - קובץ הגדרות ראשי למערכת ניהול בית עלמין
- * 
- * קובץ זה טוען הגדרות מקובץ .env ומגדיר קבועים וחיבורים למערכת
  */
 
-// מנע גישה ישירה
-if (!defined('CEMETERY_SYSTEM')) {
-    define('CEMETERY_SYSTEM', true);
-}
-
-// הגדרת דיווח על שגיאות בהתאם לסביבה
-if (getenv('APP_ENV') === 'production') {
-    error_reporting(0);
-    ini_set('display_errors', '0');
-} else {
-    error_reporting(E_ALL);
-    ini_set('display_errors', '1');
-}
+// הגדרת דיווח על שגיאות
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // הגדרת אזור זמן
 date_default_timezone_set('Asia/Jerusalem');
@@ -25,118 +13,125 @@ date_default_timezone_set('Asia/Jerusalem');
 /**
  * טעינת קובץ ENV
  */
-class EnvLoader {
-    private static $loaded = false;
-    private static $envPath;
+function loadEnvFile($path) {
+    if (!file_exists($path)) {
+        // נסה גם בתיקיית האב
+        $parentPath = dirname($path) . '/.env';
+        if (file_exists($parentPath)) {
+            $path = $parentPath;
+        } else {
+            die("
+                <div style='text-align: center; margin-top: 50px; font-family: Arial;'>
+                    <h2>שגיאה: קובץ .env לא נמצא</h2>
+                    <p>יש ליצור קובץ .env בתיקיית השורש של הפרויקט</p>
+                    <p>נתיב: $path</p>
+                </div>
+            ");
+        }
+    }
     
-    public static function load($path = null) {
-        if (self::$loaded) {
-            return true;
+    if (!is_readable($path)) {
+        die("שגיאה: אין הרשאות קריאה לקובץ .env");
+    }
+    
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $loaded = 0;
+    
+    foreach ($lines as $line) {
+        // דלג על הערות וקווים ריקים
+        $line = trim($line);
+        if (empty($line) || $line[0] === '#') {
+            continue;
         }
         
-        self::$envPath = $path ?: __DIR__ . '/.env';
-        
-        if (!file_exists(self::$envPath)) {
-            // נסה לחפש בתיקיית האב
-            self::$envPath = dirname(__DIR__) . '/.env';
-            if (!file_exists(self::$envPath)) {
-                throw new Exception("קובץ .env לא נמצא. האם העתקת את env-example.txt ל-.env?");
-            }
-        }
-        
-        if (!is_readable(self::$envPath)) {
-            throw new Exception("אין הרשאות קריאה לקובץ .env");
-        }
-        
-        $lines = file(self::$envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        
-        foreach ($lines as $line) {
-            // דלג על הערות וקווים ריקים
-            if (empty($line) || strpos(trim($line), '#') === 0) {
-                continue;
-            }
+        // חלק למפתח וערך
+        if (strpos($line, '=') !== false) {
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
             
-            // חלק את השורה למפתח וערך
-            if (strpos($line, '=') !== false) {
-                list($key, $value) = explode('=', $line, 2);
-                $key = trim($key);
-                $value = trim($value);
-                
-                // הסר גרשיים אם יש
-                if ((substr($value, 0, 1) === '"' && substr($value, -1) === '"') ||
-                    (substr($value, 0, 1) === "'" && substr($value, -1) === "'")) {
-                    $value = substr($value, 1, -1);
-                }
-                
-                // החלף משתנים אם יש
-                if (strpos($value, '${') !== false) {
-                    $value = self::parseVariables($value);
-                }
-                
-                // הגדר משתנה סביבה
-                putenv("$key=$value");
-                $_ENV[$key] = $value;
-                $_SERVER[$key] = $value;
-            }
+            // הסר גרשיים
+            $value = trim($value, '"\'');
+            
+            // הגדר משתנה סביבה
+            putenv("$key=$value");
+            $_ENV[$key] = $value;
+            $loaded++;
         }
-        
-        self::$loaded = true;
-        return true;
     }
     
-    private static function parseVariables($value) {
-        return preg_replace_callback('/\${([^}]+)}/', function($matches) {
-            return getenv($matches[1]) ?: $matches[0];
-        }, $value);
-    }
+    return $loaded;
 }
 
 // טען את קובץ ENV
-try {
-    EnvLoader::load();
-} catch (Exception $e) {
-    die("שגיאה קריטית: " . $e->getMessage());
+$envPath = __DIR__ . '/.env';
+$loadedVars = loadEnvFile($envPath);
+
+if ($loadedVars == 0) {
+    die("שגיאה: קובץ .env ריק או לא תקין");
 }
 
-/**
- * פונקציה לקבלת ערך מ-ENV עם ברירת מחדל
- */
-function env($key, $default = null) {
-    $value = getenv($key);
-    if ($value === false) {
-        return $default;
-    }
-    
-    // המר ערכים בוליאניים
-    if (strtolower($value) === 'true') return true;
-    if (strtolower($value) === 'false') return false;
-    if (strtolower($value) === 'null') return null;
-    
-    return $value;
+// הגדרות מסד נתונים
+define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
+define('DB_NAME', $_ENV['DB_NAME'] ?? '');
+define('DB_USER', $_ENV['DB_USER'] ?? '');
+define('DB_PASS', $_ENV['DB_PASS'] ?? '');
+define('DB_CHARSET', $_ENV['DB_CHARSET'] ?? 'utf8mb4');
+
+// בדיקה שיש את הפרטים הנדרשים
+if (empty(DB_NAME)) {
+    die("שגיאה: חסר שם מסד נתונים (DB_NAME) בקובץ .env");
+}
+if (empty(DB_USER)) {
+    die("שגיאה: חסר שם משתמש (DB_USER) בקובץ .env");
 }
 
-/**
- * הגדרת קבועים למסד נתונים
- */
-define('DB_HOST', env('DB_HOST', 'localhost'));
-define('DB_NAME', env('DB_NAME'));
-define('DB_USER', env('DB_USER'));
-define('DB_PASS', env('DB_PASS'));
-define('DB_CHARSET', env('DB_CHARSET', 'utf8mb4'));
+// הגדרות אתר - חשוב לכלול את אלה!
+define('SITE_URL', rtrim($_ENV['SITE_URL'] ?? 'https://mbe-plus.com/cemeteries/vaadma/project_form_levayot', '/'));
+define('SITE_NAME', $_ENV['SITE_NAME'] ?? 'מערכת ניהול טפסי נפטרים');
+define('SITE_EMAIL', $_ENV['SITE_EMAIL'] ?? 'info@example.com');
 
-// בדיקה שיש את כל הפרטים הנדרשים
-if (!DB_NAME || !DB_USER) {
-    die("שגיאה: חסרים פרטי חיבור למסד נתונים. בדוק את קובץ .env");
-}
+// הגדרות נתיבים
+define('ROOT_PATH', dirname(__DIR__)); // תיקיית השורש של הפרויקט
+define('AUTH_PATH', ROOT_PATH . '/auth/');
+define('ADMIN_PATH', ROOT_PATH . '/admin/');
+define('INCLUDES_PATH', ROOT_PATH . '/includes/');
+define('UPLOAD_PATH', $_ENV['UPLOAD_PATH'] ?? (ROOT_PATH . '/uploads/'));
+define('LOGS_PATH', $_ENV['LOG_PATH'] ?? (ROOT_PATH . '/logs/'));
+
+// הגדרות URLs - חשוב מאוד!
+define('BASE_URL', SITE_URL);
+define('AUTH_URL', BASE_URL . '/auth');
+define('ADMIN_URL', BASE_URL . '/admin');
+define('LOGIN_URL', AUTH_URL . '/login.php');
+define('LOGOUT_URL', AUTH_URL . '/logout.php');
+define('REGISTER_URL', AUTH_URL . '/register.php');
+
+// הגדרות דשבורדים - זה מה שחסר!
+define('DASHBOARD_URL', BASE_URL . '/dashboard.php');
+define('DASHBOARD_FULL_URL', DASHBOARD_URL); // זה הקבוע שחסר!
+define('CEMETERIES_DASHBOARD_URL', BASE_URL . '/cemeteries/dashboard.php');
+define('ADMIN_DASHBOARD_URL', ADMIN_URL . '/dashboard.php');
+
+// הגדרות Google Auth (אם בשימוש)
+define('GOOGLE_CLIENT_ID', $_ENV['GOOGLE_CLIENT_ID'] ?? '');
+define('GOOGLE_CLIENT_SECRET', $_ENV['GOOGLE_CLIENT_SECRET'] ?? '');
+
+// הגדרות אבטחה
+define('SESSION_LIFETIME', (int)($_ENV['SESSION_LIFETIME'] ?? 3600));
+define('CSRF_TOKEN_LIFETIME', (int)($_ENV['CSRF_TOKEN_LIFETIME'] ?? 3600));
+define('ENCRYPTION_KEY', $_ENV['ENCRYPTION_KEY'] ?? 'default-key-change-this');
+
+// משתנה גלובלי לחיבור
+$pdo = null;
 
 /**
- * מחלקת חיבור למסד נתונים
+ * פונקציה לקבלת חיבור למסד נתונים
  */
-class Database {
-    private static $instance = null;
-    private $pdo;
+function getDbConnection() {
+    global $pdo;
     
-    private function __construct() {
+    if ($pdo === null) {
         try {
             $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
             
@@ -144,122 +139,150 @@ class Database {
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . DB_CHARSET . " COLLATE utf8mb4_unicode_ci"
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . DB_CHARSET
             ];
             
-            $this->pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+            $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
             
         } catch (PDOException $e) {
-            // בסביבת פיתוח - הצג את השגיאה המלאה
-            if (env('APP_DEBUG', false)) {
-                die("שגיאת חיבור למסד נתונים: " . $e->getMessage());
+            // בסביבת פיתוח - הצג שגיאה מפורטת
+            if (($_ENV['APP_ENV'] ?? 'development') !== 'production') {
+                die("
+                    <div style='text-align: center; margin-top: 50px; font-family: Arial;'>
+                        <h2>שגיאת חיבור למסד נתונים</h2>
+                        <p style='color: red;'>" . $e->getMessage() . "</p>
+                    </div>
+                ");
             } else {
-                // בסביבת ייצור - הצג הודעה כללית ותעד את השגיאה
+                // בסביבת ייצור - הצג הודעה כללית
                 error_log("Database connection error: " . $e->getMessage());
                 die("שגיאה בחיבור למערכת. אנא פנה למנהל המערכת.");
             }
         }
     }
     
-    public static function getInstance() {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
+    return $pdo;
+}
+
+/**
+ * פונקציות עזר נדרשות
+ */
+
+// ניקוי קלט
+function sanitizeInput($data) {
+    if (is_array($data)) {
+        return array_map('sanitizeInput', $data);
+    }
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+    return $data;
+}
+
+// יצירת CSRF token
+function generateCsrfToken() {
+    if (!isset($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+// בדיקת CSRF token
+function verifyCsrfToken($token) {
+    return isset($_SESSION['csrf_token']) && 
+           hash_equals($_SESSION['csrf_token'], $token);
+}
+
+// קבלת URL של דשבורד לפי הרשאות
+function getUserDashboardUrl($userId, $permissionLevel) {
+    // ברירת מחדל
+    $dashboard = DASHBOARD_FULL_URL;
+    
+    // לפי רמת הרשאה
+    switch ($permissionLevel) {
+        case 4: // מנהל ראשי
+        case 3: // מנהל
+            $dashboard = ADMIN_DASHBOARD_URL;
+            break;
+        case 2: // עורך
+            $dashboard = CEMETERIES_DASHBOARD_URL;
+            break;
+        case 1: // צופה
+        default:
+            $dashboard = DASHBOARD_FULL_URL;
+            break;
     }
     
-    public function getConnection() {
-        return $this->pdo;
+    return $dashboard;
+}
+
+// קבלת רשימת דשבורדים מותרים למשתמש
+function getUserAllowedDashboards($userId) {
+    $db = getDbConnection();
+    $stmt = $db->prepare("
+        SELECT permission_level 
+        FROM users 
+        WHERE id = ?
+    ");
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch();
+    
+    $dashboards = [];
+    
+    if ($user) {
+        // תמיד יש גישה לדשבורד הראשי
+        $dashboards[] = ['name' => 'דשבורד ראשי', 'url' => DASHBOARD_FULL_URL];
+        
+        // לפי רמת הרשאה
+        if ($user['permission_level'] >= 2) {
+            $dashboards[] = ['name' => 'דשבורד בתי עלמין', 'url' => CEMETERIES_DASHBOARD_URL];
+        }
+        
+        if ($user['permission_level'] >= 3) {
+            $dashboards[] = ['name' => 'דשבורד ניהול', 'url' => ADMIN_DASHBOARD_URL];
+        }
+    }
+    
+    return $dashboards;
+}
+
+// התחלת SESSION
+if (session_status() === PHP_SESSION_NONE) {
+    // הגדרות אבטחה ל-session
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.use_strict_mode', 1);
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.cookie_samesite', 'Lax');
+    
+    // אם באתר מאובטח
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        ini_set('session.cookie_secure', 1);
+    }
+    
+    // הגדר שם ייחודי ל-session
+    session_name('CEMETERY_SESSION');
+    
+    // הגדר זמן חיים
+    session_set_cookie_params([
+        'lifetime' => SESSION_LIFETIME,
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+    
+    // התחל את ה-session
+    session_start();
+    
+    // חדש session ID כל 30 דקות
+    if (!isset($_SESSION['last_regeneration'])) {
+        $_SESSION['last_regeneration'] = time();
+    } elseif (time() - $_SESSION['last_regeneration'] > 1800) {
+        session_regenerate_id(true);
+        $_SESSION['last_regeneration'] = time();
     }
 }
 
-/**
- * פונקציה גלובלית לקבלת חיבור למסד נתונים
- */
-function getDbConnection() {
-    return Database::getInstance()->getConnection();
-}
-
-/**
- * הגדרות אתר
- */
-define('SITE_URL', rtrim(env('SITE_URL', 'http://localhost'), '/'));
-define('SITE_NAME', env('SITE_NAME', 'מערכת ניהול נפטרים'));
-define('SITE_EMAIL', env('SITE_EMAIL', 'info@example.com'));
-define('UPLOAD_PATH', env('UPLOAD_PATH', __DIR__ . '/uploads/'));
-define('TIMEZONE', env('TIMEZONE', 'Asia/Jerusalem'));
-
-/**
- * הגדרות אבטחה
- */
-define('ENCRYPTION_KEY', env('ENCRYPTION_KEY', 'default-key-change-this'));
-define('SESSION_LIFETIME', (int)env('SESSION_LIFETIME', 3600));
-define('CSRF_TOKEN_LIFETIME', (int)env('CSRF_TOKEN_LIFETIME', 3600));
-
-/**
- * הגדרות נתיבים
- */
-define('ROOT_PATH', __DIR__);
-define('INCLUDES_PATH', ROOT_PATH . '/includes/');
-define('AJAX_PATH', ROOT_PATH . '/ajax/');
-define('ADMIN_PATH', ROOT_PATH . '/admin/');
-define('LOGS_PATH', env('LOG_PATH', ROOT_PATH . '/logs/'));
-
-/**
- * הגדרות URLs
- */
-define('BASE_URL', SITE_URL);
-define('LOGIN_URL', BASE_URL . '/login.php');
-define('DASHBOARD_URL', BASE_URL . '/dashboard.php');
-define('ADMIN_URL', BASE_URL . '/admin/');
-
-/**
- * התחלת SESSION מאובטחת
- */
-function startSecureSession() {
-    if (session_status() === PHP_SESSION_NONE) {
-        // הגדרות אבטחה ל-session
-        ini_set('session.use_only_cookies', 1);
-        ini_set('session.use_strict_mode', 1);
-        ini_set('session.cookie_httponly', 1);
-        ini_set('session.cookie_samesite', 'Lax');
-        
-        // אם האתר רץ על HTTPS
-        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-            ini_set('session.cookie_secure', 1);
-        }
-        
-        // הגדר שם ייחודי ל-session
-        session_name('CEMETERY_SESSION');
-        
-        // הגדר זמן חיים ל-cookie
-        session_set_cookie_params([
-            'lifetime' => SESSION_LIFETIME,
-            'path' => '/',
-            'domain' => '',
-            'secure' => !empty($_SERVER['HTTPS']),
-            'httponly' => true,
-            'samesite' => 'Lax'
-        ]);
-        
-        session_start();
-        
-        // חדש את session ID באופן תקופתי
-        if (!isset($_SESSION['last_regeneration'])) {
-            $_SESSION['last_regeneration'] = time();
-        } elseif (time() - $_SESSION['last_regeneration'] > 1800) { // כל 30 דקות
-            session_regenerate_id(true);
-            $_SESSION['last_regeneration'] = time();
-        }
-    }
-}
-
-// התחל session
-startSecureSession();
-
-/**
- * טען קבצים נדרשים אם הם קיימים
- */
+// טען קבצים נוספים אם קיימים
 $includeFiles = [
     'functions.php',
     'auth_functions.php',
@@ -273,27 +296,19 @@ foreach ($includeFiles as $file) {
     }
 }
 
-/**
- * הגדר handler לשגיאות
- */
-if (env('APP_ENV') !== 'production') {
-    set_error_handler(function($severity, $message, $file, $line) {
-        throw new ErrorException($message, 0, $severity, $file, $line);
-    });
-    
-    set_exception_handler(function($exception) {
-        echo "<div style='border: 2px solid red; padding: 10px; margin: 10px; background: #ffe0e0;'>";
-        echo "<h3>שגיאה במערכת</h3>";
-        echo "<p><strong>הודעה:</strong> " . $exception->getMessage() . "</p>";
-        echo "<p><strong>קובץ:</strong> " . $exception->getFile() . "</p>";
-        echo "<p><strong>שורה:</strong> " . $exception->getLine() . "</p>";
-        echo "<pre>" . $exception->getTraceAsString() . "</pre>";
-        echo "</div>";
-    });
+// וודא שתיקיות נדרשות קיימות
+$requiredDirs = [UPLOAD_PATH, LOGS_PATH];
+foreach ($requiredDirs as $dir) {
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0777, true);
+    }
 }
 
-// בדיקת חיבור למסד נתונים בעת טעינת הקובץ (אופציונלי)
-if (env('CHECK_DB_ON_LOAD', false)) {
+// הגדר קובץ לוג
+ini_set('error_log', LOGS_PATH . 'php_errors.log');
+
+// בדיקה בסיסית של החיבור (אופציונלי)
+if (($_ENV['CHECK_DB_ON_LOAD'] ?? false) == 'true') {
     try {
         $db = getDbConnection();
         $db->query("SELECT 1");
