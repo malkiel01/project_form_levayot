@@ -1,320 +1,626 @@
 <?php
-/**
- * קונפיג חדש
- * config.php - קובץ הגדרות ראשי למערכת ניהול בית עלמין
- */
+// קונפיג ישן
+// config.php - קובץ הגדרות משופר
 
-// הגדרת דיווח על שגיאות
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// הגדרת אזור זמן
-date_default_timezone_set('Asia/Jerusalem');
-
-/**
- * טעינת קובץ ENV
- */
-function loadEnvFile($path) {
+// פונקציה פשוטה לטעינת קובץ .env
+function loadEnv($path = __DIR__ . '/.env') {
     if (!file_exists($path)) {
-        // נסה גם בתיקיית האב
-        $parentPath = dirname($path) . '/.env';
-        if (file_exists($parentPath)) {
-            $path = $parentPath;
-        } else {
-            die("
-                <div style='text-align: center; margin-top: 50px; font-family: Arial;'>
-                    <h2>שגיאה: קובץ .env לא נמצא</h2>
-                    <p>יש ליצור קובץ .env בתיקיית השורש של הפרויקט</p>
-                    <p>נתיב: $path</p>
-                </div>
-            ");
-        }
-    }
-    
-    if (!is_readable($path)) {
-        die("שגיאה: אין הרשאות קריאה לקובץ .env");
+        die("Error: .env file not found at: $path");
     }
     
     $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $loaded = 0;
-    
     foreach ($lines as $line) {
-        // דלג על הערות וקווים ריקים
-        $line = trim($line);
-        if (empty($line) || $line[0] === '#') {
+        // דלג על הערות
+        if (strpos(trim($line), '#') === 0) {
             continue;
         }
         
-        // חלק למפתח וערך
-        if (strpos($line, '=') !== false) {
-            list($key, $value) = explode('=', $line, 2);
-            $key = trim($key);
-            $value = trim($value);
+        // פרק את השורה ל-key=value
+        $parts = explode('=', $line, 2);
+        if (count($parts) == 2) {
+            $key = trim($parts[0]);
+            $value = trim($parts[1]);
             
-            // הסר גרשיים
+            // הסר מרכאות אם יש
             $value = trim($value, '"\'');
             
-            // הגדר משתנה סביבה
+            // הגדר כמשתנה סביבה
             putenv("$key=$value");
             $_ENV[$key] = $value;
-            $loaded++;
+            $_SERVER[$key] = $value;
         }
     }
-    
-    return $loaded;
 }
 
-// טען את קובץ ENV
-$envPath = __DIR__ . '/.env';
-$loadedVars = loadEnvFile($envPath);
+// טען את קובץ ה-ENV
+loadEnv();
 
-if ($loadedVars == 0) {
-    die("שגיאה: קובץ .env ריק או לא תקין");
+// תיקון לבעיות Session במובייל
+ini_set('session.use_cookies', '1');
+ini_set('session.use_only_cookies', '1');
+ini_set('session.use_trans_sid', '0');
+ini_set('session.cookie_httponly', '1');
+ini_set('session.cookie_samesite', 'Lax'); // חשוב! Lax ולא Strict למובייל
+
+// אם האתר ב-HTTPS (מומלץ מאוד!)
+if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
+    ini_set('session.cookie_secure', '1');
 }
 
-// הגדרות מסד נתונים
-define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
-define('DB_NAME', $_ENV['DB_NAME'] ?? '');
-define('DB_USER', $_ENV['DB_USER'] ?? '');
-define('DB_PASS', $_ENV['DB_PASS'] ?? '');
-define('DB_CHARSET', $_ENV['DB_CHARSET'] ?? 'utf8mb4');
-
-// בדיקה שיש את הפרטים הנדרשים
-if (empty(DB_NAME)) {
-    die("שגיאה: חסר שם מסד נתונים (DB_NAME) בקובץ .env");
-}
-if (empty(DB_USER)) {
-    die("שגיאה: חסר שם משתמש (DB_USER) בקובץ .env");
-}
-
-// הגדרות אתר - חשוב לכלול את אלה!
-define('SITE_URL', rtrim($_ENV['SITE_URL'] ?? 'https://mbe-plus.com/cemeteries/vaadma/project_form_levayot', '/'));
-define('SITE_NAME', $_ENV['SITE_NAME'] ?? 'מערכת ניהול טפסי נפטרים');
-define('SITE_EMAIL', $_ENV['SITE_EMAIL'] ?? 'info@example.com');
-
-// הגדרות נתיבים
-define('ROOT_PATH', dirname(__DIR__)); // תיקיית השורש של הפרויקט
-define('AUTH_PATH', ROOT_PATH . '/auth/');
-define('ADMIN_PATH', ROOT_PATH . '/admin/');
-define('INCLUDES_PATH', ROOT_PATH . '/includes/');
-define('UPLOAD_PATH', $_ENV['UPLOAD_PATH'] ?? (ROOT_PATH . '/uploads/'));
-define('LOGS_PATH', $_ENV['LOG_PATH'] ?? (ROOT_PATH . '/logs/'));
-
-// הגדרות URLs - חשוב מאוד!
-define('BASE_URL', SITE_URL);
-define('AUTH_URL', BASE_URL . '/auth');
-define('ADMIN_URL', BASE_URL . '/admin');
-define('LOGIN_URL', AUTH_URL . '/login.php');
-define('LOGOUT_URL', AUTH_URL . '/logout.php');
-define('REGISTER_URL', AUTH_URL . '/register.php');
-
-// הגדרות דשבורדים - זה מה שחסר!
-define('DASHBOARD_URL', BASE_URL . '/dashboard.php');
-define('DASHBOARD_FULL_URL', DASHBOARD_URL); // זה הקבוע שחסר!
-define('CEMETERIES_DASHBOARD_URL', BASE_URL . '/cemeteries/dashboard.php');
-define('ADMIN_DASHBOARD_URL', ADMIN_URL . '/dashboard.php');
-
-// הגדרות Google Auth (אם בשימוש)
-define('GOOGLE_CLIENT_ID', $_ENV['GOOGLE_CLIENT_ID'] ?? '');
-define('GOOGLE_CLIENT_SECRET', $_ENV['GOOGLE_CLIENT_SECRET'] ?? '');
+// הגדרת זמן חיים ארוך יותר ל-session
+ini_set('session.gc_maxlifetime', '7200'); // 2 שעות
+ini_set('session.cookie_lifetime', '7200'); // 2 שעות
 
 // הגדרות אבטחה
-define('SESSION_LIFETIME', (int)($_ENV['SESSION_LIFETIME'] ?? 3600));
-define('CSRF_TOKEN_LIFETIME', (int)($_ENV['CSRF_TOKEN_LIFETIME'] ?? 3600));
-define('ENCRYPTION_KEY', $_ENV['ENCRYPTION_KEY'] ?? 'default-key-change-this');
+define('SESSION_NAME', 'deceased_forms_session');
+define('CSRF_TOKEN_NAME', 'csrf_token');
 
-// משתנה גלובלי לחיבור
-$pdo = null;
+// הגדר שם מותאם אישית ל-session
+session_name(SESSION_NAME);
+
+// התחל session רק אם לא פעיל
+if (session_status() === PHP_SESSION_NONE) {
+    // הגדרות נוספות לפני התחלת ה-session
+    session_set_cookie_params([
+        'lifetime' => 7200,
+        'path' => '/',
+        'domain' => '', // ריק = הדומיין הנוכחי
+        'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+        'httponly' => true,
+        'samesite' => 'Lax' // חשוב למובייל!
+    ]);
+    
+    session_start();
+}
+
+// יצירת CSRF token אם לא קיים
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// // הגדרות חיבור למסד נתונים מה-ENV
+// define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
+// define('DB_NAME', $_ENV['DB_NAME'] ?? 'database');
+// define('DB_USER', $_ENV['DB_USER'] ?? 'root');
+// define('DB_PASS', $_ENV['DB_PASS'] ?? '');
+// define('DB_CHARSET', $_ENV['DB_CHARSET'] ?? 'utf8mb4');
+// // אל תשתמש בפורט 8080! זה לא פורט של MySQL
+// // define('DB_PORT', $_ENV['PORT'] ?? '3306'); // <- מחק את זה!
+
+// // הגדרות Google Auth
+// define('GOOGLE_CLIENT_ID', $_ENV['CLIENT_ID'] ?? '');
+
+
+// הגדרות חיבור לדטהבייס
+define('DB_HOST', 'mbe-plus.com');
+define('DB_NAME', 'mbeplusc_kadisha_v7');
+define('DB_USER', 'mbeplusc_test');
+define('DB_PASS', 'Gxfv16be');
+define('DB_CHARSET', 'utf8mb4');
+
+// הגדרות כלליות
+define('SITE_URL', 'https://vaadma.cemeteries.mbe-plus.com/project_form_levayot');
+define('UPLOAD_PATH', __DIR__ . '/uploads/');
+define('MAX_FILE_SIZE', 10 * 1024 * 1024); // 10MB
+define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']);
+
+// לינקים וקישורים
+define('LOGIN_URL', 'auth/login.php');
+define('LOGOUT_URL', 'auth/logout.php');
+define('LOGIN_SITE_URL', SITE_URL .  'auth/login.php');
+
+define('FORM_URL', 'form/index_deceased.php');
+define('FORM_DECEASED_URL', 'form/index_deceased.php');
+define('FORM_PURCHASE_URL', 'form/index_purchase.php');
+
+define('DASHBOARD_FULL_URL', SITE_URL . '/includes/dashboard.php');
+define('DASHBOARD_DECEASED_URL', SITE_URL . '/includes/dashboard_deceased.php');
+define('DASHBOARD_PURCHASES_URL', SITE_URL . '/includes/dashboard_purchases.php');
+
+// נתיבי רשימות
+define('DECEASED_LIST_URL', SITE_URL . '/includes/lists/deceased_list.php');
+define('PURCHASE_LIST_URL', SITE_URL . '/includes/lists/purchase_list.php');
+
+
+define('ALLOWED_FILE_TYPES', ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip', 'rar']);
+
+// הגדרות זמן
+date_default_timezone_set('Asia/Jerusalem');
+
+
+// -----------
+// עדכן את הפונקציה הזאת ב-config.php במקום הישנה
+
+// פונקציה חדשה להעניק הרשאה ספציפית למשתמש
+function grantUserPermission($fieldName, $userId, $action = 'view') {
+    $db = getDbConnection();
+    $column = $action === 'view' ? 'user_specific_view' : 'user_specific_edit';
+    
+    // קבלת ההרשאות הנוכחיות
+    $stmt = $db->prepare("SELECT {$column} FROM field_permissions WHERE field_name = ?");
+    $stmt->execute([$fieldName]);
+    $current = $stmt->fetchColumn();
+    
+    $permissions = $current ? json_decode($current, true) : [];
+    $permissions[$userId] = true;
+    
+    $updateStmt = $db->prepare("
+        UPDATE field_permissions 
+        SET {$column} = ?, updated_at = CURRENT_TIMESTAMP 
+        WHERE field_name = ?
+    ");
+    return $updateStmt->execute([json_encode($permissions), $fieldName]);
+}
+
+// פונקציה חדשה להסרת הרשאה ספציפית
+function revokeUserPermission($fieldName, $userId, $action = 'view') {
+    $db = getDbConnection();
+    $column = $action === 'view' ? 'user_specific_view' : 'user_specific_edit';
+    
+    $stmt = $db->prepare("SELECT {$column} FROM field_permissions WHERE field_name = ?");
+    $stmt->execute([$fieldName]);
+    $current = $stmt->fetchColumn();
+    
+    if ($current) {
+        $permissions = json_decode($current, true);
+        unset($permissions[$userId]);
+        $newValue = empty($permissions) ? null : json_encode($permissions);
+        
+        $updateStmt = $db->prepare("
+            UPDATE field_permissions 
+            SET {$column} = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE field_name = ?
+        ");
+        return $updateStmt->execute([$newValue, $fieldName]);
+    }
+    
+    return true;
+}
+// -----------
+
+
+
+// <?php
+// // dashboard_router.php - הוסף את הפונקציות האלה לקובץ config.php
 
 /**
- * פונקציה לקבלת חיבור למסד נתונים
+ * פונקציה לקבלת כתובת הדשבורד המתאים למשתמש
  */
-function getDbConnection() {
-    global $pdo;
+function getUserDashboardUrl($userId = null, $permissionLevel = null) {
+    $db = getDbConnection();
     
-    if ($pdo === null) {
-        try {
-            $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
-            
-            $options = [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . DB_CHARSET
-            ];
-            
-            $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
-            
-        } catch (PDOException $e) {
-            // בסביבת פיתוח - הצג שגיאה מפורטת
-            if (($_ENV['APP_ENV'] ?? 'development') !== 'production') {
-                die("
-                    <div style='text-align: center; margin-top: 50px; font-family: Arial;'>
-                        <h2>שגיאת חיבור למסד נתונים</h2>
-                        <p style='color: red;'>" . $e->getMessage() . "</p>
-                    </div>
-                ");
-            } else {
-                // בסביבת ייצור - הצג הודעה כללית
-                error_log("Database connection error: " . $e->getMessage());
-                die("שגיאה בחיבור למערכת. אנא פנה למנהל המערכת.");
+    // אם לא נשלחו פרמטרים, קח מהסשן
+    if ($userId === null) {
+        $userId = $_SESSION['user_id'] ?? null;
+    }
+    if ($permissionLevel === null) {
+        $permissionLevel = $_SESSION['permission_level'] ?? 1;
+    }
+    
+    // מנהלים ועורכים מתקדמים - תמיד דשבורד ראשי
+    if ($permissionLevel >= 3) {
+        return DASHBOARD_FULL_URL;
+    }
+    
+    // עורכים רגילים וצופים - בדוק הרשאות ספציפיות
+    if ($permissionLevel == 2) {
+        // בדוק אם יש הרשאה לדשבורד ספציפי
+        $stmt = $db->prepare("
+            SELECT dashboard_type 
+            FROM user_dashboard_permissions 
+            WHERE user_id = ? AND has_permission = 1
+            ORDER BY 
+                CASE dashboard_type 
+                    WHEN 'main' THEN 1 
+                    WHEN 'deceased' THEN 2 
+                    WHEN 'purchases' THEN 3 
+                END
+            LIMIT 1
+        ");
+        $stmt->execute([$userId]);
+        $allowedDashboard = $stmt->fetchColumn();
+        
+        if ($allowedDashboard) {
+            switch($allowedDashboard) {
+                case 'main':
+                    return DASHBOARD_FULL_URL;
+                case 'deceased':
+                    return DASHBOARD_DECEASED_URL;
+                case 'purchases':
+                    return DASHBOARD_PURCHASES_URL;
             }
         }
     }
     
-    return $pdo;
+    // ברירת מחדל - דשבורד צפייה בלבד
+    return SITE_URL . '/includes/dashboard_view_only.php';
 }
 
 /**
- * פונקציות עזר נדרשות
+ * פונקציה להענקת הרשאה לדשבורד למשתמש
  */
-
-// ניקוי קלט
-function sanitizeInput($data) {
-    if (is_array($data)) {
-        return array_map('sanitizeInput', $data);
-    }
-    $data = trim($data);
-    $data = stripslashes($data);
-    $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
-    return $data;
-}
-
-// יצירת CSRF token
-function generateCsrfToken() {
-    if (!isset($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
-}
-
-// בדיקת CSRF token
-function verifyCsrfToken($token) {
-    return isset($_SESSION['csrf_token']) && 
-           hash_equals($_SESSION['csrf_token'], $token);
-}
-
-// קבלת URL של דשבורד לפי הרשאות
-function getUserDashboardUrl($userId, $permissionLevel) {
-    // ברירת מחדל
-    $dashboard = DASHBOARD_FULL_URL;
-    
-    // לפי רמת הרשאה
-    switch ($permissionLevel) {
-        case 4: // מנהל ראשי
-        case 3: // מנהל
-            $dashboard = ADMIN_DASHBOARD_URL;
-            break;
-        case 2: // עורך
-            $dashboard = CEMETERIES_DASHBOARD_URL;
-            break;
-        case 1: // צופה
-        default:
-            $dashboard = DASHBOARD_FULL_URL;
-            break;
-    }
-    
-    return $dashboard;
-}
-
-// קבלת רשימת דשבורדים מותרים למשתמש
-function getUserAllowedDashboards($userId) {
+function grantDashboardPermission($userId, $dashboardType, $grantedBy = null) {
     $db = getDbConnection();
-    $stmt = $db->prepare("
-        SELECT permission 
-        FROM users 
-        WHERE id = ?
-    ");
+    
+    try {
+        $stmt = $db->prepare("
+            INSERT INTO user_dashboard_permissions 
+            (user_id, dashboard_type, has_permission, created_by) 
+            VALUES (?, ?, 1, ?)
+            ON DUPLICATE KEY UPDATE 
+            has_permission = 1,
+            created_by = ?
+        ");
+        
+        $grantedBy = $grantedBy ?? $_SESSION['user_id'] ?? null;
+        return $stmt->execute([$userId, $dashboardType, $grantedBy, $grantedBy]);
+        
+    } catch (Exception $e) {
+        error_log("Error granting dashboard permission: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * פונקציה להסרת הרשאה לדשבורד
+ */
+function revokeDashboardPermission($userId, $dashboardType) {
+    $db = getDbConnection();
+    
+    try {
+        $stmt = $db->prepare("
+            UPDATE user_dashboard_permissions 
+            SET has_permission = 0 
+            WHERE user_id = ? AND dashboard_type = ?
+        ");
+        return $stmt->execute([$userId, $dashboardType]);
+        
+    } catch (Exception $e) {
+        error_log("Error revoking dashboard permission: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * פונקציה לבדיקת הרשאה לדשבורד
+ */
+function hasDashboardPermission($userId, $dashboardType) {
+    $db = getDbConnection();
+    
+    // מנהלים תמיד יכולים
+    $stmt = $db->prepare("SELECT permission_level FROM users WHERE id = ?");
     $stmt->execute([$userId]);
-    $user = $stmt->fetch();
+    $permissionLevel = $stmt->fetchColumn();
+    
+    if ($permissionLevel >= 3) {
+        return true;
+    }
+    
+    // בדוק הרשאה ספציפית
+    $stmt = $db->prepare("
+        SELECT has_permission 
+        FROM user_dashboard_permissions 
+        WHERE user_id = ? AND dashboard_type = ? AND has_permission = 1
+    ");
+    $stmt->execute([$userId, $dashboardType]);
+    
+    return (bool) $stmt->fetchColumn();
+}
+
+/**
+ * פונקציה לקבלת רשימת הדשבורדים המותרים למשתמש
+ */
+function getUserAllowedDashboards($userId = null) {
+    $db = getDbConnection();
+    
+    if ($userId === null) {
+        $userId = $_SESSION['user_id'] ?? null;
+    }
+    
+    // קבל רמת הרשאה
+    $stmt = $db->prepare("SELECT permission_level FROM users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $permissionLevel = $stmt->fetchColumn();
     
     $dashboards = [];
     
-    if ($user) {
-        // תמיד יש גישה לדשבורד הראשי
-        $dashboards[] = ['name' => 'דשבורד ראשי', 'url' => DASHBOARD_FULL_URL];
+    // מנהלים ועורכים מתקדמים - גישה לכל הדשבורדים
+    if ($permissionLevel >= 3) {
+        $dashboards = [
+            ['type' => 'main', 'name' => 'דשבורד ראשי', 'url' => DASHBOARD_FULL_URL, 'icon' => 'fas fa-home'],
+            ['type' => 'deceased', 'name' => 'דשבורד נפטרים', 'url' => DASHBOARD_DECEASED_URL, 'icon' => 'fas fa-user-alt-slash'],
+            ['type' => 'purchases', 'name' => 'דשבורד רכישות', 'url' => DASHBOARD_PURCHASES_URL, 'icon' => 'fas fa-shopping-cart']
+        ];
+    } else {
+        // בדוק הרשאות ספציפיות
+        $stmt = $db->prepare("
+            SELECT dashboard_type 
+            FROM user_dashboard_permissions 
+            WHERE user_id = ? AND has_permission = 1
+        ");
+        $stmt->execute([$userId]);
+        $allowedTypes = $stmt->fetchAll(PDO::FETCH_COLUMN);
         
-        // לפי רמת הרשאה - שימוש ב-permission במקום permission_level
-        if ($user['permission'] >= 2) {
-            $dashboards[] = ['name' => 'דשבורד בתי עלמין', 'url' => CEMETERIES_DASHBOARD_URL];
-        }
-        
-        if ($user['permission'] >= 3) {
-            $dashboards[] = ['name' => 'דשבורד ניהול', 'url' => ADMIN_DASHBOARD_URL];
+        foreach ($allowedTypes as $type) {
+            switch($type) {
+                case 'main':
+                    $dashboards[] = ['type' => 'main', 'name' => 'דשבורד ראשי', 'url' => DASHBOARD_FULL_URL, 'icon' => 'fas fa-home'];
+                    break;
+                case 'deceased':
+                    $dashboards[] = ['type' => 'deceased', 'name' => 'דשבורד נפטרים', 'url' => DASHBOARD_DECEASED_URL, 'icon' => 'fas fa-user-alt-slash'];
+                    break;
+                case 'purchases':
+                    $dashboards[] = ['type' => 'purchases', 'name' => 'דשבורד רכישות', 'url' => DASHBOARD_PURCHASES_URL, 'icon' => 'fas fa-shopping-cart'];
+                    break;
+            }
         }
     }
+    
+    // תמיד הוסף דשבורד צפייה בלבד כאופציה
+    $dashboards[] = ['type' => 'view_only', 'name' => 'צפייה בלבד', 'url' => SITE_URL . '/includes/dashboard_view_only.php', 'icon' => 'fas fa-eye'];
     
     return $dashboards;
 }
 
-// התחלת SESSION
-if (session_status() === PHP_SESSION_NONE) {
-    // הגדרות אבטחה ל-session
-    ini_set('session.use_only_cookies', 1);
-    ini_set('session.use_strict_mode', 1);
-    ini_set('session.cookie_httponly', 1);
-    ini_set('session.cookie_samesite', 'Lax');
-    
-    // אם באתר מאובטח
-    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-        ini_set('session.cookie_secure', 1);
-    }
-    
-    // הגדר שם ייחודי ל-session
-    session_name('CEMETERY_SESSION');
-    
-    // הגדר זמן חיים
-    session_set_cookie_params([
-        'lifetime' => SESSION_LIFETIME,
-        'path' => '/',
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
-    
-    // התחל את ה-session
-    session_start();
-    
-    // חדש session ID כל 30 דקות
-    if (!isset($_SESSION['last_regeneration'])) {
-        $_SESSION['last_regeneration'] = time();
-    } elseif (time() - $_SESSION['last_regeneration'] > 1800) {
-        session_regenerate_id(true);
-        $_SESSION['last_regeneration'] = time();
+// הוסף את הקבוע החדש
+define('DASHBOARD_VIEW_ONLY_URL', SITE_URL . '/includes/dashboard_view_only.php');
+
+// ----------
+
+// פונקציה ליצירת חיבור לדטהבייס
+function getDbConnection() {
+    try {
+        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
+        $pdo = new PDO($dsn, DB_USER, DB_PASS);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        return $pdo;
+    } catch (PDOException $e) {
+        die("Connection failed: " . $e->getMessage());
     }
 }
 
-// טען קבצים נוספים אם קיימים
-$includeFiles = [
-    'functions.php',
-    'auth_functions.php',
-    'validation_functions.php'
-];
-
-foreach ($includeFiles as $file) {
-    $filePath = INCLUDES_PATH . $file;
-    if (file_exists($filePath)) {
-        require_once $filePath;
+// פונקציה משופרת ליצירת UUID
+function generateUUID() {
+    // שיטה 1: שימוש ב-random_bytes (מומלץ)
+    if (function_exists('random_bytes')) {
+        $data = random_bytes(16);
+        
+        // הגדרת ביטים לפי תקן UUID v4
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // גרסה 4
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // variant bits
+        
+        // המרה לפורמט UUID
+        $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    } else {
+        // שיטה 2: גיבוי עם mt_rand (פחות מאובטח)
+        $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        );
     }
+    
+    // רישום בלוג
+    error_log("Generated new UUID: " . $uuid);
+    
+    // וידוא שה-UUID ייחודי בבסיס הנתונים
+    $db = getDbConnection();
+    $stmt = $db->prepare("SELECT COUNT(*) FROM deceased_forms WHERE form_uuid = ?");
+    $stmt->execute([$uuid]);
+    
+    // אם כבר קיים, צור חדש (נדיר מאוד)
+    if ($stmt->fetchColumn() > 0) {
+        error_log("UUID collision detected, generating new one");
+        return generateUUID();
+    }
+    
+    return $uuid;
 }
 
-// וודא שתיקיות נדרשות קיימות
-$requiredDirs = [UPLOAD_PATH, LOGS_PATH];
-foreach ($requiredDirs as $dir) {
-    if (!is_dir($dir)) {
-        @mkdir($dir, 0777, true);
+// פונקציה לבדיקת הרשאות
+function hasPermission($fieldName, $permissionLevel, $action = 'view') {
+    static $cache = [];
+    
+    $userId = $_SESSION['user_id'] ?? null;
+    $cacheKey = "{$fieldName}_{$userId}_{$permissionLevel}_{$action}";
+    
+    if (isset($cache[$cacheKey])) {
+        return $cache[$cacheKey];
     }
-}
-
-// הגדר קובץ לוג
-ini_set('error_log', LOGS_PATH . 'php_errors.log');
-
-// בדיקה בסיסית של החיבור (אופציונלי)
-if (($_ENV['CHECK_DB_ON_LOAD'] ?? false) == 'true') {
+    
     try {
         $db = getDbConnection();
-        $db->query("SELECT 1");
+        
+        $stmt = $db->prepare("
+            SELECT 
+                view_permission_levels,
+                edit_permission_levels,
+                user_specific_view,
+                user_specific_edit
+            FROM field_permissions 
+            WHERE field_name = ?
+        ");
+        $stmt->execute([$fieldName]);
+        $permissions = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$permissions) {
+            // אם השדה לא קיים, ברירת מחדל - רק מנהלים
+            $cache[$cacheKey] = ($permissionLevel >= 4);
+            return $cache[$cacheKey];
+        }
+        
+        // בחירת העמודה הנכונה
+        $levelColumn = $action === 'view' ? 'view_permission_levels' : 'edit_permission_levels';
+        $userColumn = $action === 'view' ? 'user_specific_view' : 'user_specific_edit';
+        
+        // בדיקת הרשאה ספציפית למשתמש (קדימות עליונה)
+        if ($permissions[$userColumn] && $userId) {
+            $userPermissions = json_decode($permissions[$userColumn], true);
+            if (isset($userPermissions[$userId]) && $userPermissions[$userId] === true) {
+                $cache[$cacheKey] = true;
+                return true;
+            }
+        }
+        
+        // בדיקת הרשאה כללית לפי רמה
+        if ($permissions[$levelColumn]) {
+            $allowedLevels = json_decode($permissions[$levelColumn], true);
+            if (in_array($permissionLevel, $allowedLevels)) {
+                $cache[$cacheKey] = true;
+                return true;
+            }
+        }
+        
+        $cache[$cacheKey] = false;
+        return false;
+        
     } catch (Exception $e) {
-        error_log("Database check failed: " . $e->getMessage());
+        error_log("Permission check error: " . $e->getMessage());
+        // במקרה של שגיאה, ברירת מחדל - רק מנהלים
+        $cache[$cacheKey] = ($permissionLevel >= 4);
+        return $cache[$cacheKey];
     }
 }
-?>
+// פונקציה לבדיקת הרשאה ספציפית למשתמש
+function userHasPermission($userId, $permissionName) {
+    global $db;
+    
+    $stmt = $db->prepare("
+        SELECT has_permission 
+        FROM user_permissions 
+        WHERE user_id = ? AND permission_name = ? AND has_permission = 1
+    ");
+    $stmt->execute([$userId, $permissionName]);
+    
+    return $stmt->fetchColumn() == 1;
+}
+
+// פונקציה לבדיקה אם המשתמש יכול למחוק טפסים
+function canDeleteForms($userId, $permissionLevel) {
+    // מנהלים תמיד יכולים
+    if ($permissionLevel >= 4) {
+        return true;
+    }
+    
+    // בדוק הרשאה ספציפית
+    return userHasPermission($userId, 'delete_forms');
+}
+
+
+// -----
+
+// הוספה לקובץ config.php
+define('DEBUG_MODE', true); // שנה ל-false בייצור
+
+// פונקציית סניטציה משופרת עם דיבוג
+function sanitizeInput($data) {
+    if (is_array($data)) {
+        $sanitized = [];
+        foreach ($data as $key => $value) {
+            // דיבוג של שדות בעייתיים
+            if (in_array($key, ['cemetery_id', 'block_id', 'plot_id', 'row_id', 'areaGrave_id', 'grave_id'])) {
+                error_log("Sanitizing field $key: " . print_r($value, true));
+            }
+            $sanitized[$key] = sanitizeInput($value);
+        }
+        return $sanitized;
+    }
+    
+    // טיפול בערכים ריקים
+    if ($data === '' || $data === null) {
+        return null;
+    }
+    
+    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
+}
+
+
+// -----
+
+// פונקציה לסניטציה של קלט
+function sanitizeInput2($input) {
+    if (is_array($input)) {
+        return array_map('sanitizeInput', $input);
+    }
+    return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+}
+
+// פונקציה לולידציה של תעודת זהות ישראלית
+function validateIsraeliId($id) {
+    $id = trim($id);
+    if (!preg_match('/^\d{9}$/', $id)) {
+        return false;
+    }
+    
+    $sum = 0;
+    for ($i = 0; $i < 9; $i++) {
+        $digit = (int)$id[$i];
+        $step = $digit * (($i % 2) + 1);
+        $sum += $step > 9 ? $step - 9 : $step;
+    }
+    
+    return $sum % 10 === 0;
+}
+
+// פונקציה לרישום פעילות
+function logActivity($action, $details = [], $formId = null) {
+    try {
+        $db = getDbConnection();
+        $stmt = $db->prepare("
+            INSERT INTO activity_log (user_id, form_id, action, details, ip_address, user_agent) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        
+        $stmt->execute([
+            $_SESSION['user_id'] ?? null,
+            $formId,
+            $action,
+            json_encode($details),
+            $_SERVER['REMOTE_ADDR'] ?? '',
+            $_SERVER['HTTP_USER_AGENT'] ?? ''
+        ]);
+    } catch (Exception $e) {
+        error_log("Failed to log activity: " . $e->getMessage());
+    }
+}
+
+// פונקציה להצגת הודעות דיבוג בקונסול
+function debugLog($message, $data = null) {
+    if ($data !== null) {
+        $message .= ' - ' . json_encode($data);
+    }
+    echo "<script>console.log('DEBUG: " . addslashes($message) . "');</script>";
+}
+
+// יצירת CSRF token אם לא קיים
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// הגדרת error reporting בהתאם לסביבה
+if (isset($_ENV['APP_ENV']) && $_ENV['APP_ENV'] === 'production') {
+    error_reporting(0);
+    ini_set('display_errors', '0');
+} else {
+    error_reporting(E_ALL);
+    ini_set('display_errors', '1');
+}
+
+// וידוא שתיקיית uploads קיימת
+if (!is_dir(UPLOAD_PATH)) {
+    mkdir(UPLOAD_PATH, 0777, true);
+}
+
+// וידוא שתיקיית logs קיימת
+$logsPath = __DIR__ . '/logs/';
+if (!is_dir($logsPath)) {
+    mkdir($logsPath, 0777, true);
+}
+
+// הגדרת קובץ לוג
+ini_set('error_log', $logsPath . 'php_errors.log');
+
+
