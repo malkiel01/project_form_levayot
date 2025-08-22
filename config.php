@@ -107,7 +107,7 @@ if (empty($_SESSION['csrf_token'])) {
 // טעינת משתני סביבה
 $env = loadEnv(__DIR__ . '/.env');
 
-// עכשיו תוכל להשתמש בערכים:
+// הגדרות חיבור לדטהבייס
 define('DB_HOST', $env['DB_HOST'] ?? 'localhost');
 define('DB_NAME', $env['DB_NAME'] ?? '');
 define('DB_USER', $env['DB_USER'] ?? '');
@@ -115,12 +115,6 @@ define('DB_PASS', $env['DB_PASS'] ?? '');
 define('DB_CHARSET', $env['DB_CHARSET'] ?? 'utf8mb4');
 
 
-// הגדרות חיבור לדטהבייס
-// define('DB_HOST', 'mbe-plus.com');
-// define('DB_NAME', 'mbeplusc_kadisha_v7');
-// define('DB_USER', 'mbeplusc_test');
-// define('DB_PASS', 'Gxfv16be');
-// define('DB_CHARSET', 'utf8mb4');
 
 // הגדרות כלליות
 define('SITE_URL', 'https://vaadma.cemeteries.mbe-plus.com/project_form_levayot');

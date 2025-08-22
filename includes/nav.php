@@ -110,7 +110,7 @@ $allowedDashboards = getUserAllowedDashboards($userId);
                             <i class="fas fa-cog"></i> הגדרות
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="<?= $navBasePath ?>auth/logout.php">
+                        <li><a class="dropdown-item" href="../<?= $navBasePath ?>auth/logout.php">
                             <i class="fas fa-sign-out-alt"></i> יציאה
                         </a></li>
                     </ul>
