@@ -2,97 +2,339 @@
 // includes/dashboard_functions.php - פונקציות עזר לדשבורדים
 
 /**
- * תרגום סטטוס
+ * בדיקה אם למשתמש יש הרשאה לדשבורד ספציפי
+ */
+function hasDashboardPermission($userId, $dashboardType) {
+    try {
+        $db = getDbConnection();
+        
+        // תחילה בדוק אם יש טבלת dashboard_permissions
+        $stmt = $db->prepare("
+            SELECT COUNT(*) 
+            FROM information_schema.tables 
+            WHERE table_schema = DATABASE() 
+            AND table_name = 'dashboard_permissions'
+        ");
+        $stmt->execute();
+        
+        if ($stmt->fetchColumn() == 0) {
+            // אם אין טבלה, תן גישה לכולם לדשבורד הראשי
+            return ($dashboardType === 'main' || $dashboardType === 'dashboard');
+        }
+        
+        // בדוק הרשאה ספציפית
+        $stmt = $db->prepare("
+            SELECT has_permission 
+            FROM dashboard_permissions 
+            WHERE user_id = ? 
+            AND dashboard_type = ?
+        ");
+        $stmt->execute([$userId, $dashboardType]);
+        $result = $stmt->fetch();
+        
+        if ($result) {
+            return (bool)$result['has_permission'];
+        }
+        
+        // אם אין רשומה, תן גישה רק לדשבורד ראשי
+        return ($dashboardType === 'main' || $dashboardType === 'dashboard');
+        
+    } catch (Exception $e) {
+        error_log("Error checking dashboard permission: " . $e->getMessage());
+        // במקרה של שגיאה, תן גישה רק לדשבורד ראשי
+        return ($dashboardType === 'main' || $dashboardType === 'dashboard');
+    }
+}
+
+/**
+ * בדיקה אם המשתמש יכול למחוק טפסים
+ */
+function canDeleteForms($userId, $action = 'delete_forms') {
+    try {
+        $db = getDbConnection();
+        
+        // קבל את רמת ההרשאה של המשתמש
+        $stmt = $db->prepare("
+            SELECT permission_level 
+            FROM users 
+            WHERE id = ?
+        ");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        
+        if (!$user) {
+            return false;
+        }
+        
+        // מנהלים (רמה 3+) יכולים למחוק
+        if ($user['permission_level'] >= 3) {
+            return true;
+        }
+        
+        // בדוק אם יש טבלת user_permissions עם הרשאות ספציפיות
+        $stmt = $db->prepare("
+            SELECT COUNT(*) 
+            FROM information_schema.tables 
+            WHERE table_schema = DATABASE() 
+            AND table_name = 'user_permissions'
+        ");
+        $stmt->execute();
+        
+        if ($stmt->fetchColumn() > 0) {
+            // בדוק הרשאה ספציפית למחיקה
+            $stmt = $db->prepare("
+                SELECT permission_value 
+                FROM user_permissions 
+                WHERE user_id = ? 
+                AND permission_type = ?
+            ");
+            $stmt->execute([$userId, $action]);
+            $permission = $stmt->fetch();
+            
+            if ($permission) {
+                return (bool)$permission['permission_value'];
+            }
+        }
+        
+        return false;
+        
+    } catch (Exception $e) {
+        error_log("Error checking delete permission: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * תרגום סטטוס לעברית
  */
 function translateStatus($status) {
-    $translations = [
+    $statuses = [
         'draft' => 'טיוטה',
+        'pending' => 'ממתין',
         'in_progress' => 'בתהליך',
         'completed' => 'הושלם',
-        'archived' => 'בארכיון'
-    ];
-    return $translations[$status] ?? $status;
-}
-
-/**
- * תרגום סוג רכישה
- */
-function translatePurchaseType($type) {
-    $translations = [
-        'grave' => 'קבר',
-        'plot' => 'חלקה',
-        'structure' => 'מבנה',
-        'service' => 'שירות'
-    ];
-    return $translations[$type] ?? $type;
-}
-
-/**
- * תרגום אמצעי תשלום
- */
-function translatePaymentMethod($method) {
-    $translations = [
-        'cash' => 'מזומן',
-        'check' => 'צ\'ק',
-        'credit' => 'אשראי',
-        'transfer' => 'העברה בנקאית',
-        'installments' => 'תשלומים'
-    ];
-    return $translations[$method] ?? $method;
-}
-
-/**
- * יצירת צבע רנדומלי לגרפים
- */
-function generateChartColors($count) {
-    $colors = [
-        '#667eea', '#764ba2', '#84fab0', '#8fd3f4', 
-        '#fa709a', '#fee140', '#30cfd0', '#330867',
-        '#f093fb', '#f5576c', '#4facfe', '#00f2fe',
-        '#43e97b', '#38f9d7', '#fa709a', '#fee140',
-        '#a8edea', '#fed6e3', '#ff9a9e', '#fecfef'
+        'cancelled' => 'בוטל',
+        'approved' => 'אושר',
+        'rejected' => 'נדחה',
+        'paid' => 'שולם',
+        'partial' => 'שולם חלקית'
     ];
     
-    $result = [];
-    for ($i = 0; $i < $count; $i++) {
-        $result[] = $colors[$i % count($colors)];
-    }
-    return $result;
+    return $statuses[$status] ?? $status;
 }
 
 /**
- * פורמט תאריך עברי
+ * יצירת מחלקת CSS לסטטוס
+ */
+function getStatusClass($status) {
+    $classes = [
+        'draft' => 'secondary',
+        'pending' => 'warning',
+        'in_progress' => 'info',
+        'completed' => 'success',
+        'cancelled' => 'danger',
+        'approved' => 'success',
+        'rejected' => 'danger',
+        'paid' => 'success',
+        'partial' => 'warning'
+    ];
+    
+    return $classes[$status] ?? 'secondary';
+}
+
+/**
+ * קבלת רשימת בתי עלמין שהמשתמש יכול לגשת אליהם
+ */
+function getUserCemeteries($userId) {
+    try {
+        $db = getDbConnection();
+        
+        // קבל את רמת ההרשאה
+        $stmt = $db->prepare("SELECT permission_level FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        
+        if (!$user) {
+            return [];
+        }
+        
+        // מנהלים רואים הכל
+        if ($user['permission_level'] >= 3) {
+            $stmt = $db->query("SELECT * FROM cemeteries WHERE is_active = 1 ORDER BY name");
+            return $stmt->fetchAll();
+        }
+        
+        // בדוק אם יש הרשאות ספציפיות לבתי עלמין
+        $stmt = $db->prepare("
+            SELECT COUNT(*) 
+            FROM information_schema.tables 
+            WHERE table_schema = DATABASE() 
+            AND table_name = 'user_cemetery_permissions'
+        ");
+        $stmt->execute();
+        
+        if ($stmt->fetchColumn() > 0) {
+            $stmt = $db->prepare("
+                SELECT c.* 
+                FROM cemeteries c
+                JOIN user_cemetery_permissions ucp ON c.id = ucp.cemetery_id
+                WHERE ucp.user_id = ? 
+                AND ucp.has_access = 1
+                AND c.is_active = 1
+                ORDER BY c.name
+            ");
+            $stmt->execute([$userId]);
+            return $stmt->fetchAll();
+        }
+        
+        // אם אין הרשאות ספציפיות, החזר רשימה ריקה
+        return [];
+        
+    } catch (Exception $e) {
+        error_log("Error getting user cemeteries: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * בדיקה אם המשתמש יכול לערוך טופס
+ */
+function canEditForm($userId, $formId, $formType = 'deceased') {
+    try {
+        $db = getDbConnection();
+        
+        // קבל את רמת ההרשאה
+        $stmt = $db->prepare("SELECT permission_level FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        
+        if (!$user) {
+            return false;
+        }
+        
+        // מנהלים יכולים לערוך הכל
+        if ($user['permission_level'] >= 3) {
+            return true;
+        }
+        
+        // בדוק אם המשתמש יצר את הטופס
+        $table = $formType === 'purchase' ? 'purchase_forms' : 'deceased_forms';
+        $stmt = $db->prepare("
+            SELECT created_by 
+            FROM $table 
+            WHERE form_uuid = ?
+        ");
+        $stmt->execute([$formId]);
+        $form = $stmt->fetch();
+        
+        if ($form && $form['created_by'] == $userId) {
+            return true;
+        }
+        
+        // עורכים (רמה 2) יכולים לערוך כל טופס
+        if ($user['permission_level'] >= 2) {
+            return true;
+        }
+        
+        return false;
+        
+    } catch (Exception $e) {
+        error_log("Error checking edit permission: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * רישום פעילות
+ */
+function logDashboardActivity($action, $details = []) {
+    try {
+        $db = getDbConnection();
+        
+        $stmt = $db->prepare("
+            INSERT INTO activity_log (
+                user_id, 
+                action, 
+                details, 
+                ip_address, 
+                user_agent, 
+                created_at
+            ) VALUES (?, ?, ?, ?, ?, NOW())
+        ");
+        
+        $stmt->execute([
+            $_SESSION['user_id'] ?? null,
+            $action,
+            json_encode($details, JSON_UNESCAPED_UNICODE),
+            $_SERVER['REMOTE_ADDR'] ?? '',
+            $_SERVER['HTTP_USER_AGENT'] ?? ''
+        ]);
+        
+    } catch (Exception $e) {
+        error_log("Error logging activity: " . $e->getMessage());
+    }
+}
+
+/**
+ * קבלת סטטיסטיקות מהירות לדשבורד
+ */
+function getDashboardStats($userId = null) {
+    try {
+        $db = getDbConnection();
+        $stats = [];
+        
+        // סטטיסטיקות בסיסיות
+        $queries = [
+            'total_deceased' => "SELECT COUNT(*) FROM deceased_forms",
+            'total_purchases' => "SELECT COUNT(*) FROM purchase_forms",
+            'today_deceased' => "SELECT COUNT(*) FROM deceased_forms WHERE DATE(created_at) = CURDATE()",
+            'today_purchases' => "SELECT COUNT(*) FROM purchase_forms WHERE DATE(created_at) = CURDATE()",
+            'pending_deceased' => "SELECT COUNT(*) FROM deceased_forms WHERE status = 'pending'",
+            'pending_purchases' => "SELECT COUNT(*) FROM purchase_forms WHERE status = 'pending'"
+        ];
+        
+        foreach ($queries as $key => $query) {
+            $stmt = $db->query($query);
+            $stats[$key] = $stmt->fetchColumn();
+        }
+        
+        return $stats;
+        
+    } catch (Exception $e) {
+        error_log("Error getting dashboard stats: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * פורמט תאריך לעברית
  */
 function formatHebrewDate($date) {
-    if (empty($date)) return 'לא צוין';
+    if (empty($date)) {
+        return '-';
+    }
     
-    $timestamp = strtotime($date);
-    $hebrewMonths = [
-        1 => 'ינואר', 2 => 'פברואר', 3 => 'מרץ', 4 => 'אפריל',
-        5 => 'מאי', 6 => 'יוני', 7 => 'יולי', 8 => 'אוגוסט',
-        9 => 'ספטמבר', 10 => 'אוקטובר', 11 => 'נובמבר', 12 => 'דצמבר'
+    $months = [
+        1 => 'ינואר',
+        2 => 'פברואר',
+        3 => 'מרץ',
+        4 => 'אפריל',
+        5 => 'מאי',
+        6 => 'יוני',
+        7 => 'יולי',
+        8 => 'אוגוסט',
+        9 => 'ספטמבר',
+        10 => 'אוקטובר',
+        11 => 'נובמבר',
+        12 => 'דצמבר'
     ];
     
+    $timestamp = strtotime($date);
     $day = date('j', $timestamp);
-    $month = $hebrewMonths[date('n', $timestamp)];
+    $month = $months[(int)date('n', $timestamp)];
     $year = date('Y', $timestamp);
     
-    return "$day ב$month $year";
-}
-
-/**
- * פורמט סכום כספי
- */
-function formatCurrency($amount) {
-    return '₪' . number_format($amount, 0, '.', ',');
-}
-
-/**
- * חישוב אחוז השלמה
- */
-function calculateCompletionPercentage($completed, $total) {
-    if ($total == 0) return 0;
-    return round(($completed / $total) * 100);
+    return "$day ב$month, $year";
 }
 
 /**
@@ -101,136 +343,16 @@ function calculateCompletionPercentage($completed, $total) {
 function getStatusColor($status) {
     $colors = [
         'draft' => '#6c757d',
-        'in_progress' => '#ffc107',
+        'pending' => '#ffc107',
+        'in_progress' => '#17a2b8',
         'completed' => '#28a745',
-        'archived' => '#17a2b8'
+        'cancelled' => '#dc3545',
+        'approved' => '#28a745',
+        'rejected' => '#dc3545',
+        'paid' => '#28a745',
+        'partial' => '#ffc107'
     ];
+    
     return $colors[$status] ?? '#6c757d';
 }
-
-/**
- * קבלת אייקון לפי סטטוס
- */
-function getStatusIcon($status) {
-    $icons = [
-        'draft' => 'fa-file',
-        'in_progress' => 'fa-hourglass-half',
-        'completed' => 'fa-check-circle',
-        'archived' => 'fa-archive'
-    ];
-    return $icons[$status] ?? 'fa-question';
-}
-
-/**
- * יצירת תגית HTML לסטטוס
- */
-function createStatusBadge($status) {
-    $translatedStatus = translateStatus($status);
-    $color = getStatusColor($status);
-    $icon = getStatusIcon($status);
-    
-    return sprintf(
-        '<span class="badge" style="background-color: %s; color: white;">
-            <i class="fas %s"></i> %s
-        </span>',
-        $color,
-        $icon,
-        $translatedStatus
-    );
-}
-
-/**
- * קבלת תקופת זמן יחסית
- */
-function getRelativeTime($datetime) {
-    $timestamp = strtotime($datetime);
-    $difference = time() - $timestamp;
-    
-    if ($difference < 60) {
-        return 'לפני רגע';
-    } elseif ($difference < 3600) {
-        $minutes = floor($difference / 60);
-        return "לפני $minutes דקות";
-    } elseif ($difference < 86400) {
-        $hours = floor($difference / 3600);
-        return "לפני $hours שעות";
-    } elseif ($difference < 604800) {
-        $days = floor($difference / 86400);
-        return "לפני $days ימים";
-    } else {
-        return date('d/m/Y', $timestamp);
-    }
-}
-
-/**
- * יצירת מספר טופס ייחודי
- */
-function generateFormNumber($prefix = 'FRM') {
-    return $prefix . '-' . date('Y') . '-' . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
-}
-
-/**
- * בדיקת הרשאות לפי רמה
- */
-function checkPermissionLevel($requiredLevel, $currentLevel = null) {
-    if ($currentLevel === null) {
-        $currentLevel = $_SESSION['permission_level'] ?? 1;
-    }
-    return $currentLevel >= $requiredLevel;
-}
-
-/**
- * יצירת סיכום סטטיסטי
- */
-function generateStatsSummary($stats) {
-    $summary = [];
-    
-    // חישוב סך הכל
-    $total = array_sum($stats);
-    
-    // חישוב אחוזים
-    foreach ($stats as $key => $value) {
-        $percentage = $total > 0 ? round(($value / $total) * 100, 1) : 0;
-        $summary[$key] = [
-            'value' => $value,
-            'percentage' => $percentage
-        ];
-    }
-    
-    return $summary;
-}
-
-/**
- * יצירת אופציות לרשימה נפתחת מתוך מערך
- */
-function createSelectOptions($array, $selectedValue = null, $useKeyAsValue = false) {
-    $html = '';
-    foreach ($array as $key => $value) {
-        $optionValue = $useKeyAsValue ? $key : $value;
-        $selected = ($optionValue == $selectedValue) ? 'selected' : '';
-        $html .= sprintf('<option value="%s" %s>%s</option>', 
-                        htmlspecialchars($optionValue), 
-                        $selected, 
-                        htmlspecialchars($value));
-    }
-    return $html;
-}
-
-/**
- * הצגת התראה בסגנון Bootstrap
- */
-function showAlert($message, $type = 'info', $dismissible = true) {
-    $dismissButton = $dismissible ? 
-        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' : '';
-    
-    return sprintf(
-        '<div class="alert alert-%s %s" role="alert">
-            %s
-            %s
-        </div>',
-        $type,
-        $dismissible ? 'alert-dismissible fade show' : '',
-        $message,
-        $dismissButton
-    );
-}
+?>

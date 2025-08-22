@@ -1,15 +1,19 @@
 <?php
 // includes/auth_check.php - קובץ בדיקת הרשאות מרכזי
-// כלול קובץ זה בתחילת כל דף שדורש הרשאה
 
 // טען את הקונפיג אם עוד לא נטען
 if (!function_exists('getDbConnection')) {
     require_once __DIR__ . '/../config.php';
 }
 
+// טען את פונקציות הדשבורד
+if (!function_exists('hasDashboardPermission')) {
+    require_once __DIR__ . '/dashboard_functions.php';
+}
+
 // בדיקה בסיסית - האם המשתמש מחובר
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ' . SITE_URL . '/' . LOGIN_URL);
+    header('Location: ' . LOGIN_URL);
     exit;
 }
 
@@ -64,45 +68,23 @@ function accessDenied($message = 'אין לך הרשאה לגשת לדף זה') 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>אין הרשאה</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-        <style>
-            body {
-                background-color: #f8f9fa;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-height: 100vh;
-            }
-            .access-denied-container {
-                background: white;
-                border-radius: 10px;
-                padding: 3rem;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                text-align: center;
-                max-width: 500px;
-            }
-            .icon-container {
-                color: #dc3545;
-                margin-bottom: 2rem;
-            }
-        </style>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     </head>
     <body>
-        <div class="access-denied-container">
-            <div class="icon-container">
-                <i class="fas fa-lock fa-5x"></i>
-            </div>
-            <h2 class="mb-3">אין הרשאה</h2>
-            <p class="text-muted mb-4"><?php echo htmlspecialchars($message); ?></p>
-            <div class="d-grid gap-2">
-                <a href="<?php echo getUserDashboardUrl(); ?>" class="btn btn-primary">
-                    <i class="fas fa-home me-2"></i>
-                    חזרה לדשבורד
-                </a>
-                <a href="<?php echo SITE_URL . '/' . LOGOUT_URL; ?>" class="btn btn-outline-secondary">
-                    <i class="fas fa-sign-out-alt me-2"></i>
-                    יציאה
-                </a>
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow">
+                        <div class="card-body text-center">
+                            <i class="fas fa-lock fa-3x text-danger mb-3"></i>
+                            <h3 class="text-danger">אין הרשאה</h3>
+                            <p><?= htmlspecialchars($message) ?></p>
+                            <a href="<?= getUserDashboardUrl($_SESSION['user_id'] ?? 0) ?>" class="btn btn-primary">
+                                <i class="fas fa-home"></i> חזרה לדשבורד
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </body>
@@ -112,64 +94,73 @@ function accessDenied($message = 'אין לך הרשאה לגשת לדף זה') 
 }
 
 /**
- * פונקציה לבדיקת הרשאה לפעולה ספציפית
+ * בדיקה אם המשתמש הוא מנהל
  */
-function requirePermission($permissionName, $redirectOnFail = true) {
+function isAdmin() {
+    global $currentUserLevel;
+    return $currentUserLevel >= 4;
+}
+
+/**
+ * בדיקה אם המשתמש הוא עורך
+ */
+function isEditor() {
+    global $currentUserLevel;
+    return $currentUserLevel >= 2;
+}
+
+/**
+ * בדיקה אם המשתמש יכול לראות את הטופס
+ */
+function canViewForm($formId, $formType = 'deceased') {
     global $currentUserId, $currentUserLevel;
     
-    // מנהלים יכולים הכל
-    if ($currentUserLevel >= 4) {
+    // מנהלים ועורכים יכולים לראות הכל
+    if ($currentUserLevel >= 2) {
         return true;
     }
     
-    // בדוק הרשאה ספציפית
-    if (!userHasPermission($currentUserId, $permissionName)) {
-        if ($redirectOnFail) {
-            accessDenied("אין לך הרשאה לבצע פעולה זו: $permissionName");
+    try {
+        $db = getDbConnection();
+        $table = $formType === 'purchase' ? 'purchase_forms' : 'deceased_forms';
+        
+        // בדוק אם המשתמש יצר את הטופס
+        $stmt = $db->prepare("SELECT created_by FROM $table WHERE form_uuid = ?");
+        $stmt->execute([$formId]);
+        $form = $stmt->fetch();
+        
+        if ($form && $form['created_by'] == $currentUserId) {
+            return true;
         }
-        return false;
+        
+    } catch (Exception $e) {
+        error_log("Error checking form view permission: " . $e->getMessage());
     }
     
-    return true;
+    return false;
 }
 
 /**
- * פונקציה לבדיקת הרשאה לעריכת טופס
+ * בדיקה אם המשתמש יכול למחוק
  */
-function canEditForm($formId, $formType = 'deceased') {
-    global $currentUserId, $currentUserLevel;
-    
-    // מנהלים יכולים לערוך הכל
-    if ($currentUserLevel >= 4) {
-        return true;
-    }
-    
-    $db = getDbConnection();
-    
-    // בדוק אם המשתמש יצר את הטופס
-    $table = $formType === 'deceased' ? 'deceased_forms' : 'purchase_forms';
-    $stmt = $db->prepare("SELECT created_by FROM $table WHERE form_uuid = ?");
-    $stmt->execute([$formId]);
-    $createdBy = $stmt->fetchColumn();
-    
-    // משתמש יכול לערוך טפסים שיצר
-    if ($createdBy == $currentUserId) {
-        return true;
-    }
-    
-    // בדוק הרשאות מיוחדות
-    return userHasPermission($currentUserId, 'edit_all_forms');
+function canDelete() {
+    global $currentUserLevel;
+    return $currentUserLevel >= 3;
 }
 
 /**
- * רישום פעילות עם בדיקת הרשאה
+ * בדיקה אם המשתמש יכול לייצא נתונים
  */
-function logSecureActivity($action, $details = [], $formId = null) {
-    global $currentUserId;
-    
-    // הוסף מידע על ההרשאה לפרטים
-    $details['user_level'] = $_SESSION['permission_level'] ?? 1;
-    $details['ip'] = $_SERVER['REMOTE_ADDR'] ?? '';
-    
-    logActivity($action, $details, $formId);
+function canExport() {
+    global $currentUserLevel;
+    return $currentUserLevel >= 2;
 }
+
+/**
+ * בדיקה אם המשתמש יכול לנהל משתמשים
+ */
+function canManageUsers() {
+    global $currentUserLevel;
+    return $currentUserLevel >= 4;
+}
+?>
