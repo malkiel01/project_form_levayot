@@ -14,10 +14,8 @@
         
         // בדיקת תקינות ה-redirect
         if (filter_var($redirect, FILTER_VALIDATE_URL) === false) {
-            $redirect = basename($redirect);
-            if (!preg_match('/^[a-zA-Z0-9_\-\.\/\?=&]+$/', $redirect)) {
-                $redirect = $userDashboard;
-            }
+            // אם זה לא URL מלא, תקן אותו
+            $redirect = SITE_URL . '/' . ltrim($redirect, '/');
         }
         
         // בדוק אם למשתמש יש הרשאה ל-redirect
@@ -36,7 +34,8 @@
             $redirect = $userDashboard;
         }
         
-        header('Location: ' . ltrim($redirect, '/'));
+        // תיקון קריטי - השתמש ב-URL מלא!
+        header('Location: ' . $redirect);
         exit;
     }
 
@@ -81,21 +80,19 @@
                     error_log("DB password hash: " . $user['password'] . " (len=" . strlen($user['password']) . ")");
                     error_log("is_active: " . $user['is_active'] . ", locked_until: " . $user['locked_until']);
                     
-                    // השוואה תו-לתו של הסיסמה עם מה שנשלח (לראות אם יש רווחים/תוים מוזרים)
-                    $inputPassHex = bin2hex($password);
-                    error_log("Password entered (hex): $inputPassHex");
-                    
-                    // בדוק נעילה/לא פעיל
+                    // בדיקה אם החשבון נעול
                     if ($user['locked_until'] && strtotime($user['locked_until']) > time()) {
-                        $error = 'החשבון נעול זמנית. נסה שוב מאוחר יותר.';
-                        error_log("ERROR: Account locked (locked_until=" . $user['locked_until'] . ")");
+                        $remainingTime = ceil((strtotime($user['locked_until']) - time()) / 60);
+                        $error = "החשבון נעול. נסה שוב בעוד $remainingTime דקות";
+                        error_log("ERROR: Account locked until " . $user['locked_until']);
                     } elseif (!$user['is_active']) {
-                        $error = 'החשבון לא פעיל. פנה למנהל המערכת.';
+                        $error = 'החשבון אינו פעיל. פנה למנהל המערכת';
                         error_log("ERROR: Account not active");
                     } else {
-                        // בדיקת התאמה
+                        // בדיקת סיסמה
+                        error_log("Verifying password...");
                         $pwResult = password_verify($password, $user['password']);
-                        error_log("password_verify result: " . ($pwResult ? "TRUE" : "FALSE"));
+                        error_log("Password verification result: " . ($pwResult ? "TRUE" : "FALSE"));
 
                         if ($pwResult) {
                             // התחברות מוצלחת
@@ -145,110 +142,80 @@
                                 }
                                 
                                 if ($canAccessRedirect) {
-                                    header('Location: ' . ltrim($redirect, '/'));
+                                    // תיקון קריטי - השתמש ב-URL מלא!
+                                    header('Location: ' . $redirect);
                                 } else {
-                                    // אין הרשאה ל-redirect המבוקש, שלח לדשבורד המתאים
+                                    // אם אין הרשאה, הפנה לדשבורד המתאים
                                     header('Location: ' . $userDashboard);
                                 }
                             } else {
-                                // אין redirect ספציפי, שלח לדשבורד המתאים
+                                // הפנה לדשבורד המתאים
                                 header('Location: ' . $userDashboard);
                             }
                             exit;
                         } else {
                             // סיסמה שגויה
+                            error_log("ERROR: Invalid password");
                             $attempts = $user['failed_login_attempts'] + 1;
-                            $lockUntil = null;
                             
                             if ($attempts >= 5) {
                                 $lockUntil = date('Y-m-d H:i:s', strtotime('+30 minutes'));
-                                $error = 'יותר מדי ניסיונות התחברות כושלים. החשבון נעול ל-30 דקות.';
-                                error_log("ERROR: too many login attempts, locking account!");
+                                $db->prepare("
+                                    UPDATE users 
+                                    SET failed_login_attempts = ?, locked_until = ? 
+                                    WHERE id = ?
+                                ")->execute([$attempts, $lockUntil, $user['id']]);
+                                $error = 'יותר מדי ניסיונות כושלים. החשבון ננעל ל-30 דקות';
+                                error_log("ERROR: Account locked due to too many failed attempts");
                             } else {
-                                $error = 'שם משתמש או סיסמה שגויים. נותרו ' . (5 - $attempts) . ' ניסיונות.';
-                                error_log("ERROR: wrong password, $attempts attempts");
+                                $db->prepare("
+                                    UPDATE users 
+                                    SET failed_login_attempts = ? 
+                                    WHERE id = ?
+                                ")->execute([$attempts, $user['id']]);
+                                $remaining = 5 - $attempts;
+                                $error = "שם משתמש או סיסמה שגויים. נותרו $remaining ניסיונות";
+                                error_log("ERROR: Failed attempts: $attempts");
                             }
-                            
-                            $db->prepare("
-                                UPDATE users 
-                                SET failed_login_attempts = ?, locked_until = ? 
-                                WHERE id = ?
-                            ")->execute([$attempts, $lockUntil, $user['id']]);
-                            
-                            // רישום בלוג
-                            $db->prepare("
-                                INSERT INTO activity_log 
-                                (user_id, action, details, ip_address, user_agent) 
-                                VALUES (?, 'login_failed', ?, ?, ?)
-                            ")->execute([
-                                $user['id'], 
-                                json_encode(['reason' => 'wrong_password', 'attempts' => $attempts]), 
-                                $_SERVER['REMOTE_ADDR'] ?? '', 
-                                $_SERVER['HTTP_USER_AGENT'] ?? ''
-                            ]);
                         }
                     }
                 } else {
                     $error = 'שם משתמש או סיסמה שגויים';
-                    error_log("ERROR: User not found for username: $username");
-                    // רישום בלוג
-                    $db->prepare("
-                        INSERT INTO activity_log 
-                        (user_id, action, details, ip_address, user_agent) 
-                        VALUES (NULL, 'login_failed', ?, ?, ?)
-                    ")->execute([
-                        json_encode(['reason' => 'user_not_found', 'username' => $username]), 
-                        $_SERVER['REMOTE_ADDR'] ?? '', 
-                        $_SERVER['HTTP_USER_AGENT'] ?? ''
-                    ]);
+                    error_log("ERROR: User not found in database");
                 }
-            } catch (Exception $e) {
-                error_log("Login error: " . $e->getMessage());
-                $error = 'שגיאה במערכת. נסה שוב מאוחר יותר.';
+                
+            } catch (PDOException $e) {
+                $error = 'שגיאת מערכת. נסה שוב מאוחר יותר';
+                error_log("Database error: " . $e->getMessage());
             }
         }
     }
-
-    // בדיקה אם יש הודעה מהרישום
-    if (isset($_SESSION['registration_success'])) {
-        $success = $_SESSION['registration_success'];
-        unset($_SESSION['registration_success']);
-    }
 ?>
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>התחברות למערכת</title>
-    <!-- הוסף את השורות האלה לPWA -->
-    <link rel="manifest" href="../manifest.json">
-    <meta name="theme-color" content="#0d6efd">
-    <link rel="apple-touch-icon" href="/project_form_levayot/icons/icon-192x192.png">
-    <!-- סוף הוספות PWA -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    
-    <!-- Google Sign-In -->
+    <title>התחברות - מערכת ניהול בית עלמין</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
             display: flex;
             align-items: center;
-            justify-content: center;
+            min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         .auth-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: white;
             padding: 40px;
-            width: 100%;
-            max-width: 450px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         
         .auth-header {
@@ -262,15 +229,16 @@
             margin-bottom: 15px;
         }
         
-        .auth-header h3 {
-            color: #333;
-            font-weight: 600;
+        .btn-primary {
+            background-color: #667eea;
+            border-color: #667eea;
+            padding: 10px;
+            font-weight: 500;
         }
         
-        .form-control {
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            padding: 12px 15px;
+        .btn-primary:hover {
+            background-color: #5a67d8;
+            border-color: #5a67d8;
         }
         
         .form-control:focus {
@@ -278,27 +246,26 @@
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
         
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 20px;
-            font-weight: 600;
-            transition: transform 0.2s;
+        .demo-users, .redirect-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            margin-bottom: 10px;
         }
         
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .redirect-info {
+            background-color: #e3f2fd;
+            font-size: 0.9rem;
         }
         
         .divider {
             text-align: center;
-            margin: 25px 0;
+            margin: 20px 0;
             position: relative;
         }
         
-        .divider::before {
+        .divider:before {
             content: '';
             position: absolute;
             top: 50%;
@@ -315,23 +282,6 @@
             color: #666;
         }
         
-        .register-link {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-        
-        .redirect-info {
-            background: #e3f2fd;
-            border: 1px solid #64b5f6;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 20px;
-            color: #1976d2;
-        }
-
-        /* עיצוב מתוקן לכפתור Google */
         .google-signin {
             margin: 20px 0;
             display: flex;
@@ -339,11 +289,10 @@
             align-items: center;
         }
     
-        /* הגדר גודל קבוע לקונטיינר כדי למנוע קפיצות */
         .g_id_signin {
             width: 100%;
             max-width: 400px;
-            min-height: 44px; /* גובה מינימלי של כפתור Google */
+            min-height: 44px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -356,7 +305,7 @@
             <div class="auth-header">
                 <i class="fas fa-user-circle"></i>
                 <h3>התחברות למערכת</h3>
-                <p class="text-muted">מערכת ניהול טפסי נפטרים</p>
+                <p class="text-muted">מערכת ניהול בית עלמין</p>
             </div>
             
             <?php if ($redirect !== DASHBOARD_FULL_URL): ?>
@@ -379,104 +328,73 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             <?php endif; ?>
-
-            <!-- Google Sign-In Button -->
-            <div class="google-signin">
-                <div id="g_id_onload"
-                    data-client_id="<?= GOOGLE_CLIENT_ID ?>"
-                    data-callback="handleGoogleSignIn"
-                    data-auto_prompt="false"
-                    data-cancel_on_tap_outside="false">
-                </div>
-                <div class="g_id_signin"
-                    data-type="standard"
-                    data-size="large"
-                    data-theme="outline"
-                    data-text="sign_in_with"
-                    data-shape="rectangular"
-                    data-logo_alignment="left">
-                </div>
-            </div>
-
-            <div class="divider">
-                <span>או</span>
-            </div>
-
-            <form method="POST" id="loginForm">
+            
+            <form method="POST" action="">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect) ?>">
                 <input type="hidden" name="action" value="login">
                 
                 <div class="mb-3">
-                    <label for="username" class="form-label">שם משתמש או אימייל</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-user"></i></span>
-                        <input type="text" class="form-control" id="username" name="username" 
-                               value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" required autofocus>
-                    </div>
+                    <label for="username" class="form-label">
+                        <i class="fas fa-user"></i> שם משתמש או מייל
+                    </label>
+                    <input type="text" class="form-control" id="username" name="username" required>
                 </div>
                 
                 <div class="mb-3">
-                    <label for="password" class="form-label">סיסמה</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock"></i> סיסמה
+                    </label>
+                    <input type="password" class="form-control" id="password" name="password" required>
                 </div>
                 
-                <div class="mb-3 d-flex justify-content-between align-items-center">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                        <label class="form-check-label" for="remember">זכור אותי</label>
-                    </div>
-                    <a href="forgot_password.php" class="text-decoration-none">
-                        <i class="fas fa-key"></i> שכחת סיסמה?
-                    </a>
-                </div>
-                
-                <button type="submit" class="btn btn-primary w-100" id="loginBtn">
+                <button type="submit" id="loginBtn" class="btn btn-primary w-100">
                     <i class="fas fa-sign-in-alt"></i> התחבר
                 </button>
             </form>
             
-            <div class="register-link">
-                <p class="mb-0">אין לך חשבון? 
-                    <a href="register.php" class="text-decoration-none">
-                        <i class="fas fa-user-plus"></i> הרשם עכשיו
-                    </a>
-                </p>
+            <div class="divider">
+                <span>או</span>
+            </div>
+            
+            <!-- Google Sign-In Button -->
+            <div class="google-signin">
+                <div id="g_id_onload"
+                     data-client_id="<?= GOOGLE_CLIENT_ID ?>"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="sign_in_with"
+                     data-shape="rectangular"
+                     data-logo_alignment="left"
+                     data-width="350">
+                </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                <a href="register.php" class="text-decoration-none">
+                    <i class="fas fa-user-plus"></i> משתמש חדש? הרשם כאן
+                </a>
+                <br>
+                <a href="forgot_password.php" class="text-decoration-none">
+                    <i class="fas fa-key"></i> שכחת סיסמה?
+                </a>
             </div>
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Toggle password visibility
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const passwordField = document.getElementById('password');
-            const icon = this.querySelector('i');
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                passwordField.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
-
-        // Form submission loading
-        document.getElementById('loginForm').addEventListener('submit', function() {
-            const btn = document.getElementById('loginBtn');
+        document.getElementById('loginBtn').addEventListener('click', function(e) {
+            const btn = this;
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מתחבר...';
             
-            // Safety timeout
             setTimeout(function() {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
@@ -484,7 +402,7 @@
         });
 
         // Google Sign-In callback - גרסה מתוקנת
-        async function handleGoogleSignIn(response) {
+        async function handleCredentialResponse(response) {
             console.log('Google Sign-In response received');
             
             // הצג אינדיקטור טעינה
@@ -517,7 +435,7 @@
                     
                     if (data.success) {
                         // הצלחה - הפנה למיקום המבוקש
-                        window.location.href = data.redirect || '<?= DASHBOARD_FULL_URL ?>';
+                        window.location.href = data.redirect;
                     } else {
                         // הצג הודעת שגיאה
                         showGoogleError(data.message || 'שגיאה בהתחברות עם Google');
