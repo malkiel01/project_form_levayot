@@ -69,10 +69,16 @@ try {
     $db = getDbConnection();
     
     // בדיקה אם המשתמש קיים
+    // $stmt = $db->prepare("
+    //     SELECT id, username, full_name, permission_level, is_active, locked_until
+    //     FROM users 
+    //     WHERE email = ? OR google_id = ?
+    // ");
+
     $stmt = $db->prepare("
-        SELECT id, username, full_name, permission_level, is_active, locked_until
+        SELECT id, username, firstName, lastName, permission, email
         FROM users 
-        WHERE email = ? OR google_id = ?
+        WHERE email = ?
     ");
     $stmt->execute([$email, $google_id]);
     $user = $stmt->fetch();
