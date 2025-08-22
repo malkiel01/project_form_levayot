@@ -1,0 +1,230 @@
+# מבנה תיקיות לפרויקט ניהול בית עלמין
+
+## מבנה הפרויקט המומלץ:
+
+```
+project_form_levayot/
+│
+├── .env                      # קובץ הגדרות סביבה (לא נכלל ב-git)
+├── .htaccess                 # הגדרות Apache
+├── config.php                # קובץ קונפיג ראשי
+├── index.php                 # נקודת כניסה ראשית
+│
+├── app/                      # לוגיקת האפליקציה
+│   ├── controllers/          # בקרים
+│   │   ├── AuthController.php
+│   │   ├── DashboardController.php
+│   │   ├── DeceasedController.php
+│   │   ├── PurchaseController.php
+│   │   └── AdminController.php
+│   │
+│   ├── models/              # מודלים
+│   │   ├── User.php
+│   │   ├── Deceased.php
+│   │   ├── Purchase.php
+│   │   ├── Cemetery.php
+│   │   └── Permission.php
+│   │
+│   ├── views/               # תצוגות
+│   │   ├── layouts/
+│   │   │   ├── header.php
+│   │   │   ├── footer.php
+│   │   │   ├── sidebar.php
+│   │   │   └── mobile_nav.php
+│   │   │
+│   │   ├── auth/
+│   │   │   ├── login.php
+│   │   │   ├── register.php
+│   │   │   └── forgot_password.php
+│   │   │
+│   │   ├── dashboard/
+│   │   │   ├── main.php
+│   │   │   ├── admin.php
+│   │   │   ├── deceased.php
+│   │   │   └── purchases.php
+│   │   │
+│   │   └── forms/
+│   │       ├── deceased_form.php
+│   │       └── purchase_form.php
+│   │
+│   ├── includes/            # קבצי include
+│   │   ├── header.php
+│   │   ├── footer.php
+│   │   └── navigation.php
+│   │
+│   ├── helpers/             # פונקציות עזר
+│   │   ├── functions.php
+│   │   ├── auth_functions.php
+│   │   ├── validation_functions.php
+│   │   ├── security_functions.php
+│   │   └── database_functions.php
+│   │
+│   └── middleware/          # Middleware
+│       ├── AuthMiddleware.php
+│       ├── CsrfMiddleware.php
+│       └── PermissionMiddleware.php
+│
+├── public/                  # קבצים ציבוריים
+│   ├── assets/             # משאבים
+│   │   ├── css/
+│   │   │   ├── main.css
+│   │   │   ├── mobile.css
+│   │   │   ├── admin.css
+│   │   │   └── rtl.css
+│   │   │
+│   │   ├── js/
+│   │   │   ├── main.js
+│   │   │   ├── forms.js
+│   │   │   ├── dashboard.js
+│   │   │   └── mobile.js
+│   │   │
+│   │   ├── images/
+│   │   │   ├── logo.png
+│   │   │   └── icons/
+│   │   │
+│   │   ├── fonts/
+│   │   │   └── heebo/
+│   │   │
+│   │   └── vendors/        # ספריות חיצוניות
+│   │       ├── bootstrap/
+│   │       ├── fontawesome/
+│   │       └── jquery/
+│   │
+│   └── uploads/            # קבצים שהועלו
+│       ├── documents/
+│       ├── images/
+│       └── temp/
+│
+├── auth/                    # אימות (תאימות אחורה)
+│   ├── login.php           # מפנה ל-controller
+│   ├── logout.php
+│   ├── register.php
+│   └── google_auth.php
+│
+├── dashboard/              # דשבורדים (תאימות אחורה)
+│   ├── index.php          # מפנה ל-controller
+│   ├── admin.php
+│   ├── deceased.php
+│   └── purchases.php
+│
+├── forms/                  # טפסים (תאימות אחורה)
+│   ├── deceased.php       # מפנה ל-controller
+│   └── purchase.php
+│
+├── lists/                  # רשימות (תאימות אחורה)
+│   ├── deceased.php       # מפנה ל-controller
+│   └── purchases.php
+│
+├── api/                    # API endpoints
+│   ├── auth/
+│   ├── deceased/
+│   ├── purchases/
+│   └── search/
+│
+├── admin/                  # ניהול מערכת
+│   ├── users.php
+│   ├── permissions.php
+│   ├── settings.php
+│   └── backup.php
+│
+├── database/              # מסד נתונים
+│   ├── migrations/       # מיגרציות
+│   ├── seeds/           # נתוני בסיס
+│   └── backup/          # גיבויים
+│
+├── logs/                  # לוגים
+│   ├── error.log
+│   ├── access.log
+│   └── activity.log
+│
+├── tests/                 # בדיקות
+│   ├── unit/
+│   └── integration/
+│
+└── docs/                  # תיעוד
+    ├── API.md
+    ├── DATABASE.md
+    └── INSTALLATION.md
+```
+
+## קבצי Router לדוגמה:
+
+### `/auth/login.php` (קובץ מפנה):
+```php
+<?php
+require_once '../config.php';
+require_once CONTROLLERS_PATH . 'AuthController.php';
+
+$controller = new AuthController();
+$controller->login();
+```
+
+### `/dashboard/index.php` (קובץ מפנה):
+```php
+<?php
+require_once '../config.php';
+require_once CONTROLLERS_PATH . 'DashboardController.php';
+
+$controller = new DashboardController();
+$controller->index();
+```
+
+## יתרונות המבנה:
+
+1. **הפרדת דאגות** - לוגיקה, תצוגה ונתונים מופרדים
+2. **אבטחה** - רוב הקבצים מחוץ ל-public folder
+3. **גמישות** - קל להוסיף פיצ'רים חדשים
+4. **תחזוקה** - קל למצוא ולתקן בעיות
+5. **מותאם למובייל** - קבצי CSS/JS נפרדים למובייל
+6. **תאימות אחורה** - שומר על URLs קיימים
+
+## הגדרת .htaccess:
+
+```apache
+# Redirect all requests to index.php
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
+
+# Security headers
+Header set X-Frame-Options "SAMEORIGIN"
+Header set X-Content-Type-Options "nosniff"
+Header set X-XSS-Protection "1; mode=block"
+
+# Deny access to sensitive files
+<FilesMatch "\.(env|log|sql)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+```
+
+## קובץ index.php ראשי:
+
+```php
+<?php
+require_once 'config.php';
+
+// קבל את הניתוב המבוקש
+$route = $_GET['route'] ?? 'dashboard';
+
+// ניתוב בסיסי
+switch($route) {
+    case 'auth/login':
+        require_once CONTROLLERS_PATH . 'AuthController.php';
+        $controller = new AuthController();
+        $controller->login();
+        break;
+        
+    case 'dashboard':
+        require_once CONTROLLERS_PATH . 'DashboardController.php';
+        $controller = new DashboardController();
+        $controller->index();
+        break;
+        
+    default:
+        // 404
+        header("HTTP/1.0 404 Not Found");
+        include VIEWS_PATH . 'errors/404.php';
+}
+```
