@@ -68,86 +68,135 @@ try {
     // חיבור למסד הנתונים
     $db = getDbConnection();
     
-    // בדיקה אם המשתמש קיים
-    // $stmt = $db->prepare("
-    //     SELECT id, username, full_name, permission_level, is_active, locked_until
-    //     FROM users 
-    //     WHERE email = ? OR google_id = ?
-    // ");
-
+    // בדיקה אם המשתמש קיים לפי email או google_id
     $stmt = $db->prepare("
-        SELECT id, username, firstName, lastName, permission, email
+        SELECT id, username, email, name, google_id, profile_picture, is_active
         FROM users 
-        WHERE email = ?
+        WHERE email = ? OR google_id = ?
     ");
     $stmt->execute([$email, $google_id]);
     $user = $stmt->fetch();
     
     if ($user) {
-        // משתמש קיים - בדיקת סטטוס
+        // משתמש קיים
+        
+        // בדיקה אם המשתמש פעיל
         if (!$user['is_active']) {
-            echo json_encode(['success' => false, 'message' => 'החשבון לא פעיל']);
-            exit;
+            throw new Exception('החשבון לא פעיל. פנה למנהל המערכת.');
         }
         
-        if ($user['locked_until'] && strtotime($user['locked_until']) > time()) {
-            echo json_encode(['success' => false, 'message' => 'החשבון נעול זמנית']);
-            exit;
+        // עדכון google_id ותמונה אם צריך
+        $updates = [];
+        $params = [];
+        
+        if (!$user['google_id']) {
+            $updates[] = "google_id = ?";
+            $params[] = $google_id;
         }
         
-        // עדכון פרטי התחברות
-        $stmt = $db->prepare("
-            UPDATE users 
-            SET google_id = ?, 
-                last_login = NOW(),
-                failed_login_attempts = 0,
-                locked_until = NULL
-            WHERE id = ?
-        ");
-        $stmt->execute([$google_id, $user['id']]);
+        if ($picture && $picture !== $user['profile_picture']) {
+            $updates[] = "profile_picture = ?";
+            $params[] = $picture;
+        }
+        
+        $updates[] = "last_login = NOW()";
+        $updates[] = "auth_type = 'google'";
+        
+        if (!empty($updates)) {
+            $params[] = $user['id'];
+            $updateStmt = $db->prepare("
+                UPDATE users 
+                SET " . implode(', ', $updates) . "
+                WHERE id = ?
+            ");
+            $updateStmt->execute($params);
+        }
+        
+        error_log("User {$user['username']} logged in via Google");
         
     } else {
         // משתמש חדש - יצירת חשבון
-        $username = explode('@', $email)[0] . '_' . rand(100, 999);
         
+        // יצירת username ייחודי מה-email
+        $baseUsername = explode('@', $email)[0];
+        $username = $baseUsername;
+        $counter = 1;
+        
+        // בדיקה אם ה-username תפוס
+        $checkStmt = $db->prepare("SELECT id FROM users WHERE username = ?");
+        $checkStmt->execute([$username]);
+        
+        while ($checkStmt->fetch()) {
+            $username = $baseUsername . '_' . $counter;
+            $counter++;
+            $checkStmt->execute([$username]);
+        }
+        
+        // הוספת המשתמש החדש
         $stmt = $db->prepare("
             INSERT INTO users (
-                username, email, google_id, full_name, 
-                permission_level, is_active, created_at, password
-            ) VALUES (?, ?, ?, ?, 1, 1, NOW(), ?)
+                username, 
+                email,
+                google_id,
+                name,
+                profile_picture,
+                auth_type,
+                is_active,
+                created_at,
+                last_login
+            ) VALUES (?, ?, ?, ?, ?, 'google', 1, NOW(), NOW())
         ");
-        
-        // סיסמה רנדומלית (המשתמש ישתמש ב-Google)
-        $random_password = password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
         
         $stmt->execute([
             $username,
             $email,
             $google_id,
             $name,
-            $random_password
+            $picture
         ]);
         
         $user = [
             'id' => $db->lastInsertId(),
             'username' => $username,
-            'full_name' => $name,
-            'permission_level' => 1
+            'email' => $email,
+            'name' => $name,
+            'google_id' => $google_id,
+            'profile_picture' => $picture
         ];
+        
+        error_log("New user created via Google: $username");
+    }
+    
+    // כעת צריך לבדוק מה רמת ההרשאה של המשתמש
+    // כנראה יש טבלה נפרדת להרשאות או ערך ברירת מחדל
+    $permission_level = 1; // ברירת מחדל
+    
+    // נסה לחפש בטבלת הרשאות אם קיימת
+    try {
+        $permStmt = $db->prepare("SELECT permission_level FROM user_permissions WHERE user_id = ?");
+        $permStmt->execute([$user['id']]);
+        $perm = $permStmt->fetch();
+        if ($perm) {
+            $permission_level = $perm['permission_level'];
+        }
+    } catch (Exception $e) {
+        // אם אין טבלת הרשאות, השתמש בברירת מחדל
+        error_log("No permissions table found, using default");
     }
     
     // הגדרת סשן
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['username'] = $user['username'];
-    $_SESSION['full_name'] = $user['full_name'] ?? $name;
-    $_SESSION['permission_level'] = $user['permission_level'];
+    $_SESSION['full_name'] = $user['name'];
+    $_SESSION['email'] = $user['email'];
+    $_SESSION['permission_level'] = $permission_level;
     $_SESSION['login_time'] = time();
     $_SESSION['login_method'] = 'google';
-    $_SESSION['user_picture'] = $picture;
+    $_SESSION['user_picture'] = $user['profile_picture'] ?? $picture;
+    $_SESSION['google_id'] = $user['google_id'];
 
-    // הוסף את הקוד הזה:
     // קבלת הדשבורד המתאים למשתמש
-    $userDashboard = getUserDashboardUrl($user['id'], $user['permission_level']);
+    $userDashboard = getUserDashboardUrl($user['id'], $permission_level);
 
     // בדיקה אם יש redirect ספציפי
     if ($redirect && $redirect !== DASHBOARD_FULL_URL) {
@@ -162,26 +211,31 @@ try {
         }
         
         if (!$canAccessRedirect) {
-            // אם אין הרשאה ל-redirect המבוקש, שנה אותו לדשבורד המתאים
             $redirect = $userDashboard;
         }
     } else {
-        // אין redirect ספציפי, השתמש בדשבורד המתאים
         $redirect = $userDashboard;
     }
     
     // רישום בלוג
-    logActivity('login_success', [
-        'method' => 'google',
-        'email' => $email,
-        'redirect' => $redirect
-    ]);
+    if (function_exists('logActivity')) {
+        logActivity('login_success', [
+            'method' => 'google',
+            'email' => $email,
+            'redirect' => $redirect
+        ]);
+    }
     
     // החזרת תגובה
     echo json_encode([
         'success' => true,
         'redirect' => $redirect,
-        'message' => 'התחברת בהצלחה'
+        'message' => 'התחברת בהצלחה',
+        'user' => [
+            'name' => $user['name'],
+            'email' => $user['email'],
+            'picture' => $user['profile_picture'] ?? $picture
+        ]
     ]);
     
 } catch (Exception $e) {
@@ -191,3 +245,4 @@ try {
         'message' => 'שגיאה בהתחברות עם Google: ' . $e->getMessage()
     ]);
 }
+?>
