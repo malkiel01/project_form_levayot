@@ -15,5 +15,6 @@ if (ini_get("session.use_cookies")) {
 
 session_destroy();
 
-header("Location: ../" . LOGIN_URL);
+// הפנה ל-LOGIN עם URL מלא!
+header("Location: " . LOGIN_URL);
 exit;

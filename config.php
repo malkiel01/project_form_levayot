@@ -72,8 +72,16 @@ if (empty(DB_USER)) {
     die("שגיאה: חסר שם משתמש (DB_USER) בקובץ .env");
 }
 
-// הגדרות אתר - תיקון!
-define('SITE_URL', rtrim($_ENV['SITE_URL'] ?? 'https://vaadma.cemeteries.mbe-plus.com/project_form_levayot', '/'));
+// הגדרת ה-URL הבסיסי של האתר
+define('SITE_URL', 'https://vaadma.cemeteries.mbe-plus.com/project_form_levayot');
+
+// הגדרות URLs - כולם חייבים להיות מלאים!
+define('LOGIN_URL', SITE_URL . '/auth/login.php');
+define('LOGOUT_URL', SITE_URL . '/auth/logout.php');
+define('REGISTER_URL', SITE_URL . '/auth/register.php');
+
+
+
 define('SITE_NAME', $_ENV['SITE_NAME'] ?? 'מערכת ניהול בית עלמין');
 define('SITE_EMAIL', $_ENV['SITE_EMAIL'] ?? 'info@example.com');
 
@@ -87,7 +95,7 @@ define('UPLOAD_PATH', $_ENV['UPLOAD_PATH'] ?? (ROOT_PATH . '/uploads/'));
 define('LOGS_PATH', $_ENV['LOG_PATH'] ?? (ROOT_PATH . '/logs/'));
 
 // ****** תיקון קריטי - כל הניתובים חייבים להיות URL מלא! ******
-// דשבורדים - URL מלא!
+// דשבורדים - URLs מלאים!
 define('DASHBOARD_URL', SITE_URL . '/includes/dashboard.php');
 define('DASHBOARD_FULL_URL', SITE_URL . '/includes/dashboard.php');
 define('ADMIN_DASHBOARD_URL', SITE_URL . '/includes/dashboard_admin.php');
@@ -96,10 +104,7 @@ define('DASHBOARD_PURCHASES_URL', SITE_URL . '/includes/dashboard_purchases.php'
 define('DASHBOARD_VIEW_ONLY_URL', SITE_URL . '/includes/dashboard_view_only.php');
 define('CEMETERIES_DASHBOARD_URL', SITE_URL . '/includes/dashboard_cemeteries.php');
 
-// אימות - URL מלא!
-define('LOGIN_URL', SITE_URL . '/auth/login.php');
-define('LOGOUT_URL', SITE_URL . '/auth/logout.php');
-define('REGISTER_URL', SITE_URL . '/auth/register.php');
+
 
 // טפסים - URL מלא!
 define('FORM_DECEASED_URL', SITE_URL . '/form/index_deceased.php');
@@ -117,6 +122,7 @@ define('GOOGLE_CLIENT_SECRET', $_ENV['GOOGLE_CLIENT_SECRET'] ?? '');
 define('SESSION_LIFETIME', (int)($_ENV['SESSION_LIFETIME'] ?? 3600));
 define('CSRF_TOKEN_LIFETIME', (int)($_ENV['CSRF_TOKEN_LIFETIME'] ?? 3600));
 define('ENCRYPTION_KEY', $_ENV['ENCRYPTION_KEY'] ?? 'default-key-change-this');
+
 
 // משתנה גלובלי לחיבור
 $pdo = null;
