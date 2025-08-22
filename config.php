@@ -92,8 +92,7 @@ define('SITE_NAME', $_ENV['SITE_NAME'] ?? 'מערכת ניהול טפסי נפט
 define('SITE_EMAIL', $_ENV['SITE_EMAIL'] ?? 'info@example.com');
 
 // הגדר את הנתיב הבסיסי של האתר (החלק אחרי הדומיין)
-// define('BASE_PATH', '/cemeteries/vaadma/project_form_levayot');
-define('BASE_PATH', '/');
+define('BASE_PATH', '/cemeteries/vaadma/project_form_levayot');
 
 // הגדרות נתיבים בשרת
 define('ROOT_PATH', dirname(__DIR__)); // תיקיית השורש של הפרויקט
